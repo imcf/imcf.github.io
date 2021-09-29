@@ -39,6 +39,12 @@
             <li>
                     <a class="function" href="#job_parameter_summary">job_parameter_summary</a>
             </li>
+            <li>
+                    <a class="function" href="#parse_job_basename">parse_job_basename</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_summary">parse_summary</a>
+            </li>
     </ul>
 
 
@@ -62,11 +68,11 @@
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="sd">&quot;&quot;&quot;Helper functions to interact with the HRM.&quot;&quot;&quot;</span>
 
-<span class="c1"># pylint: disable-msg=consider-using-f-string</span>
-<span class="c1"># pylint: disable-msg=import-outside-toplevel</span>
-
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">shlex</span>
 
+<span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
 <span class="kn">from</span> <span class="nn">loguru</span> <span class="kn">import</span> <span class="n">logger</span> <span class="k">as</span> <span class="n">log</span>
 
 
@@ -108,7 +114,7 @@
 <span class="sd">    ...     &#39;SUSER&#39;: &#39;hrm&#39;</span>
 <span class="sd">    ... }</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Trying to parse HRM configuration file [</span><span class="si">{}</span><span class="s2">]...&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to parse HRM configuration file [</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
     <span class="n">config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
         <span class="n">body</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
@@ -129,12 +135,12 @@
             <span class="n">equals</span> <span class="o">=</span> <span class="n">lexer</span><span class="o">.</span><span class="n">get_token</span><span class="p">()</span>
             <span class="k">assert</span> <span class="n">equals</span> <span class="o">==</span> <span class="s2">&quot;=&quot;</span>
         <span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span>   <span class="c1"># pylint: disable-msg=raise-missing-from</span>
-                <span class="s2">&quot;Can&#39;t parse </span><span class="si">%s</span><span class="s2">, invalid syntax in line </span><span class="si">%s</span><span class="s2"> &quot;</span>
-                <span class="s2">&quot;(expected &#39;=&#39;, found &#39;</span><span class="si">%s</span><span class="s2">&#39;).&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">lexer</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">equals</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span>  <span class="c1"># pylint: disable-msg=raise-missing-from</span>
+                <span class="sa">f</span><span class="s2">&quot;Can&#39;t parse </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">, invalid syntax in line </span><span class="si">{</span><span class="n">lexer</span><span class="o">.</span><span class="n">lineno</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(expected &#39;=&#39;, found &#39;</span><span class="si">{</span><span class="n">equals</span><span class="si">}</span><span class="s2">&#39;).&quot;</span>
             <span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=broad-except</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Error parsing config: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pragma: no cover # pylint: disable-msg=broad-except</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error parsing config: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">lexer</span><span class="o">.</span><span class="n">get_token</span><span class="p">()</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># remove double quotes</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># remove single quotes</span>
@@ -159,28 +165,15 @@
     <span class="n">required</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;OMERO_PKG&quot;</span><span class="p">,</span> <span class="s2">&quot;OMERO_HOSTNAME&quot;</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">required</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">entry</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s1">&#39;Missing &quot;</span><span class="si">%s</span><span class="s1">&quot; in the HRM config file.&#39;</span> <span class="o">%</span> <span class="n">entry</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing &#39;</span><span class="si">{</span><span class="n">entry</span><span class="si">}</span><span class="s2">&#39;&#39; in the HRM config file.&quot;</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;HRM config file passed all checks.&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">job_parameter_summary</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Generate a parameter summary from the HRM-generated HTML file.</span>
+    <span class="sd">&quot;&quot;&quot;Generate a parameter summary text from the HRM-generated HTML file.</span>
 
-<span class="sd">    Parse the HTML file generated by the HRM containing the parameter summary and</span>
-<span class="sd">    generate a plain-text version of it. The HTML file is assumed to contain three</span>
-<span class="sd">    `&lt;table&gt;` items that contain a single `&lt;tr&gt;` column with the table title in the</span>
-<span class="sd">    first row, the second row is ignored (column legend) and the actual parameters in</span>
-<span class="sd">    four columns in each of the subsequent rows, e.g. something of this form:</span>
-
-<span class="sd">    ```</span>
-<span class="sd">    ___________________________________________</span>
-<span class="sd">    |___________________title_________________|</span>
-<span class="sd">    |_________________(ignored)_______________|</span>
-<span class="sd">    | parameter | channel | (ignored) | value |</span>
-<span class="sd">    ...</span>
-<span class="sd">    | parameter | channel | (ignored) | value |</span>
-<span class="sd">    -------------------------------------------</span>
-<span class="sd">    ```</span>
+<span class="sd">    Call the parser for the HTML file generated by the HRM containing the parameter</span>
+<span class="sd">    summary and generate a plain-text version from the parsed results.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -192,37 +185,170 @@
 <span class="sd">    str</span>
 <span class="sd">        The formatted string containing the parameter summary.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
-    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">BeautifulSoup</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
-        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span>
-                <span class="s2">&quot;This file was imported via the HRM-OMERO connector. For a parameter &quot;</span>
-                <span class="s2">&quot;summary, the &#39;BeautifulSoup&#39; package for Python is required at import &quot;</span>
-                <span class="s2">&quot;time on the HRM system.&quot;</span>
-            <span class="p">)</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">))</span>
-    <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+    <span class="n">parsed</span> <span class="o">=</span> <span class="n">parse_summary</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">parsed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
+
     <span class="n">summary</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">:</span>
+        <span class="n">summary</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="se">\n</span><span class="s2">==============================</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">[</span><span class="n">section</span><span class="p">]:</span>
+            <span class="n">summary</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">parsed</span><span class="p">[</span><span class="n">section</span><span class="p">][</span><span class="n">parameter</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Job parameter summary:</span><span class="se">\n</span><span class="s2">---</span><span class="se">\n</span><span class="si">{</span><span class="n">summary</span><span class="si">}</span><span class="s2">---&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Generated parameter summary.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">summary</span>
+
+
+<span class="k">def</span> <span class="nf">parse_job_basename</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse the basename from an HRM job result file name.</span>
+
+<span class="sd">    HRM job IDs are generated via PHP&#39;s `uniqid()` call that is giving a 13-digit</span>
+<span class="sd">    hexadecimal string (8 digits UNIX time and 5 digits microsconds). The HRM labels its</span>
+<span class="sd">    result files by appending an underscore (`_`) followed by this ID and an `_hrm`</span>
+<span class="sd">    suffix. This function tries to match this section and remove everything *after* it</span>
+<span class="sd">    from the name.</span>
+
+<span class="sd">    Its intention is to safely remove the suffix from an image file name while taking no</span>
+<span class="sd">    assumptions about how the suffix looks like (could e.g. be `.ics`, `.ome.tif` or</span>
+<span class="sd">    similar).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fname : str</span>
+<span class="sd">        The input string, usually the name of an HRM result file (but any string is</span>
+<span class="sd">        accepted).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The input string (`fname`) where everything *after* an HRM-like job label (e.g.</span>
+<span class="sd">        `_abcdef0123456_hrm` or `_f435a27b9c85e_hrm`) is removed. In case the input</span>
+<span class="sd">        string does *not* contain a matching section it is returned</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+    <span class="n">basename</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(_[0-9a-f]</span><span class="si">{13}</span><span class="s2">_hrm)\..*&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;\1&quot;</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">basename</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">basename</span>
+
+
+<span class="k">def</span> <span class="nf">parse_summary</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse the job parameter summary generated by HRM into a dict.</span>
+
+<span class="sd">    Parse the HTML file generated by the HRM containing the parameter summary and</span>
+<span class="sd">    generate a nested dict from it. The HTML file is assumed to contain three `&lt;table&gt;`</span>
+<span class="sd">    items that contain a single `&lt;td class=&quot;header&quot;&gt;` item with the title and a `&lt;tr&gt;`</span>
+<span class="sd">    section with four `&lt;td&gt;` items per parameter (being *parameter-name*, *channel*,</span>
+<span class="sd">    *source* and *value*), e.g. something of this form:</span>
+
+<span class="sd">    ```</span>
+<span class="sd">    _____________________________________________</span>
+<span class="sd">    |___________________title___________________|</span>
+<span class="sd">    |_________________(ignored)_________________|</span>
+<span class="sd">    | parameter-name | channel | source | value |</span>
+<span class="sd">    ...</span>
+<span class="sd">    | parameter-name | channel | source | value |</span>
+<span class="sd">    ---------------------------------------------</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fname : str</span>
+<span class="sd">        The filename of the job&#39;s HTML parameter summary or (e.g.) the resulting image</span>
+<span class="sd">        file. In case `fname` doesn&#39;t end in the common parameter summary suffix (for</span>
+<span class="sd">        example if the image file name was provided), the function tries to derive the</span>
+<span class="sd">        name of summary file and use that one for parsing.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict(dict)</span>
+<span class="sd">        A dict with the parsed section names (table titles) being the keys, each</span>
+<span class="sd">        containing another dict with the parameter names as keys (including the channel</span>
+<span class="sd">        unless the parameter is channel-independent). See the example below.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    &gt;&gt;&gt; parse_summary(&#39;image_001.parameters.txt&#39;)</span>
+<span class="sd">    ... {</span>
+<span class="sd">    ...     &quot;Image Parameters&quot;: {</span>
+<span class="sd">    ...         &quot;Emission wavelength (nm) [ch:0]&quot;: &quot;567.000&quot;,</span>
+<span class="sd">    ...         &quot;Excitation wavelength (nm) [ch:0]&quot;: &quot;456.000&quot;,</span>
+<span class="sd">    ...         &quot;Lens refractive index [ch:0]&quot;: &quot;4.567&quot;,</span>
+<span class="sd">    ...         &quot;Microscope type [ch:0]&quot;: &quot;widefield&quot;,</span>
+<span class="sd">    ...         &quot;Numerical aperture [ch:0]&quot;: &quot;2.345&quot;,</span>
+<span class="sd">    ...         &quot;Point Spread Function&quot;: &quot;theoretical&quot;,</span>
+<span class="sd">    ...         &quot;Sample refractive index [ch:0]&quot;: &quot;3.456&quot;,</span>
+<span class="sd">    ...         &quot;Time interval (s)&quot;: &quot;1.000000&quot;,</span>
+<span class="sd">    ...         &quot;X pixel size (μm)&quot;: &quot;0.123456&quot;,</span>
+<span class="sd">    ...         &quot;Y pixel size (μm)&quot;: &quot;0.123456&quot;,</span>
+<span class="sd">    ...         &quot;Z step size (μm)&quot;: &quot;0.234567&quot;,</span>
+<span class="sd">    ...     },</span>
+<span class="sd">    ...     &quot;Restoration Parameters&quot;: {</span>
+<span class="sd">    ...         &quot;Autocrop&quot;: &quot;no&quot;,</span>
+<span class="sd">    ...         &quot;Background estimation&quot;: &quot;auto&quot;,</span>
+<span class="sd">    ...         &quot;Deconvolution algorithm&quot;: &quot;iiff&quot;,</span>
+<span class="sd">    ...         &quot;Number of iterations&quot;: &quot;42&quot;,</span>
+<span class="sd">    ...         &quot;Quality stop criterion&quot;: &quot;0.000007&quot;,</span>
+<span class="sd">    ...         &quot;Signal/Noise ratio [ch:0]&quot;: &quot;99&quot;,</span>
+<span class="sd">    ...     },</span>
+<span class="sd">    ... }</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># In case `fname` doesn&#39;t end with the common suffix for job summary files check if</span>
+    <span class="c1"># it is the actual *image* filename of an HRM job and try to use the corresponding</span>
+    <span class="c1"># parameter summary file instead:</span>
+    <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;.parameters.txt&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fname</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">suffix</span><span class="p">):</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="n">parse_job_basename</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.parameters.txt&quot;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">candidate</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found [</span><span class="si">{</span><span class="n">candidate</span><span class="si">}</span><span class="s2">], will use it instead of [</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+            <span class="n">fname</span> <span class="o">=</span> <span class="n">candidate</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to parse job parameter summary file [</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">soupfile</span><span class="p">:</span>
+            <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">soupfile</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="s2">&quot;html.parser&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to open parameter summary file [</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">]: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">sections</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># job parameter summaries have multiple sections split by headers</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;table&quot;</span><span class="p">):</span>
         <span class="n">rows</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;tr&quot;</span><span class="p">)</span>
-        <span class="c1"># the table header:</span>
-        <span class="n">summary</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;td&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
-        <span class="n">summary</span> <span class="o">+=</span> <span class="s2">&quot;==============================</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="c1"># and the table body:</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;td&quot;</span><span class="p">,</span> <span class="n">class_</span><span class="o">=</span><span class="s2">&quot;header&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parsed table header: </span><span class="si">{</span><span class="n">header</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">header</span> <span class="ow">in</span> <span class="n">sections</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error parsing parameters, duplicate header: </span><span class="si">{</span><span class="n">header</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">pairs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># and the table body, starting from the 3rd &lt;tr&gt; item:</span>
         <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
             <span class="n">cols</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;td&quot;</span><span class="p">)</span>
-            <span class="n">summary</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [Ch: </span><span class="si">%s</span><span class="s2">]: </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                <span class="n">cols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&amp;mu;m&quot;</span><span class="p">,</span> <span class="s2">&quot;um&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">u</span><span class="s2">&quot;</span><span class="se">\u03bc</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;u&quot;</span><span class="p">),</span>
-                <span class="n">cols</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
-                <span class="n">cols</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="n">summary</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
-    <span class="k">return</span> <span class="n">summary</span>
+            <span class="c1"># parse the parameter &quot;name&quot;:</span>
+            <span class="n">param_key</span> <span class="o">=</span> <span class="n">cols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parsed (raw) key name: </span><span class="si">{</span><span class="n">param_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># replace HTML-encoded chars:</span>
+            <span class="n">param_key</span> <span class="o">=</span> <span class="n">param_key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&amp;mu;m&quot;</span><span class="p">,</span> <span class="s2">&quot;µm&quot;</span><span class="p">)</span>
+
+            <span class="c1"># parse the channel and add it to the key-string (unless it&#39;s &quot;All&quot;):</span>
+            <span class="n">channel</span> <span class="o">=</span> <span class="n">cols</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+            <span class="k">if</span> <span class="n">channel</span> <span class="o">==</span> <span class="s2">&quot;All&quot;</span><span class="p">:</span>
+                <span class="n">channel</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">channel</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; [ch:</span><span class="si">{</span><span class="n">channel</span><span class="si">}</span><span class="s2">]&quot;</span>
+            <span class="n">param_key</span> <span class="o">+=</span> <span class="n">channel</span>
+
+            <span class="c1"># parse the parameter value:</span>
+            <span class="n">param_value</span> <span class="o">=</span> <span class="n">cols</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+
+            <span class="c1"># finally add a new entry to the dict unless the key already exists:</span>
+            <span class="k">if</span> <span class="n">param_key</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parsing failed, duplicate parameter: </span><span class="si">{</span><span class="n">param_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">pairs</span><span class="p">[</span><span class="n">param_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
+        <span class="n">sections</span><span class="p">[</span><span class="n">header</span><span class="p">]</span> <span class="o">=</span> <span class="n">pairs</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="si">}</span><span class="s2"> table rows.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sections</span>
 </pre></div>
 
         </details>
@@ -276,7 +402,7 @@
 <span class="sd">    ...     &#39;SUSER&#39;: &#39;hrm&#39;</span>
 <span class="sd">    ... }</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Trying to parse HRM configuration file [</span><span class="si">{}</span><span class="s2">]...&quot;</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to parse HRM configuration file [</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
     <span class="n">config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
         <span class="n">body</span> <span class="o">=</span> <span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
@@ -297,12 +423,12 @@
             <span class="n">equals</span> <span class="o">=</span> <span class="n">lexer</span><span class="o">.</span><span class="n">get_token</span><span class="p">()</span>
             <span class="k">assert</span> <span class="n">equals</span> <span class="o">==</span> <span class="s2">&quot;=&quot;</span>
         <span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span>   <span class="c1"># pylint: disable-msg=raise-missing-from</span>
-                <span class="s2">&quot;Can&#39;t parse </span><span class="si">%s</span><span class="s2">, invalid syntax in line </span><span class="si">%s</span><span class="s2"> &quot;</span>
-                <span class="s2">&quot;(expected &#39;=&#39;, found &#39;</span><span class="si">%s</span><span class="s2">&#39;).&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">lexer</span><span class="o">.</span><span class="n">lineno</span><span class="p">,</span> <span class="n">equals</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span>  <span class="c1"># pylint: disable-msg=raise-missing-from</span>
+                <span class="sa">f</span><span class="s2">&quot;Can&#39;t parse </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">, invalid syntax in line </span><span class="si">{</span><span class="n">lexer</span><span class="o">.</span><span class="n">lineno</span><span class="si">}</span><span class="s2"> &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;(expected &#39;=&#39;, found &#39;</span><span class="si">{</span><span class="n">equals</span><span class="si">}</span><span class="s2">&#39;).&quot;</span>
             <span class="p">)</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=broad-except</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Error parsing config: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pragma: no cover # pylint: disable-msg=broad-except</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error parsing config: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">lexer</span><span class="o">.</span><span class="n">get_token</span><span class="p">()</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># remove double quotes</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>  <span class="c1"># remove single quotes</span>
@@ -384,7 +510,7 @@ The name of the configuration file to be parsed.</li>
     <span class="n">required</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;OMERO_PKG&quot;</span><span class="p">,</span> <span class="s2">&quot;OMERO_HOSTNAME&quot;</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">required</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">entry</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s1">&#39;Missing &quot;</span><span class="si">%s</span><span class="s1">&quot; in the HRM config file.&#39;</span> <span class="o">%</span> <span class="n">entry</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Missing &#39;</span><span class="si">{</span><span class="n">entry</span><span class="si">}</span><span class="s2">&#39;&#39; in the HRM config file.&quot;</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;HRM config file passed all checks.&quot;</span><span class="p">)</span>
 </pre></div>
 
@@ -419,23 +545,10 @@ A dict with a parsed configuration, as returned by <code>parse_hrm_conf()</code>
                 <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">job_parameter_summary</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Generate a parameter summary from the HRM-generated HTML file.</span>
+    <span class="sd">&quot;&quot;&quot;Generate a parameter summary text from the HRM-generated HTML file.</span>
 
-<span class="sd">    Parse the HTML file generated by the HRM containing the parameter summary and</span>
-<span class="sd">    generate a plain-text version of it. The HTML file is assumed to contain three</span>
-<span class="sd">    `&lt;table&gt;` items that contain a single `&lt;tr&gt;` column with the table title in the</span>
-<span class="sd">    first row, the second row is ignored (column legend) and the actual parameters in</span>
-<span class="sd">    four columns in each of the subsequent rows, e.g. something of this form:</span>
-
-<span class="sd">    ```</span>
-<span class="sd">    ___________________________________________</span>
-<span class="sd">    |___________________title_________________|</span>
-<span class="sd">    |_________________(ignored)_______________|</span>
-<span class="sd">    | parameter | channel | (ignored) | value |</span>
-<span class="sd">    ...</span>
-<span class="sd">    | parameter | channel | (ignored) | value |</span>
-<span class="sd">    -------------------------------------------</span>
-<span class="sd">    ```</span>
+<span class="sd">    Call the parser for the HTML file generated by the HRM containing the parameter</span>
+<span class="sd">    summary and generate a plain-text version from the parsed results.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -447,56 +560,26 @@ A dict with a parsed configuration, as returned by <code>parse_hrm_conf()</code>
 <span class="sd">    str</span>
 <span class="sd">        The formatted string containing the parameter summary.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">bs4</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
-    <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="kn">from</span> <span class="nn">BeautifulSoup</span> <span class="kn">import</span> <span class="n">BeautifulSoup</span>
-        <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span>
-                <span class="s2">&quot;This file was imported via the HRM-OMERO connector. For a parameter &quot;</span>
-                <span class="s2">&quot;summary, the &#39;BeautifulSoup&#39; package for Python is required at import &quot;</span>
-                <span class="s2">&quot;time on the HRM system.&quot;</span>
-            <span class="p">)</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">))</span>
-    <span class="k">except</span> <span class="ne">IOError</span><span class="p">:</span>
+    <span class="n">parsed</span> <span class="o">=</span> <span class="n">parse_summary</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">parsed</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">None</span>
+
     <span class="n">summary</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-    <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;table&quot;</span><span class="p">):</span>
-        <span class="n">rows</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;tr&quot;</span><span class="p">)</span>
-        <span class="c1"># the table header:</span>
-        <span class="n">summary</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;td&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
-        <span class="n">summary</span> <span class="o">+=</span> <span class="s2">&quot;==============================</span><span class="se">\n</span><span class="s2">&quot;</span>
-        <span class="c1"># and the table body:</span>
-        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
-            <span class="n">cols</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;td&quot;</span><span class="p">)</span>
-            <span class="n">summary</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> [Ch: </span><span class="si">%s</span><span class="s2">]: </span><span class="si">%s</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                <span class="n">cols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&amp;mu;m&quot;</span><span class="p">,</span> <span class="s2">&quot;um&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">u</span><span class="s2">&quot;</span><span class="se">\u03bc</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;u&quot;</span><span class="p">),</span>
-                <span class="n">cols</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
-                <span class="n">cols</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="n">summary</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">:</span>
+        <span class="n">summary</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="se">\n</span><span class="s2">==============================</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">for</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">parsed</span><span class="p">[</span><span class="n">section</span><span class="p">]:</span>
+            <span class="n">summary</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">parameter</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">parsed</span><span class="p">[</span><span class="n">section</span><span class="p">][</span><span class="n">parameter</span><span class="p">]</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Job parameter summary:</span><span class="se">\n</span><span class="s2">---</span><span class="se">\n</span><span class="si">{</span><span class="n">summary</span><span class="si">}</span><span class="s2">---&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Generated parameter summary.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">summary</span>
 </pre></div>
 
         </details>
 
-            <div class="docstring"><p>Generate a parameter summary from the HRM-generated HTML file.</p>
+            <div class="docstring"><p>Generate a parameter summary text from the HRM-generated HTML file.</p>
 
-<p>Parse the HTML file generated by the HRM containing the parameter summary and
-generate a plain-text version of it. The HTML file is assumed to contain three
-<code>&lt;table&gt;</code> items that contain a single <code>&lt;tr&gt;</code> column with the table title in the
-first row, the second row is ignored (column legend) and the actual parameters in
-four columns in each of the subsequent rows, e.g. something of this form:</p>
-
-<pre><code>|___________________title_________________|
-|_________________(ignored)_______________|
-| parameter | channel | (ignored) | value |
-...
-| parameter | channel | (ignored) | value |
--------------------------------------------
-</code></pre>
+<p>Call the parser for the HTML file generated by the HRM containing the parameter
+summary and generate a plain-text version from the parsed results.</p>
 
 <h6 id="parameters">Parameters</h6>
 
@@ -510,6 +593,278 @@ The filename of the job's HTML parameter summary.</li>
 <ul>
 <li><strong>str</strong>: The formatted string containing the parameter summary.</li>
 </ul>
+</div>
+
+
+                </section>
+                <section id="parse_job_basename">
+                            <div class="attr function"><a class="headerlink" href="#parse_job_basename">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">parse_job_basename</span><span class="signature">(fname)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">parse_job_basename</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse the basename from an HRM job result file name.</span>
+
+<span class="sd">    HRM job IDs are generated via PHP&#39;s `uniqid()` call that is giving a 13-digit</span>
+<span class="sd">    hexadecimal string (8 digits UNIX time and 5 digits microsconds). The HRM labels its</span>
+<span class="sd">    result files by appending an underscore (`_`) followed by this ID and an `_hrm`</span>
+<span class="sd">    suffix. This function tries to match this section and remove everything *after* it</span>
+<span class="sd">    from the name.</span>
+
+<span class="sd">    Its intention is to safely remove the suffix from an image file name while taking no</span>
+<span class="sd">    assumptions about how the suffix looks like (could e.g. be `.ics`, `.ome.tif` or</span>
+<span class="sd">    similar).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fname : str</span>
+<span class="sd">        The input string, usually the name of an HRM result file (but any string is</span>
+<span class="sd">        accepted).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The input string (`fname`) where everything *after* an HRM-like job label (e.g.</span>
+<span class="sd">        `_abcdef0123456_hrm` or `_f435a27b9c85e_hrm`) is removed. In case the input</span>
+<span class="sd">        string does *not* contain a matching section it is returned</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span>
+    <span class="n">basename</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(_[0-9a-f]</span><span class="si">{13}</span><span class="s2">_hrm)\..*&quot;</span><span class="p">,</span> <span class="sa">r</span><span class="s2">&quot;\1&quot;</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">basename</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">basename</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Parse the basename from an HRM job result file name.</p>
+
+<p>HRM job IDs are generated via PHP's <code>uniqid()</code> call that is giving a 13-digit
+hexadecimal string (8 digits UNIX time and 5 digits microsconds). The HRM labels its
+result files by appending an underscore (<code>_</code>) followed by this ID and an <code>_hrm</code>
+suffix. This function tries to match this section and remove everything <em>after</em> it
+from the name.</p>
+
+<p>Its intention is to safely remove the suffix from an image file name while taking no
+assumptions about how the suffix looks like (could e.g. be <code>.ics</code>, <code>.ome.tif</code> or
+similar).</p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>fname</strong> (str):
+The input string, usually the name of an HRM result file (but any string is
+accepted).</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<ul>
+<li><strong>str</strong>: The input string (<code>fname</code>) where everything <em>after</em> an HRM-like job label (e.g.
+<code>_abcdef0123456_hrm</code> or <code>_f435a27b9c85e_hrm</code>) is removed. In case the input
+string does <em>not</em> contain a matching section it is returned</li>
+</ul>
+</div>
+
+
+                </section>
+                <section id="parse_summary">
+                            <div class="attr function"><a class="headerlink" href="#parse_summary">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">parse_summary</span><span class="signature">(fname)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">parse_summary</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse the job parameter summary generated by HRM into a dict.</span>
+
+<span class="sd">    Parse the HTML file generated by the HRM containing the parameter summary and</span>
+<span class="sd">    generate a nested dict from it. The HTML file is assumed to contain three `&lt;table&gt;`</span>
+<span class="sd">    items that contain a single `&lt;td class=&quot;header&quot;&gt;` item with the title and a `&lt;tr&gt;`</span>
+<span class="sd">    section with four `&lt;td&gt;` items per parameter (being *parameter-name*, *channel*,</span>
+<span class="sd">    *source* and *value*), e.g. something of this form:</span>
+
+<span class="sd">    ```</span>
+<span class="sd">    _____________________________________________</span>
+<span class="sd">    |___________________title___________________|</span>
+<span class="sd">    |_________________(ignored)_________________|</span>
+<span class="sd">    | parameter-name | channel | source | value |</span>
+<span class="sd">    ...</span>
+<span class="sd">    | parameter-name | channel | source | value |</span>
+<span class="sd">    ---------------------------------------------</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fname : str</span>
+<span class="sd">        The filename of the job&#39;s HTML parameter summary or (e.g.) the resulting image</span>
+<span class="sd">        file. In case `fname` doesn&#39;t end in the common parameter summary suffix (for</span>
+<span class="sd">        example if the image file name was provided), the function tries to derive the</span>
+<span class="sd">        name of summary file and use that one for parsing.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict(dict)</span>
+<span class="sd">        A dict with the parsed section names (table titles) being the keys, each</span>
+<span class="sd">        containing another dict with the parameter names as keys (including the channel</span>
+<span class="sd">        unless the parameter is channel-independent). See the example below.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    &gt;&gt;&gt; parse_summary(&#39;image_001.parameters.txt&#39;)</span>
+<span class="sd">    ... {</span>
+<span class="sd">    ...     &quot;Image Parameters&quot;: {</span>
+<span class="sd">    ...         &quot;Emission wavelength (nm) [ch:0]&quot;: &quot;567.000&quot;,</span>
+<span class="sd">    ...         &quot;Excitation wavelength (nm) [ch:0]&quot;: &quot;456.000&quot;,</span>
+<span class="sd">    ...         &quot;Lens refractive index [ch:0]&quot;: &quot;4.567&quot;,</span>
+<span class="sd">    ...         &quot;Microscope type [ch:0]&quot;: &quot;widefield&quot;,</span>
+<span class="sd">    ...         &quot;Numerical aperture [ch:0]&quot;: &quot;2.345&quot;,</span>
+<span class="sd">    ...         &quot;Point Spread Function&quot;: &quot;theoretical&quot;,</span>
+<span class="sd">    ...         &quot;Sample refractive index [ch:0]&quot;: &quot;3.456&quot;,</span>
+<span class="sd">    ...         &quot;Time interval (s)&quot;: &quot;1.000000&quot;,</span>
+<span class="sd">    ...         &quot;X pixel size (μm)&quot;: &quot;0.123456&quot;,</span>
+<span class="sd">    ...         &quot;Y pixel size (μm)&quot;: &quot;0.123456&quot;,</span>
+<span class="sd">    ...         &quot;Z step size (μm)&quot;: &quot;0.234567&quot;,</span>
+<span class="sd">    ...     },</span>
+<span class="sd">    ...     &quot;Restoration Parameters&quot;: {</span>
+<span class="sd">    ...         &quot;Autocrop&quot;: &quot;no&quot;,</span>
+<span class="sd">    ...         &quot;Background estimation&quot;: &quot;auto&quot;,</span>
+<span class="sd">    ...         &quot;Deconvolution algorithm&quot;: &quot;iiff&quot;,</span>
+<span class="sd">    ...         &quot;Number of iterations&quot;: &quot;42&quot;,</span>
+<span class="sd">    ...         &quot;Quality stop criterion&quot;: &quot;0.000007&quot;,</span>
+<span class="sd">    ...         &quot;Signal/Noise ratio [ch:0]&quot;: &quot;99&quot;,</span>
+<span class="sd">    ...     },</span>
+<span class="sd">    ... }</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># In case `fname` doesn&#39;t end with the common suffix for job summary files check if</span>
+    <span class="c1"># it is the actual *image* filename of an HRM job and try to use the corresponding</span>
+    <span class="c1"># parameter summary file instead:</span>
+    <span class="n">suffix</span> <span class="o">=</span> <span class="s2">&quot;.parameters.txt&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fname</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="n">suffix</span><span class="p">):</span>
+        <span class="n">candidate</span> <span class="o">=</span> <span class="n">parse_job_basename</span><span class="p">(</span><span class="n">fname</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;.parameters.txt&quot;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">candidate</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found [</span><span class="si">{</span><span class="n">candidate</span><span class="si">}</span><span class="s2">], will use it instead of [</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+            <span class="n">fname</span> <span class="o">=</span> <span class="n">candidate</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to parse job parameter summary file [</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">soupfile</span><span class="p">:</span>
+            <span class="n">soup</span> <span class="o">=</span> <span class="n">BeautifulSoup</span><span class="p">(</span><span class="n">soupfile</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="s2">&quot;html.parser&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to open parameter summary file [</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">]: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">sections</span> <span class="o">=</span> <span class="p">{}</span>  <span class="c1"># job parameter summaries have multiple sections split by headers</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">soup</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;table&quot;</span><span class="p">):</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">table</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;tr&quot;</span><span class="p">)</span>
+        <span class="n">header</span> <span class="o">=</span> <span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;td&quot;</span><span class="p">,</span> <span class="n">class_</span><span class="o">=</span><span class="s2">&quot;header&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parsed table header: </span><span class="si">{</span><span class="n">header</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">header</span> <span class="ow">in</span> <span class="n">sections</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error parsing parameters, duplicate header: </span><span class="si">{</span><span class="n">header</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">pairs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="c1"># and the table body, starting from the 3rd &lt;tr&gt; item:</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+            <span class="n">cols</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">findAll</span><span class="p">(</span><span class="s2">&quot;td&quot;</span><span class="p">)</span>
+            <span class="c1"># parse the parameter &quot;name&quot;:</span>
+            <span class="n">param_key</span> <span class="o">=</span> <span class="n">cols</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parsed (raw) key name: </span><span class="si">{</span><span class="n">param_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="c1"># replace HTML-encoded chars:</span>
+            <span class="n">param_key</span> <span class="o">=</span> <span class="n">param_key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&amp;mu;m&quot;</span><span class="p">,</span> <span class="s2">&quot;µm&quot;</span><span class="p">)</span>
+
+            <span class="c1"># parse the channel and add it to the key-string (unless it&#39;s &quot;All&quot;):</span>
+            <span class="n">channel</span> <span class="o">=</span> <span class="n">cols</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+            <span class="k">if</span> <span class="n">channel</span> <span class="o">==</span> <span class="s2">&quot;All&quot;</span><span class="p">:</span>
+                <span class="n">channel</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">channel</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot; [ch:</span><span class="si">{</span><span class="n">channel</span><span class="si">}</span><span class="s2">]&quot;</span>
+            <span class="n">param_key</span> <span class="o">+=</span> <span class="n">channel</span>
+
+            <span class="c1"># parse the parameter value:</span>
+            <span class="n">param_value</span> <span class="o">=</span> <span class="n">cols</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">text</span>
+
+            <span class="c1"># finally add a new entry to the dict unless the key already exists:</span>
+            <span class="k">if</span> <span class="n">param_key</span> <span class="ow">in</span> <span class="n">pairs</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parsing failed, duplicate parameter: </span><span class="si">{</span><span class="n">param_key</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">pairs</span><span class="p">[</span><span class="n">param_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">param_value</span>
+        <span class="n">sections</span><span class="p">[</span><span class="n">header</span><span class="p">]</span> <span class="o">=</span> <span class="n">pairs</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="si">}</span><span class="s2"> table rows.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sections</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Parse the job parameter summary generated by HRM into a dict.</p>
+
+<p>Parse the HTML file generated by the HRM containing the parameter summary and
+generate a nested dict from it. The HTML file is assumed to contain three <code>&lt;table&gt;</code>
+items that contain a single <code>&lt;td class="header"&gt;</code> item with the title and a <code>&lt;tr&gt;</code>
+section with four <code>&lt;td&gt;</code> items per parameter (being <em>parameter-name</em>, <em>channel</em>,
+<em>source</em> and <em>value</em>), e.g. something of this form:</p>
+
+<pre><code>|___________________title___________________|
+|_________________(ignored)_________________|
+| parameter-name | channel | source | value |
+...
+| parameter-name | channel | source | value |
+---------------------------------------------
+</code></pre>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>fname</strong> (str):
+The filename of the job's HTML parameter summary or (e.g.) the resulting image
+file. In case <code>fname</code> doesn't end in the common parameter summary suffix (for
+example if the image file name was provided), the function tries to derive the
+name of summary file and use that one for parsing.</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<ul>
+<li><strong>dict(dict)</strong>: A dict with the parsed section names (table titles) being the keys, each
+containing another dict with the parameter names as keys (including the channel
+unless the parameter is channel-independent). See the example below.</li>
+</ul>
+
+<h6 id="example">Example</h6>
+
+<div class="codehilite"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_summary</span><span class="p">(</span><span class="s1">&#39;image_001.parameters.txt&#39;</span><span class="p">)</span>
+<span class="gp">... </span><span class="p">{</span>
+<span class="gp">... </span>    <span class="s2">&quot;Image Parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s2">&quot;Emission wavelength (nm) [ch:0]&quot;</span><span class="p">:</span> <span class="s2">&quot;567.000&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;Excitation wavelength (nm) [ch:0]&quot;</span><span class="p">:</span> <span class="s2">&quot;456.000&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;Lens refractive index [ch:0]&quot;</span><span class="p">:</span> <span class="s2">&quot;4.567&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;Microscope type [ch:0]&quot;</span><span class="p">:</span> <span class="s2">&quot;widefield&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;Numerical aperture [ch:0]&quot;</span><span class="p">:</span> <span class="s2">&quot;2.345&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;Point Spread Function&quot;</span><span class="p">:</span> <span class="s2">&quot;theoretical&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;Sample refractive index [ch:0]&quot;</span><span class="p">:</span> <span class="s2">&quot;3.456&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;Time interval (s)&quot;</span><span class="p">:</span> <span class="s2">&quot;1.000000&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;X pixel size (μm)&quot;</span><span class="p">:</span> <span class="s2">&quot;0.123456&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;Y pixel size (μm)&quot;</span><span class="p">:</span> <span class="s2">&quot;0.123456&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;Z step size (μm)&quot;</span><span class="p">:</span> <span class="s2">&quot;0.234567&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">},</span>
+<span class="gp">... </span>    <span class="s2">&quot;Restoration Parameters&quot;</span><span class="p">:</span> <span class="p">{</span>
+<span class="gp">... </span>        <span class="s2">&quot;Autocrop&quot;</span><span class="p">:</span> <span class="s2">&quot;no&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;Background estimation&quot;</span><span class="p">:</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;Deconvolution algorithm&quot;</span><span class="p">:</span> <span class="s2">&quot;iiff&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;Number of iterations&quot;</span><span class="p">:</span> <span class="s2">&quot;42&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;Quality stop criterion&quot;</span><span class="p">:</span> <span class="s2">&quot;0.000007&quot;</span><span class="p">,</span>
+<span class="gp">... </span>        <span class="s2">&quot;Signal/Noise ratio [ch:0]&quot;</span><span class="p">:</span> <span class="s2">&quot;99&quot;</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="p">},</span>
+<span class="gp">... </span><span class="p">}</span>
+</code></pre></div>
 </div>
 
 

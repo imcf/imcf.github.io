@@ -36,6 +36,15 @@
             <li>
                     <a class="function" href="#check_credentials">check_credentials</a>
             </li>
+            <li>
+                    <a class="function" href="#extract_image_id">extract_image_id</a>
+            </li>
+            <li>
+                    <a class="function" href="#add_annotation_keyvalue">add_annotation_keyvalue</a>
+            </li>
+            <li>
+                    <a class="function" href="#add_annotation_tag">add_annotation_tag</a>
+            </li>
     </ul>
 
 
@@ -59,10 +68,13 @@
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="sd">&quot;&quot;&quot;Functions related to direct interaction with OMERO.&quot;&quot;&quot;</span>
 
-<span class="c1"># pylint: disable-msg=consider-using-f-string</span>
-
+<span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">from</span> <span class="nn">loguru</span> <span class="kn">import</span> <span class="n">logger</span> <span class="k">as</span> <span class="n">log</span>
-<span class="kn">from</span> <span class="nn">omero.gateway</span> <span class="kn">import</span> <span class="n">BlitzGateway</span>
+<span class="kn">import</span> <span class="nn">omero.gateway</span>
+
+<span class="kn">from</span> <span class="nn">.decorators</span> <span class="kn">import</span> <span class="n">connect_and_set_group</span>
+<span class="kn">from</span> <span class="nn">.group</span> <span class="kn">import</span> <span class="n">set_session_group</span>
+<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">printlog</span>
 
 
 <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">passwd</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">4064</span><span class="p">):</span>
@@ -87,7 +99,8 @@
 <span class="sd">    omero.gateway.BlitzGateway</span>
 <span class="sd">        The OMERO connection object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">conn</span> <span class="o">=</span> <span class="n">BlitzGateway</span><span class="p">(</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;connect()&#39; is DEPRECATED, will be removed in an upcoming release!&quot;</span><span class="p">)</span>
+    <span class="n">conn</span> <span class="o">=</span> <span class="n">omero</span><span class="o">.</span><span class="n">gateway</span><span class="o">.</span><span class="n">BlitzGateway</span><span class="p">(</span>
         <span class="n">user</span><span class="p">,</span> <span class="n">passwd</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span> <span class="n">secure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">useragent</span><span class="o">=</span><span class="s2">&quot;HRM-OMERO.connector&quot;</span>
     <span class="p">)</span>
     <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
@@ -112,10 +125,117 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">connected</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">connected</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Success logging into OMERO with user ID </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">conn</span><span class="o">.</span><span class="n">getUserId</span><span class="p">())</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Connected to OMERO [user ID: </span><span class="si">{</span><span class="n">conn</span><span class="o">.</span><span class="n">getUserId</span><span class="p">()</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR logging into OMERO.&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="s2">&quot;ERROR logging into OMERO.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">connected</span>
+
+
+<span class="k">def</span> <span class="nf">extract_image_id</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse the YAML returned by an &#39;omero import&#39; call and extract the image ID.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fname : str</span>
+<span class="sd">        The path to the `yaml` file to parse.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int or None</span>
+<span class="sd">        The OMERO ID of the newly imported image, e.g. `1568386` or `None` in case</span>
+<span class="sd">        parsing the file failed for any reason.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+            <span class="n">parsed</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parsed</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;Image&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unexpected YAML retrieved from OMERO, unable to parse:</span><span class="se">\n</span><span class="si">{</span><span class="n">parsed</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">image_id</span> <span class="o">=</span> <span class="n">parsed</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;Image&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=broad-except</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Error parsing imported image ID from YAML output: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">image_id</span>
+
+
+<span class="nd">@connect_and_set_group</span>
+<span class="k">def</span> <span class="nf">add_annotation_keyvalue</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">annotation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add a key-value &quot;map&quot; annotation to an OMERO object.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    conn : omero.gateway.BlitzGateway</span>
+<span class="sd">        The OMERO connection object.</span>
+<span class="sd">    id_str : str</span>
+<span class="sd">        The ID describing the target OMERO object, e.g.</span>
+<span class="sd">        * `G:23:Image:42`</span>
+<span class="sd">        * `G:4:Dataset:77`</span>
+<span class="sd">    annotation : dict(dict)</span>
+<span class="sd">        The map annotation as returned by `hrm_omero.hrm.parse_summary()`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True in case of success, False otherwise.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    RuntimeError</span>
+<span class="sd">        Raised in case re-establishing the OMERO connection fails.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">set_session_group</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">obj_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No object ID given, not adding annotation &gt;&gt;&gt;</span><span class="si">{</span><span class="n">annotation</span><span class="si">}</span><span class="s2">&lt;&lt;&lt;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">target_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">target_obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to identify target object </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> in OMERO!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">annotation</span><span class="p">:</span>
+        <span class="n">namespace</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Huygens Remote Manager - </span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">map_ann</span> <span class="o">=</span> <span class="n">omero</span><span class="o">.</span><span class="n">gateway</span><span class="o">.</span><span class="n">MapAnnotationWrapper</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
+        <span class="n">map_ann</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">annotation</span><span class="p">[</span><span class="n">section</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="n">map_ann</span><span class="o">.</span><span class="n">setNs</span><span class="p">(</span><span class="n">namespace</span><span class="p">)</span>
+        <span class="n">map_ann</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">target_obj</span><span class="o">.</span><span class="n">linkAnnotation</span><span class="p">(</span><span class="n">map_ann</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Added key-value annotation using namespace [</span><span class="si">{</span><span class="n">namespace</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully added annotation to </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">True</span>
+
+
+<span class="k">def</span> <span class="nf">add_annotation_tag</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">annotation</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">,</span> <span class="n">obj_type</span><span class="o">=</span><span class="s2">&quot;Image&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">obj_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No object ID given, not adding annotation &gt;&gt;&gt;</span><span class="si">{</span><span class="n">annotation</span><span class="si">}</span><span class="s2">&lt;&lt;&lt;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># the connection might be closed (e.g. after importing an image), so reconnect:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">conn</span><span class="o">.</span><span class="n">_connected</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=protected-access</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Failed to (re-)establish connection to OMERO!&quot;</span><span class="p">)</span>
+
+    <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
+    <span class="n">target_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">target_obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to identify target object </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> in OMERO!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">tag_ann</span> <span class="o">=</span> <span class="n">omero</span><span class="o">.</span><span class="n">gateway</span><span class="o">.</span><span class="n">TagAnnotationWrapper</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
+    <span class="n">tag_ann</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">desc</span><span class="p">:</span>
+        <span class="n">tag_ann</span><span class="o">.</span><span class="n">setDescription</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
+    <span class="n">tag_ann</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="n">target_obj</span><span class="o">.</span><span class="n">linkAnnotation</span><span class="p">(</span><span class="n">tag_ann</span><span class="p">)</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully added annotation to </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">True</span>
 </pre></div>
 
         </details>
@@ -153,7 +273,8 @@
 <span class="sd">    omero.gateway.BlitzGateway</span>
 <span class="sd">        The OMERO connection object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">conn</span> <span class="o">=</span> <span class="n">BlitzGateway</span><span class="p">(</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;connect()&#39; is DEPRECATED, will be removed in an upcoming release!&quot;</span><span class="p">)</span>
+    <span class="n">conn</span> <span class="o">=</span> <span class="n">omero</span><span class="o">.</span><span class="n">gateway</span><span class="o">.</span><span class="n">BlitzGateway</span><span class="p">(</span>
         <span class="n">user</span><span class="p">,</span> <span class="n">passwd</span><span class="p">,</span> <span class="n">host</span><span class="o">=</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="n">port</span><span class="p">,</span> <span class="n">secure</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">useragent</span><span class="o">=</span><span class="s2">&quot;HRM-OMERO.connector&quot;</span>
     <span class="p">)</span>
     <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
@@ -217,9 +338,9 @@ The OMERO port number, by default 4064.</li>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">connected</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">connected</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Success logging into OMERO with user ID </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">conn</span><span class="o">.</span><span class="n">getUserId</span><span class="p">())</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Connected to OMERO [user ID: </span><span class="si">{</span><span class="n">conn</span><span class="o">.</span><span class="n">getUserId</span><span class="p">()</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ERROR logging into OMERO.&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="s2">&quot;ERROR logging into OMERO.&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">connected</span>
 </pre></div>
 
@@ -242,6 +363,204 @@ otherwise.</li>
 </ul>
 </div>
 
+
+                </section>
+                <section id="extract_image_id">
+                            <div class="attr function"><a class="headerlink" href="#extract_image_id">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">extract_image_id</span><span class="signature">(fname)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">extract_image_id</span><span class="p">(</span><span class="n">fname</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parse the YAML returned by an &#39;omero import&#39; call and extract the image ID.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fname : str</span>
+<span class="sd">        The path to the `yaml` file to parse.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    int or None</span>
+<span class="sd">        The OMERO ID of the newly imported image, e.g. `1568386` or `None` in case</span>
+<span class="sd">        parsing the file failed for any reason.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+            <span class="n">parsed</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parsed</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;Image&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unexpected YAML retrieved from OMERO, unable to parse:</span><span class="se">\n</span><span class="si">{</span><span class="n">parsed</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">image_id</span> <span class="o">=</span> <span class="n">parsed</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;Image&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=broad-except</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Error parsing imported image ID from YAML output: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">image_id</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Parse the YAML returned by an 'omero import' call and extract the image ID.</p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>fname</strong> (str):
+The path to the <code>yaml</code> file to parse.</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<ul>
+<li><strong>int or None</strong>: The OMERO ID of the newly imported image, e.g. <code>1568386</code> or <code>None</code> in case
+parsing the file failed for any reason.</li>
+</ul>
+</div>
+
+
+                </section>
+                <section id="add_annotation_keyvalue">
+                            <div class="attr function"><a class="headerlink" href="#add_annotation_keyvalue">#&nbsp;&nbsp</a>
+
+                <div class="decorator">@connect_and_set_group</div>
+
+            <span class="def">def</span>
+            <span class="name">add_annotation_keyvalue</span><span class="signature">(conn, id_str, annotation)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="nd">@connect_and_set_group</span>
+<span class="k">def</span> <span class="nf">add_annotation_keyvalue</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">annotation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add a key-value &quot;map&quot; annotation to an OMERO object.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    conn : omero.gateway.BlitzGateway</span>
+<span class="sd">        The OMERO connection object.</span>
+<span class="sd">    id_str : str</span>
+<span class="sd">        The ID describing the target OMERO object, e.g.</span>
+<span class="sd">        * `G:23:Image:42`</span>
+<span class="sd">        * `G:4:Dataset:77`</span>
+<span class="sd">    annotation : dict(dict)</span>
+<span class="sd">        The map annotation as returned by `hrm_omero.hrm.parse_summary()`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bool</span>
+<span class="sd">        True in case of success, False otherwise.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    RuntimeError</span>
+<span class="sd">        Raised in case re-establishing the OMERO connection fails.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">set_session_group</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">obj_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No object ID given, not adding annotation &gt;&gt;&gt;</span><span class="si">{</span><span class="n">annotation</span><span class="si">}</span><span class="s2">&lt;&lt;&lt;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">target_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">target_obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to identify target object </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> in OMERO!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">for</span> <span class="n">section</span> <span class="ow">in</span> <span class="n">annotation</span><span class="p">:</span>
+        <span class="n">namespace</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Huygens Remote Manager - </span><span class="si">{</span><span class="n">section</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">map_ann</span> <span class="o">=</span> <span class="n">omero</span><span class="o">.</span><span class="n">gateway</span><span class="o">.</span><span class="n">MapAnnotationWrapper</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
+        <span class="n">map_ann</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">annotation</span><span class="p">[</span><span class="n">section</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="n">map_ann</span><span class="o">.</span><span class="n">setNs</span><span class="p">(</span><span class="n">namespace</span><span class="p">)</span>
+        <span class="n">map_ann</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="n">target_obj</span><span class="o">.</span><span class="n">linkAnnotation</span><span class="p">(</span><span class="n">map_ann</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Added key-value annotation using namespace [</span><span class="si">{</span><span class="n">namespace</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully added annotation to </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">True</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Add a key-value "map" annotation to an OMERO object.</p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>conn</strong> (omero.gateway.BlitzGateway):
+The OMERO connection object.</li>
+<li><strong>id_str</strong> (str):
+The ID describing the target OMERO object, e.g.
+<ul>
+<li><code>G:23:Image:42</code></li>
+<li><code>G:4:Dataset:77</code></li>
+</ul></li>
+<li><strong>annotation</strong> (dict(dict)):
+The map annotation as returned by <code><a href="hrm.html#parse_summary">hrm_omero.hrm.parse_summary()</a></code>.</li>
+</ul>
+
+<h6 id="returns">Returns</h6>
+
+<ul>
+<li><strong>bool</strong>: True in case of success, False otherwise.</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>RuntimeError</strong>: Raised in case re-establishing the OMERO connection fails.</li>
+</ul>
+</div>
+
+
+                </section>
+                <section id="add_annotation_tag">
+                            <div class="attr function"><a class="headerlink" href="#add_annotation_tag">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">add_annotation_tag</span><span class="signature">(conn, gid, annotation, obj_id, obj_type=&#39;Image&#39;, desc=None)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">add_annotation_tag</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">annotation</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">,</span> <span class="n">obj_type</span><span class="o">=</span><span class="s2">&quot;Image&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">obj_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No object ID given, not adding annotation &gt;&gt;&gt;</span><span class="si">{</span><span class="n">annotation</span><span class="si">}</span><span class="s2">&lt;&lt;&lt;&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="c1"># the connection might be closed (e.g. after importing an image), so reconnect:</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">conn</span><span class="o">.</span><span class="n">_connected</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=protected-access</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Failed to (re-)establish connection to OMERO!&quot;</span><span class="p">)</span>
+
+    <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
+    <span class="n">target_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">target_obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to identify target object </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> in OMERO!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="n">tag_ann</span> <span class="o">=</span> <span class="n">omero</span><span class="o">.</span><span class="n">gateway</span><span class="o">.</span><span class="n">TagAnnotationWrapper</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
+    <span class="n">tag_ann</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">desc</span><span class="p">:</span>
+        <span class="n">tag_ann</span><span class="o">.</span><span class="n">setDescription</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
+    <span class="n">tag_ann</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="n">target_obj</span><span class="o">.</span><span class="n">linkAnnotation</span><span class="p">(</span><span class="n">tag_ann</span><span class="p">)</span>
+
+    <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully added annotation to </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="kc">True</span>
+</pre></div>
+
+        </details>
+
+    
 
                 </section>
     </main>

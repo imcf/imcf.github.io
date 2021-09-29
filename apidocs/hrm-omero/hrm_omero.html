@@ -46,14 +46,38 @@
       <li><a href="#uploading-an-image-from-the-local-file-system-to-omero">Uploading an image from the local file system to OMERO</a></li>
     </ul></li>
   </ul></li>
+  <li><a href="#developing-the-hrm-omero-connector">Developing the HRM-OMERO connector</a>
+  <ul>
+    <li><a href="#using-poetry">Using poetry</a></li>
+    <li><a href="#installing-a-pre-release-from-testpypi">Installing a pre-release from TestPyPI</a></li>
+    <li><a href="#generating-documentation">Generating Documentation</a></li>
+    <li><a href="#todo-list">ToDo list</a></li>
+  </ul></li>
+  <li><a href="#changelog">Changelog</a>
+  <ul>
+    <li><a href="#040">0.4.0</a>
+    <ul>
+      <li><a href="#new">New</a></li>
+      <li><a href="#changes">Changes</a></li>
+      <li><a href="#fixes">Fixes</a></li>
+    </ul></li>
+  </ul></li>
+  <li><a href="#api-changes">API Changes</a>
+  <ul>
+    <li><a href="#hrm_config2"><a href="https://github.com/aarpon/hrm/blob/master/bin/hrm_config.py"><code>hrm_config</code></a></a></li>
+    <li><a href="#ome_hrm1"><a href="https://github.com/aarpon/hrm/blob/master/bin/ome_hrm.py"><code>ome_hrm</code></a></a></li>
+  </ul></li>
 </ul>
 
 
                     <h2>Submodules</h2>
                     <ul>
                             <li><a href="hrm_omero/cli.html">hrm_omero.cli</a></li>
+                            <li><a href="hrm_omero/decorators.html">hrm_omero.decorators</a></li>
                             <li><a href="hrm_omero/formatting.html">hrm_omero.formatting</a></li>
+                            <li><a href="hrm_omero/group.html">hrm_omero.group</a></li>
                             <li><a href="hrm_omero/hrm.html">hrm_omero.hrm</a></li>
+                            <li><a href="hrm_omero/misc.html">hrm_omero.misc</a></li>
                             <li><a href="hrm_omero/omero.html">hrm_omero.omero</a></li>
                             <li><a href="hrm_omero/transfer.html">hrm_omero.transfer</a></li>
                             <li><a href="hrm_omero/tree.html">hrm_omero.tree</a></li>
@@ -77,8 +101,8 @@ hrm_omero    </h1>
 
 <h1 id="the-hrm-omero-connector">The HRM-OMERO connector</h1>
 
-<p>This project provides a connector to allow for communication between an <a href="https://huygens-rm.org/">HRM (Huygens
-Remote Manager)</a> and an <a href="https://www.openmicroscopy.org/omero/">OMERO server</a>.</p>
+<p>This project provides a connector to allow for communication between an <a href="https://github.com/aarpon/hrm/blob/master/bin/ome_hrm.py">HRM (Huygens
+Remote Manager)</a> and an <a href="https://github.com/aarpon/hrm/blob/master/bin/hrm_config.py">OMERO server</a>.</p>
 
 <p>Its purpose is to simplify the data transfer by allowing raw images to be downloaded
 from OMERO as well as uploading deconvolution results back to OMERO directly from within
@@ -226,6 +250,209 @@ by HRM will usually end up in the web server's error log (as they go to <code>st
     --dset <span class="s2">&quot;G:4:Dataset:65432&quot;</span> <span class="se">\</span>
     --file test-image.tif
 </code></pre></div>
+
+<h1 id="developing-the-hrm-omero-connector">Developing the HRM-OMERO connector</h1>
+
+<h2 id="using-poetry">Using poetry</h2>
+
+<p>The project is using <a href="https://python-poetry.org/">poetry</a> for packaging and dependency management. To set up a
+development environment use this command, it will set up a fresh <em>virtual environment</em>
+with the correct dependencies and install the project in <strong><em>editable</em></strong> mode:</p>
+
+<div class="codehilite"><pre><span></span><code>git clone https://github.com/imcf/hrm-omero
+<span class="nb">cd</span> hrm-omero
+poetry install
+</code></pre></div>
+
+<h2 id="installing-a-pre-release-from-testpypi">Installing a pre-release from TestPyPI</h2>
+
+<p>To make dependency resolution work with the test repository a command like this can be
+used:</p>
+
+<div class="codehilite"><pre><span></span><code>pip install <span class="se">\</span>
+    -i https://test.pypi.org/simple/ <span class="se">\</span>
+    --extra-index-url https://pypi.org/simple <span class="se">\</span>
+    hrm-omero<span class="o">==</span><span class="m">0</span>.3.2.dev0
+</code></pre></div>
+
+<h2 id="generating-documentation">Generating Documentation</h2>
+
+<p>The project is using <a href="https://pdoc.dev/">pdoc</a> for generating API documentation. To update or (re-)
+generate the HTML documentation use this <code>poetry</code> command:</p>
+
+<div class="codehilite"><pre><span></span><code>poetry run pdoc --docformat numpy --output-directory docs/ src/hrm_omero/
+</code></pre></div>
+
+<h2 id="todo-list">ToDo list</h2>
+
+<ul>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> use "key-value pairs" for the HRM job parameter summaries</li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> trees for different groups
+<ul>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> (REJECTED) requesting groups through a commandline option</li>
+</ul></li>
+<li><input type="checkbox" class="task-list-item-checkbox" disabled> logging
+<ul>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> proper logging (<a href="https://github.com/Delgan/loguru">loguru</a>)</li>
+<li><input type="checkbox" class="task-list-item-checkbox" disabled> separate logfile for the connector</li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> adjust log verbosity through a parameter</li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> adjust log verbosity through the configuration file</li>
+</ul></li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> allow debug logging of the "omero import" call
+<ul>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> (REJECTED) requested through a command line argument</li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> through the configuration file</li>
+</ul></li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> (REJECTED) offer download of OME-TIFFs</li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> don't use a command line parameter for the OMERO password</li>
+</ul>
+
+<h1 id="changelog">Changelog</h1>
+
+<h2 id="040">0.4.0</h2>
+
+<h3 id="new">New</h3>
+
+<ul>
+<li>An environment variable <code>OMERO_PASSWORD</code> can (and should!) now be used to supply the
+sensitive part of the user credentials that are necessary to connect to OMERO. This
+avoids having the password as plain-text in the system's process list (e.g. when
+calling <code>ps fu -e</code> or similar) and also prevents it from showing up in an annotated
+stack trace in case an uncaught exception is raised.</li>
+<li>Log level of the HRM-OMERO connector itself can now be set through the configuration
+option <code>OMERO_CONNECTOR_LOGLEVEL</code> in the HRM config file.</li>
+<li>Debug logging for the OMERO <em>import call</em> can now be requested be setting the
+configuration option <code>OMERO_DEBUG_LOG</code> in the HRM config file.</li>
+<li><code><a href="hrm_omero/hrm.html#parse_summary">hrm_omero.hrm.parse_summary()</a></code> has been added to provide a function for parsing the
+parameter summary from an HRM job into a (nested) dict.</li>
+<li><code><a href="hrm_omero/hrm.html#parse_job_basename">hrm_omero.hrm.parse_job_basename()</a></code> has been added to identify the base name of all
+files that belong to the set of results from a certain HRM job.</li>
+<li><code><a href="hrm_omero/omero.html#add_annotation_keyvalue">hrm_omero.omero.add_annotation_keyvalue()</a></code> can be used to add so-called <a href="https://docs.openmicroscopy.org/omero/5.6/developers/Python.html#write-data">Map
+Annotations</a> (key-value pairs) to objects in OMERO.</li>
+<li><code><a href="hrm_omero/misc.html#printlog">hrm_omero.misc.printlog()</a></code> can be used to push a message to the log and stdout.</li>
+<li>Unit tests using <a href="https://docs.pytest.org/">pytest</a> and <a href="https://pypi.org/project/pytest-cov/">pytest-cov</a> (incomplete).</li>
+</ul>
+
+<h3 id="changes">Changes</h3>
+
+<ul>
+<li>Uploading images to OMERO into another group than the user's default one is now
+properly supported.</li>
+<li>HRM job parameter summaries are now being added as OMERO <a href="https://docs.openmicroscopy.org/omero/5.6/developers/Python.html#write-data">"Map Annotations"</a>
+instead of simply being a comment string.</li>
+<li>The function <code><a href="hrm_omero/omero.html#connect">hrm_omero.omero.connect()</a></code> is now deprecated and will be removed in a
+subsequent release.</li>
+<li>Functions <code><a href="hrm_omero/transfer.html#to_omero">hrm_omero.transfer.to_omero()</a></code> and <code><a href="hrm_omero/transfer.html#from_omero">hrm_omero.transfer.from_omero()</a></code> are
+now raising a <code>ValueError</code> in case the provided <code>id_str</code> is malformed.</li>
+<li>Various improvements on log messages.</li>
+<li>Unit string literal <code>µm</code> is no longer converted to <code>um</code> in parameter summaries.</li>
+<li>New dependencies: <a href="https://pypi.org/project/Pillow/">Pillow</a></li>
+</ul>
+
+<h3 id="fixes">Fixes</h3>
+
+<ul>
+<li>Thumbnail download has been adapted to recent code changes in OMERO.</li>
+</ul>
+
+<h1 id="api-changes">API Changes</h1>
+
+<p>The tables below describe the API changes compared to the <a href="https://github.com/aarpon/hrm/blob/master/bin/ome_hrm.py">"integrated" HRM-OMERO
+connector</a> that used to be shipped with the HRM itself previously.</p>
+
+<h2 id="hrm_config2"><a href="https://github.com/aarpon/hrm/blob/master/bin/hrm_config.py"><code>hrm_config</code></a></h2>
+
+<table>
+<thead>
+<tr>
+  <th><code>hrm_config</code></th>
+  <th><code><a href="">hrm_omero</a></code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>parse_hrm_conf()</code></td>
+  <td><code>hrm.parse_config()</code></td>
+</tr>
+<tr>
+  <td><code>check_hrm_conf()</code></td>
+  <td><code>hrm.check_config()</code></td>
+</tr>
+</tbody>
+</table>
+
+<h2 id="ome_hrm1"><a href="https://github.com/aarpon/hrm/blob/master/bin/ome_hrm.py"><code>ome_hrm</code></a></h2>
+
+<table>
+<thead>
+<tr>
+  <th><code>ome_hrm</code></th>
+  <th><code><a href="">hrm_omero</a></code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><code>omero_login()</code></td>
+  <td><code>omero.connect()</code></td>
+</tr>
+<tr>
+  <td><code>check_credentials()</code></td>
+  <td><code>omero.check_credentials()</code></td>
+</tr>
+<tr>
+  <td><code>gen_obj_dict()</code></td>
+  <td><code>tree.gen_obj_dict()</code></td>
+</tr>
+<tr>
+  <td><code>gen_children()</code></td>
+  <td><code>tree.gen_children()</code></td>
+</tr>
+<tr>
+  <td><code>gen_base_tree()</code></td>
+  <td><code>tree.gen_base_tree()</code></td>
+</tr>
+<tr>
+  <td><code>gen_group_tree()</code></td>
+  <td><code>tree.gen_group_tree()</code></td>
+</tr>
+<tr>
+  <td><code>tree_to_json()</code></td>
+  <td><code>formatting.tree_to_json()</code></td>
+</tr>
+<tr>
+  <td><code>print_children_json()</code></td>
+  <td><code>formatting.print_children_json()</code></td>
+</tr>
+<tr>
+  <td><code>gen_parameter_summary()</code></td>
+  <td><code>hrm.job_parameter_summary()</code></td>
+</tr>
+<tr>
+  <td><code>omero_to_hrm()</code></td>
+  <td><code>transfer.from_omero()</code></td>
+</tr>
+<tr>
+  <td><code>hrm_to_omero()</code></td>
+  <td><code>transfer.to_omero()</code></td>
+</tr>
+<tr>
+  <td><code>download_thumb()</code></td>
+  <td><code>transfer.fetch_thumbnail()</code></td>
+</tr>
+<tr>
+  <td><code>bool_to_exitstatus()</code></td>
+  <td><code>cli.bool_to_exitstatus()</code></td>
+</tr>
+<tr>
+  <td><code>parse_arguments()</code></td>
+  <td><code>cli.parse_arguments()</code></td>
+</tr>
+<tr>
+  <td><code>main()</code></td>
+  <td><code>cli.run_task()</code></td>
+</tr>
+</tbody>
+</table>
 </div>
 
                         <details>
@@ -233,9 +460,15 @@ by HRM will usually end up in the web server's error log (as they go to <code>st
             <div class="codehilite"><pre><span></span><span class="sd">&quot;&quot;&quot;OMERO connector for the Huygens Remote Manager (HRM).</span>
 
 <span class="sd">.. include:: ../../README.md</span>
+
+<span class="sd">.. include:: ../../DEVELOPMENT.md</span>
+
+<span class="sd">.. include:: ../../CHANGELOG.md</span>
+
+<span class="sd">.. include:: ../../API-CHANGES.md</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.3.0&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.4.0-dev2&quot;</span>
 </pre></div>
 
         </details>
