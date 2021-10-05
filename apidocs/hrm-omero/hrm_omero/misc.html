@@ -31,7 +31,22 @@
                     <h2>API Documentation</h2>
                         <ul class="memberlist">
             <li>
+                    <a class="class" href="#OmeroId">OmeroId</a>
+                            <ul class="memberlist">
+                        <li>
+                                <a class="function" href="#OmeroId.__init__">OmeroId</a>
+                        </li>
+                        <li>
+                                <a class="function" href="#OmeroId.parse_id_str">parse_id_str</a>
+                        </li>
+                </ul>
+
+            </li>
+            <li>
                     <a class="function" href="#printlog">printlog</a>
+            </li>
+            <li>
+                    <a class="function" href="#parse_id_str">parse_id_str</a>
             </li>
     </ul>
 
@@ -59,6 +74,78 @@
 <span class="kn">from</span> <span class="nn">loguru</span> <span class="kn">import</span> <span class="n">logger</span> <span class="k">as</span> <span class="n">log</span>
 
 
+<span class="k">class</span> <span class="nc">OmeroId</span><span class="p">():</span>
+
+    <span class="sd">&quot;&quot;&quot;Representation of a (group-qualified) OMERO object ID.</span>
+
+<span class="sd">    The purpose of this class is to facilitate parsing and access of the</span>
+<span class="sd">    ubiquitious target IDs denoting objects in OMERO. The constructor takes</span>
+<span class="sd">    the common string of the form `G:[gid]:[type]:[iid]` as an input and sets</span>
+<span class="sd">    the properties `group`, `obj_type` and `obj_id` accordingly.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">parse_id_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse and validate an ID string of the form `G:[gid]:[type]:[oid]`</span>
+
+<span class="sd">        The method will parse the given string and set the object&#39;s `group`, `obj_type`</span>
+<span class="sd">        and `obj_id` values accordingly. In case for `id_str` the special value `ROOT`</span>
+<span class="sd">        was supplied, `group` and `obj_id` will be set to `-1` whereas `obj_type` will</span>
+<span class="sd">        be set to `BaseTree`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        id_str : str</span>
+<span class="sd">            The ID of an OMERO object, e.g.</span>
+<span class="sd">            * `G:23:Image:42`</span>
+<span class="sd">            * `G:4:Dataset:765487`</span>
+<span class="sd">            * special case `ROOT`, same as `G:-1:BaseTree:-1`</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            Raised in case a malformed `id_str` was given.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">id_str</span> <span class="o">==</span> <span class="s2">&quot;ROOT&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">=</span> <span class="s2">&quot;BaseTree&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Converted special ID &#39;ROOT&#39; to [</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">group_type</span><span class="p">,</span> <span class="n">group_id</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">id_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">group_id</span><span class="p">)</span>  <span class="c1"># raises a TypeError if cast to int fails</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">obj_id</span><span class="p">)</span>  <span class="c1"># raises a TypeError if cast to int fails</span>
+            <span class="k">if</span> <span class="n">group_type</span> <span class="o">!=</span> <span class="s2">&quot;G&quot;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="k">if</span> <span class="n">obj_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;Image&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Dataset&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Project&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Experimenter&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ExperimenterGroup&quot;</span><span class="p">,</span>
+            <span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="c1"># pylint: disable-msg=raise-missing-from</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Malformed `id_str`, expecting `G:[gid]:[type]:[oid]`!&quot;</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validated ID string: group=</span><span class="si">{</span><span class="n">group_id</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="n">group_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">=</span> <span class="n">obj_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span> <span class="o">=</span> <span class="n">obj_id</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;G:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">&quot;</span>
+
+
+
 <span class="k">def</span> <span class="nf">printlog</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Simple wrapper to push a message to stdout and logging.</span>
 
@@ -74,11 +161,225 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+    <span class="sd">&quot;&quot;&quot;Legacy wrapper to `hrm_omero.misc.OmeroId`.&quot;&quot;&quot;</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DEPRECATED call to </span><span class="si">{</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
+    <span class="n">omero_id</span> <span class="o">=</span> <span class="n">OmeroId</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span>
 </pre></div>
 
         </details>
 
             </section>
+                <section id="OmeroId">
+                                <div class="attr class">
+        <a class="headerlink" href="#OmeroId">#&nbsp;&nbsp</a>
+
+        
+        <span class="def">class</span>
+        <span class="name">OmeroId</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">OmeroId</span><span class="p">():</span>
+
+    <span class="sd">&quot;&quot;&quot;Representation of a (group-qualified) OMERO object ID.</span>
+
+<span class="sd">    The purpose of this class is to facilitate parsing and access of the</span>
+<span class="sd">    ubiquitious target IDs denoting objects in OMERO. The constructor takes</span>
+<span class="sd">    the common string of the form `G:[gid]:[type]:[iid]` as an input and sets</span>
+<span class="sd">    the properties `group`, `obj_type` and `obj_id` accordingly.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">parse_id_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse and validate an ID string of the form `G:[gid]:[type]:[oid]`</span>
+
+<span class="sd">        The method will parse the given string and set the object&#39;s `group`, `obj_type`</span>
+<span class="sd">        and `obj_id` values accordingly. In case for `id_str` the special value `ROOT`</span>
+<span class="sd">        was supplied, `group` and `obj_id` will be set to `-1` whereas `obj_type` will</span>
+<span class="sd">        be set to `BaseTree`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        id_str : str</span>
+<span class="sd">            The ID of an OMERO object, e.g.</span>
+<span class="sd">            * `G:23:Image:42`</span>
+<span class="sd">            * `G:4:Dataset:765487`</span>
+<span class="sd">            * special case `ROOT`, same as `G:-1:BaseTree:-1`</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            Raised in case a malformed `id_str` was given.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">id_str</span> <span class="o">==</span> <span class="s2">&quot;ROOT&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">=</span> <span class="s2">&quot;BaseTree&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Converted special ID &#39;ROOT&#39; to [</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">group_type</span><span class="p">,</span> <span class="n">group_id</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">id_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">group_id</span><span class="p">)</span>  <span class="c1"># raises a TypeError if cast to int fails</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">obj_id</span><span class="p">)</span>  <span class="c1"># raises a TypeError if cast to int fails</span>
+            <span class="k">if</span> <span class="n">group_type</span> <span class="o">!=</span> <span class="s2">&quot;G&quot;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="k">if</span> <span class="n">obj_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;Image&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Dataset&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Project&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Experimenter&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ExperimenterGroup&quot;</span><span class="p">,</span>
+            <span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="c1"># pylint: disable-msg=raise-missing-from</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Malformed `id_str`, expecting `G:[gid]:[type]:[oid]`!&quot;</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validated ID string: group=</span><span class="si">{</span><span class="n">group_id</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="n">group_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">=</span> <span class="n">obj_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span> <span class="o">=</span> <span class="n">obj_id</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;G:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">&quot;</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Representation of a (group-qualified) OMERO object ID.</p>
+
+<p>The purpose of this class is to facilitate parsing and access of the
+ubiquitious target IDs denoting objects in OMERO. The constructor takes
+the common string of the form <code>G:[gid]:[type]:[iid]</code> as an input and sets
+the properties <code>group</code>, <code>obj_type</code> and <code>obj_id</code> accordingly.</p>
+</div>
+
+
+                            <div id="OmeroId.__init__" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#OmeroId.__init__">#&nbsp;&nbsp</a>
+
+        
+            <span class="name">OmeroId</span><span class="signature">(id_str)</span>
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_str</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
+</pre></div>
+
+        </details>
+
+    
+
+                            </div>
+                            <div id="OmeroId.parse_id_str" class="classattr">
+                                        <div class="attr function"><a class="headerlink" href="#OmeroId.parse_id_str">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">parse_id_str</span><span class="signature">(self, id_str)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">parse_id_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse and validate an ID string of the form `G:[gid]:[type]:[oid]`</span>
+
+<span class="sd">        The method will parse the given string and set the object&#39;s `group`, `obj_type`</span>
+<span class="sd">        and `obj_id` values accordingly. In case for `id_str` the special value `ROOT`</span>
+<span class="sd">        was supplied, `group` and `obj_id` will be set to `-1` whereas `obj_type` will</span>
+<span class="sd">        be set to `BaseTree`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        id_str : str</span>
+<span class="sd">            The ID of an OMERO object, e.g.</span>
+<span class="sd">            * `G:23:Image:42`</span>
+<span class="sd">            * `G:4:Dataset:765487`</span>
+<span class="sd">            * special case `ROOT`, same as `G:-1:BaseTree:-1`</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            Raised in case a malformed `id_str` was given.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">id_str</span> <span class="o">==</span> <span class="s2">&quot;ROOT&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">=</span> <span class="s2">&quot;BaseTree&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Converted special ID &#39;ROOT&#39; to [</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">group_type</span><span class="p">,</span> <span class="n">group_id</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">id_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">group_id</span><span class="p">)</span>  <span class="c1"># raises a TypeError if cast to int fails</span>
+            <span class="nb">int</span><span class="p">(</span><span class="n">obj_id</span><span class="p">)</span>  <span class="c1"># raises a TypeError if cast to int fails</span>
+            <span class="k">if</span> <span class="n">group_type</span> <span class="o">!=</span> <span class="s2">&quot;G&quot;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span>
+            <span class="k">if</span> <span class="n">obj_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+                <span class="s2">&quot;Image&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Dataset&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Project&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;Experimenter&quot;</span><span class="p">,</span>
+                <span class="s2">&quot;ExperimenterGroup&quot;</span><span class="p">,</span>
+            <span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+            <span class="c1"># pylint: disable-msg=raise-missing-from</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Malformed `id_str`, expecting `G:[gid]:[type]:[oid]`!&quot;</span><span class="p">)</span>
+
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validated ID string: group=</span><span class="si">{</span><span class="n">group_id</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="n">group_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">=</span> <span class="n">obj_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span> <span class="o">=</span> <span class="n">obj_id</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Parse and validate an ID string of the form <code>G:[gid]:[type]:[oid]</code></p>
+
+<p>The method will parse the given string and set the object's <code>group</code>, <code>obj_type</code>
+and <code>obj_id</code> values accordingly. In case for <code>id_str</code> the special value <code>ROOT</code>
+was supplied, <code>group</code> and <code>obj_id</code> will be set to <code>-1</code> whereas <code>obj_type</code> will
+be set to <code>BaseTree</code>.</p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>id_str</strong> (str):
+The ID of an OMERO object, e.g.
+<ul>
+<li><code>G:23:Image:42</code></li>
+<li><code>G:4:Dataset:765487</code></li>
+<li>special case <code>ROOT</code>, same as <code>G:-1:BaseTree:-1</code></li>
+</ul></li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>ValueError</strong>: Raised in case a malformed <code>id_str</code> was given.</li>
+</ul>
+</div>
+
+
+                            </div>
+                </section>
                 <section id="printlog">
                             <div class="attr function"><a class="headerlink" href="#printlog">#&nbsp;&nbsp</a>
 
@@ -121,6 +422,30 @@ The log level of the message as defined by loguru.</li>
 <li><strong>message</strong> (str):
 The message to be printed and logged.</li>
 </ul>
+</div>
+
+
+                </section>
+                <section id="parse_id_str">
+                            <div class="attr function"><a class="headerlink" href="#parse_id_str">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">parse_id_str</span><span class="signature">(id_str)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+    <span class="sd">&quot;&quot;&quot;Legacy wrapper to `hrm_omero.misc.OmeroId`.&quot;&quot;&quot;</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DEPRECATED call to </span><span class="si">{</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
+    <span class="n">omero_id</span> <span class="o">=</span> <span class="n">OmeroId</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Legacy wrapper to <code><a href="#OmeroId">hrm_omero.misc.OmeroId</a></code>.</p>
 </div>
 
 

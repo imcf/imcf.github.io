@@ -70,10 +70,12 @@
 <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">hrm</span>
+<span class="kn">from</span> <span class="nn">.decorators</span> <span class="kn">import</span> <span class="n">connect_and_set_group</span>
 <span class="kn">from</span> <span class="nn">.omero</span> <span class="kn">import</span> <span class="n">extract_image_id</span><span class="p">,</span> <span class="n">add_annotation_keyvalue</span>
-<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">printlog</span>
+<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">printlog</span><span class="p">,</span> <span class="n">parse_id_str</span>
 
 
+<span class="nd">@connect_and_set_group</span>
 <span class="k">def</span> <span class="nf">from_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Download the corresponding original file(s) from an image ID.</span>
 
@@ -101,22 +103,17 @@
 <span class="sd">    -------</span>
 <span class="sd">    bool</span>
 <span class="sd">        True in case the download was successful, False otherwise.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        Raised in case an object that is not of type `Image` was requested.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">image_id</span> <span class="o">=</span> <span class="n">id_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to download </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> to [</span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">obj_type</span> <span class="o">!=</span> <span class="s2">&quot;Image&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;An &#39;--imageid&#39; ID of the form &#39;G:7:Image:98765&#39; is required!&quot;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">image_id</span><span class="p">:</span>
-        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Malformed ID &#39;</span><span class="si">{</span><span class="n">id_str</span><span class="si">}</span><span class="s2">&#39;. Expecting `G:[gid]:[type]:[iid]`&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="c1"># Provided that the tree displays only groups that the current user has access to,</span>
-    <span class="c1"># cross-group query (introduced in OMERO 4.4) is a generic way to get the image.</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">gid</span><span class="p">:</span>
-        <span class="n">gid</span> <span class="o">=</span> <span class="s2">&quot;-1&quot;</span>
-    <span class="n">conn</span><span class="o">.</span><span class="n">SERVICE_OPTS</span><span class="o">.</span><span class="n">setOmeroGroup</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
-    <span class="c1"># another way for switching the group was suggested in HRM upstream ticket #539:</span>
-    <span class="c1"># conn.setGroupForSession(gid)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Currently only the download of `Image` objects is supported!&quot;</span><span class="p">)</span>
 
     <span class="c1"># check if dest is a directory, rewrite it otherwise:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dest</span><span class="p">):</span>
@@ -126,14 +123,14 @@
     <span class="c1"># use image objects and getFileset() methods to determine original files,</span>
     <span class="c1"># see the following OME forum thread for some more details:</span>
     <span class="c1"># https://www.openmicroscopy.org/community/viewtopic.php?f=6&amp;t=7563</span>
-    <span class="n">image_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="s2">&quot;Image&quot;</span><span class="p">,</span> <span class="n">image_id</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">image_obj</span><span class="p">:</span>
-        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: can&#39;t find image with ID </span><span class="si">{</span><span class="n">image_id</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
+    <span class="n">target_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">target_obj</span><span class="p">:</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: can&#39;t find image with ID </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="n">fset</span> <span class="o">=</span> <span class="n">image_obj</span><span class="o">.</span><span class="n">getFileset</span><span class="p">()</span>
+    <span class="n">fset</span> <span class="o">=</span> <span class="n">target_obj</span><span class="o">.</span><span class="n">getFileset</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">fset</span><span class="p">:</span>
-        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: no original file(s) for image </span><span class="si">{</span><span class="n">image_id</span><span class="si">}</span><span class="s2"> found!&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: no original file(s) for image </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> found!&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="c1"># NOTE: the idea of offering to download the OME-TIFF from OMERO (i.e. the converted</span>
@@ -161,7 +158,7 @@
     <span class="c1"># NOTE: for filesets with a single file or e.g. ICS/IDS pairs it makes</span>
     <span class="c1"># sense to use the target name of the first file to construct the name for</span>
     <span class="c1"># the thumbnail, but it is unclear whether this is a universal approach:</span>
-    <span class="n">fetch_thumbnail</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">image_id</span><span class="p">,</span> <span class="n">downloads</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">fetch_thumbnail</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">,</span> <span class="n">downloads</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">return</span> <span class="kc">True</span>
 
 
@@ -186,6 +183,7 @@
 <span class="sd">        True in case the download was successful, False otherwise.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to fetch thumbnail for OMERO image [</span><span class="si">{</span><span class="n">image_id</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Requested target location: [</span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
     <span class="n">image_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="s2">&quot;Image&quot;</span><span class="p">,</span> <span class="n">image_id</span><span class="p">)</span>
     <span class="n">image_data</span> <span class="o">=</span> <span class="n">image_obj</span><span class="o">.</span><span class="n">getThumbnail</span><span class="p">()</span>
     <span class="n">thumbnail</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">image_data</span><span class="p">))</span>
@@ -326,14 +324,16 @@
                 <section id="from_omero">
                             <div class="attr function"><a class="headerlink" href="#from_omero">#&nbsp;&nbsp</a>
 
-        
+                <div class="decorator">@connect_and_set_group</div>
+
             <span class="def">def</span>
             <span class="name">from_omero</span><span class="signature">(conn, id_str, dest)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">from_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="nd">@connect_and_set_group</span>
+<span class="k">def</span> <span class="nf">from_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Download the corresponding original file(s) from an image ID.</span>
 
 <span class="sd">    This only works for image IDs that were created with OMERO 5.0 or later as previous</span>
@@ -360,22 +360,17 @@
 <span class="sd">    -------</span>
 <span class="sd">    bool</span>
 <span class="sd">        True in case the download was successful, False otherwise.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        Raised in case an object that is not of type `Image` was requested.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">image_id</span> <span class="o">=</span> <span class="n">id_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to download </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> to [</span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+
     <span class="k">if</span> <span class="n">obj_type</span> <span class="o">!=</span> <span class="s2">&quot;Image&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;An &#39;--imageid&#39; ID of the form &#39;G:7:Image:98765&#39; is required!&quot;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">image_id</span><span class="p">:</span>
-        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Malformed ID &#39;</span><span class="si">{</span><span class="n">id_str</span><span class="si">}</span><span class="s2">&#39;. Expecting `G:[gid]:[type]:[iid]`&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="c1"># Provided that the tree displays only groups that the current user has access to,</span>
-    <span class="c1"># cross-group query (introduced in OMERO 4.4) is a generic way to get the image.</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">gid</span><span class="p">:</span>
-        <span class="n">gid</span> <span class="o">=</span> <span class="s2">&quot;-1&quot;</span>
-    <span class="n">conn</span><span class="o">.</span><span class="n">SERVICE_OPTS</span><span class="o">.</span><span class="n">setOmeroGroup</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
-    <span class="c1"># another way for switching the group was suggested in HRM upstream ticket #539:</span>
-    <span class="c1"># conn.setGroupForSession(gid)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Currently only the download of `Image` objects is supported!&quot;</span><span class="p">)</span>
 
     <span class="c1"># check if dest is a directory, rewrite it otherwise:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dest</span><span class="p">):</span>
@@ -385,14 +380,14 @@
     <span class="c1"># use image objects and getFileset() methods to determine original files,</span>
     <span class="c1"># see the following OME forum thread for some more details:</span>
     <span class="c1"># https://www.openmicroscopy.org/community/viewtopic.php?f=6&amp;t=7563</span>
-    <span class="n">image_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="s2">&quot;Image&quot;</span><span class="p">,</span> <span class="n">image_id</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">image_obj</span><span class="p">:</span>
-        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: can&#39;t find image with ID </span><span class="si">{</span><span class="n">image_id</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
+    <span class="n">target_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">target_obj</span><span class="p">:</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: can&#39;t find image with ID </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="n">fset</span> <span class="o">=</span> <span class="n">image_obj</span><span class="o">.</span><span class="n">getFileset</span><span class="p">()</span>
+    <span class="n">fset</span> <span class="o">=</span> <span class="n">target_obj</span><span class="o">.</span><span class="n">getFileset</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">fset</span><span class="p">:</span>
-        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: no original file(s) for image </span><span class="si">{</span><span class="n">image_id</span><span class="si">}</span><span class="s2"> found!&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: no original file(s) for image </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> found!&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="c1"># NOTE: the idea of offering to download the OME-TIFF from OMERO (i.e. the converted</span>
@@ -420,7 +415,7 @@
     <span class="c1"># NOTE: for filesets with a single file or e.g. ICS/IDS pairs it makes</span>
     <span class="c1"># sense to use the target name of the first file to construct the name for</span>
     <span class="c1"># the thumbnail, but it is unclear whether this is a universal approach:</span>
-    <span class="n">fetch_thumbnail</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">image_id</span><span class="p">,</span> <span class="n">downloads</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">fetch_thumbnail</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">,</span> <span class="n">downloads</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">return</span> <span class="kc">True</span>
 </pre></div>
 
@@ -454,6 +449,12 @@ The destination path.</li>
 
 <ul>
 <li><strong>bool</strong>: True in case the download was successful, False otherwise.</li>
+</ul>
+
+<h6 id="raises">Raises</h6>
+
+<ul>
+<li><strong>ValueError</strong>: Raised in case an object that is not of type <code>Image</code> was requested.</li>
 </ul>
 </div>
 
@@ -490,6 +491,7 @@ The destination path.</li>
 <span class="sd">        True in case the download was successful, False otherwise.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to fetch thumbnail for OMERO image [</span><span class="si">{</span><span class="n">image_id</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Requested target location: [</span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
     <span class="n">image_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="s2">&quot;Image&quot;</span><span class="p">,</span> <span class="n">image_id</span><span class="p">)</span>
     <span class="n">image_data</span> <span class="o">=</span> <span class="n">image_obj</span><span class="o">.</span><span class="n">getThumbnail</span><span class="p">()</span>
     <span class="n">thumbnail</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">image_data</span><span class="p">))</span>

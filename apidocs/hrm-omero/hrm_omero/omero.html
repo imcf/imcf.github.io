@@ -43,7 +43,10 @@
                     <a class="function" href="#add_annotation_keyvalue">add_annotation_keyvalue</a>
             </li>
             <li>
-                    <a class="function" href="#add_annotation_tag">add_annotation_tag</a>
+                    <a class="function" href="#new_project">new_project</a>
+            </li>
+            <li>
+                    <a class="function" href="#new_dataset">new_dataset</a>
             </li>
     </ul>
 
@@ -73,12 +76,14 @@
 <span class="kn">import</span> <span class="nn">omero.gateway</span>
 
 <span class="kn">from</span> <span class="nn">.decorators</span> <span class="kn">import</span> <span class="n">connect_and_set_group</span>
-<span class="kn">from</span> <span class="nn">.group</span> <span class="kn">import</span> <span class="n">set_session_group</span>
-<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">printlog</span>
+<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">printlog</span><span class="p">,</span> <span class="n">parse_id_str</span>
 
 
 <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">passwd</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">4064</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Establish the connection to an OMERO server.</span>
+
+<span class="sd">    DEPRECATED function, rather use BlitzGateway&#39;s `connect()` in a context manager or</span>
+<span class="sd">    in a try/finally block to ensure the connection is properly `close()`d in any case!</span>
 
 <span class="sd">    NOTE: this does NOT check credentials - it only talks to the OMERO server to create</span>
 <span class="sd">    the connection object. To verify a login, use `check_credentials()`.</span>
@@ -115,7 +120,7 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    conn : omero.gateway.BlitzGateway</span>
-<span class="sd">        The connection object as returned by `connect()`.</span>
+<span class="sd">        The OMERO connection object.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -148,11 +153,11 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
             <span class="n">parsed</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parsed</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;Image&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parsed</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Image&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unexpected YAML retrieved from OMERO, unable to parse:</span><span class="se">\n</span><span class="si">{</span><span class="n">parsed</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="n">image_id</span> <span class="o">=</span> <span class="n">parsed</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;Image&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">image_id</span> <span class="o">=</span> <span class="n">parsed</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Image&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=broad-except</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Error parsing imported image ID from YAML output: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -169,9 +174,7 @@
 <span class="sd">    conn : omero.gateway.BlitzGateway</span>
 <span class="sd">        The OMERO connection object.</span>
 <span class="sd">    id_str : str</span>
-<span class="sd">        The ID describing the target OMERO object, e.g.</span>
-<span class="sd">        * `G:23:Image:42`</span>
-<span class="sd">        * `G:4:Dataset:77`</span>
+<span class="sd">        The ID of the OMERO image (e.g. `G:23:Image:42`).</span>
 <span class="sd">    annotation : dict(dict)</span>
 <span class="sd">        The map annotation as returned by `hrm_omero.hrm.parse_summary()`.</span>
 
@@ -185,12 +188,7 @@
 <span class="sd">    RuntimeError</span>
 <span class="sd">        Raised in case re-establishing the OMERO connection fails.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">set_session_group</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">obj_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No object ID given, not adding annotation &gt;&gt;&gt;</span><span class="si">{</span><span class="n">annotation</span><span class="si">}</span><span class="s2">&lt;&lt;&lt;&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
+    <span class="n">_</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
     <span class="n">target_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">target_obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to identify target object </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> in OMERO!&quot;</span><span class="p">)</span>
@@ -210,32 +208,64 @@
     <span class="k">return</span> <span class="kc">True</span>
 
 
-<span class="k">def</span> <span class="nf">add_annotation_tag</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">annotation</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">,</span> <span class="n">obj_type</span><span class="o">=</span><span class="s2">&quot;Image&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">obj_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No object ID given, not adding annotation &gt;&gt;&gt;</span><span class="si">{</span><span class="n">annotation</span><span class="si">}</span><span class="s2">&lt;&lt;&lt;&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
+<span class="c1"># def add_annotation_tag(conn, gid, annotation, obj_id, obj_type=&quot;Image&quot;, desc=None):</span>
+<span class="c1">#     if obj_id is None:</span>
+<span class="c1">#         log.warning(f&quot;No object ID given, not adding annotation &gt;&gt;&gt;{annotation}&lt;&lt;&lt;&quot;)</span>
+<span class="c1">#         return False</span>
 
-    <span class="c1"># the connection might be closed (e.g. after importing an image), so reconnect:</span>
-    <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">conn</span><span class="o">.</span><span class="n">_connected</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=protected-access</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Failed to (re-)establish connection to OMERO!&quot;</span><span class="p">)</span>
+<span class="c1">#     # the connection might be closed (e.g. after importing an image), so reconnect:</span>
+<span class="c1">#     conn.connect()</span>
+<span class="c1">#     if not conn._connected:  # pylint: disable-msg=protected-access</span>
+<span class="c1">#         raise RuntimeError(&quot;Failed to (re-)establish connection to OMERO!&quot;)</span>
 
-    <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
-    <span class="n">target_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">target_obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to identify target object </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> in OMERO!&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
+<span class="c1">#     conn.setGroupForSession(gid)</span>
+<span class="c1">#     target_obj = conn.getObject(obj_type, obj_id)</span>
+<span class="c1">#     if target_obj is None:</span>
+<span class="c1">#         log.warning(f&quot;Unable to identify target object {obj_id} in OMERO!&quot;)</span>
+<span class="c1">#         return False</span>
 
-    <span class="n">tag_ann</span> <span class="o">=</span> <span class="n">omero</span><span class="o">.</span><span class="n">gateway</span><span class="o">.</span><span class="n">TagAnnotationWrapper</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
-    <span class="n">tag_ann</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">desc</span><span class="p">:</span>
-        <span class="n">tag_ann</span><span class="o">.</span><span class="n">setDescription</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
-    <span class="n">tag_ann</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-    <span class="n">target_obj</span><span class="o">.</span><span class="n">linkAnnotation</span><span class="p">(</span><span class="n">tag_ann</span><span class="p">)</span>
+<span class="c1">#     tag_ann = omero.gateway.TagAnnotationWrapper(conn)</span>
+<span class="c1">#     tag_ann.setValue(annotation)</span>
+<span class="c1">#     if desc:</span>
+<span class="c1">#         tag_ann.setDescription(desc)</span>
+<span class="c1">#     tag_ann.save()</span>
+<span class="c1">#     target_obj.linkAnnotation(tag_ann)</span>
 
-    <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully added annotation to </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+<span class="c1">#     log.success(f&quot;Successfully added annotation to {obj_type}:{obj_id}.&quot;)</span>
 
-    <span class="k">return</span> <span class="kc">True</span>
+<span class="c1">#     return True</span>
+
+
+<span class="nd">@connect_and_set_group</span>
+<span class="k">def</span> <span class="nf">new_project</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">proj_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a new Project in OMERO.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    conn : omero.gateway.BlitzGateway</span>
+<span class="sd">        The OMERO connection object.</span>
+<span class="sd">    id_str : str</span>
+<span class="sd">        The ID of an OMERO object, e.g. `G:4:Experimenter:23`</span>
+<span class="sd">    proj_name : str</span>
+<span class="sd">        The name of the project to be created.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Creating Projects is not yet implemented.&quot;</span><span class="p">)</span>
+
+
+<span class="nd">@connect_and_set_group</span>
+<span class="k">def</span> <span class="nf">new_dataset</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a new Project in OMERO.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    conn : omero.gateway.BlitzGateway</span>
+<span class="sd">        The OMERO connection object.</span>
+<span class="sd">    id_str : str</span>
+<span class="sd">        The ID of an OMERO object, e.g. `G:4:Project:123`</span>
+<span class="sd">    ds_name : str</span>
+<span class="sd">        The name of the dataset to be created.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Creating Datasets is not yet implemented.&quot;</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -253,6 +283,9 @@
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">passwd</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">4064</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Establish the connection to an OMERO server.</span>
+
+<span class="sd">    DEPRECATED function, rather use BlitzGateway&#39;s `connect()` in a context manager or</span>
+<span class="sd">    in a try/finally block to ensure the connection is properly `close()`d in any case!</span>
 
 <span class="sd">    NOTE: this does NOT check credentials - it only talks to the OMERO server to create</span>
 <span class="sd">    the connection object. To verify a login, use `check_credentials()`.</span>
@@ -286,6 +319,9 @@
         </details>
 
             <div class="docstring"><p>Establish the connection to an OMERO server.</p>
+
+<p>DEPRECATED function, rather use BlitzGateway's <code><a href="#connect">connect()</a></code> in a context manager or
+in a try/finally block to ensure the connection is properly <code>close()</code>d in any case!</p>
 
 <p>NOTE: this does NOT check credentials - it only talks to the OMERO server to create
 the connection object. To verify a login, use <code><a href="#check_credentials">check_credentials()</a></code>.</p>
@@ -328,7 +364,7 @@ The OMERO port number, by default 4064.</li>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    conn : omero.gateway.BlitzGateway</span>
-<span class="sd">        The connection object as returned by `connect()`.</span>
+<span class="sd">        The OMERO connection object.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -352,7 +388,7 @@ The OMERO port number, by default 4064.</li>
 
 <ul>
 <li><strong>conn</strong> (omero.gateway.BlitzGateway):
-The connection object as returned by <code><a href="#connect">connect()</a></code>.</li>
+The OMERO connection object.</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -392,11 +428,11 @@ otherwise.</li>
     <span class="k">try</span><span class="p">:</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
             <span class="n">parsed</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parsed</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;Image&#39;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">parsed</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Image&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Unexpected YAML retrieved from OMERO, unable to parse:</span><span class="se">\n</span><span class="si">{</span><span class="n">parsed</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-        <span class="n">image_id</span> <span class="o">=</span> <span class="n">parsed</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;Image&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">image_id</span> <span class="o">=</span> <span class="n">parsed</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;Image&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=broad-except</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Error parsing imported image ID from YAML output: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
@@ -445,9 +481,7 @@ parsing the file failed for any reason.</li>
 <span class="sd">    conn : omero.gateway.BlitzGateway</span>
 <span class="sd">        The OMERO connection object.</span>
 <span class="sd">    id_str : str</span>
-<span class="sd">        The ID describing the target OMERO object, e.g.</span>
-<span class="sd">        * `G:23:Image:42`</span>
-<span class="sd">        * `G:4:Dataset:77`</span>
+<span class="sd">        The ID of the OMERO image (e.g. `G:23:Image:42`).</span>
 <span class="sd">    annotation : dict(dict)</span>
 <span class="sd">        The map annotation as returned by `hrm_omero.hrm.parse_summary()`.</span>
 
@@ -461,12 +495,7 @@ parsing the file failed for any reason.</li>
 <span class="sd">    RuntimeError</span>
 <span class="sd">        Raised in case re-establishing the OMERO connection fails.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">set_session_group</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">obj_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No object ID given, not adding annotation &gt;&gt;&gt;</span><span class="si">{</span><span class="n">annotation</span><span class="si">}</span><span class="s2">&lt;&lt;&lt;&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
+    <span class="n">_</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
     <span class="n">target_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">target_obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to identify target object </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> in OMERO!&quot;</span><span class="p">)</span>
@@ -496,11 +525,7 @@ parsing the file failed for any reason.</li>
 <li><strong>conn</strong> (omero.gateway.BlitzGateway):
 The OMERO connection object.</li>
 <li><strong>id_str</strong> (str):
-The ID describing the target OMERO object, e.g.
-<ul>
-<li><code>G:23:Image:42</code></li>
-<li><code>G:4:Dataset:77</code></li>
-</ul></li>
+The ID of the OMERO image (e.g. <code>G:23:Image:42</code>).</li>
 <li><strong>annotation</strong> (dict(dict)):
 The map annotation as returned by <code><a href="hrm.html#parse_summary">hrm_omero.hrm.parse_summary()</a></code>.</li>
 </ul>
@@ -520,47 +545,94 @@ The map annotation as returned by <code><a href="hrm.html#parse_summary">hrm_ome
 
 
                 </section>
-                <section id="add_annotation_tag">
-                            <div class="attr function"><a class="headerlink" href="#add_annotation_tag">#&nbsp;&nbsp</a>
+                <section id="new_project">
+                            <div class="attr function"><a class="headerlink" href="#new_project">#&nbsp;&nbsp</a>
 
-        
+                <div class="decorator">@connect_and_set_group</div>
+
             <span class="def">def</span>
-            <span class="name">add_annotation_tag</span><span class="signature">(conn, gid, annotation, obj_id, obj_type=&#39;Image&#39;, desc=None)</span>:
+            <span class="name">new_project</span><span class="signature">(conn, id_str, proj_name)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">add_annotation_tag</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">annotation</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">,</span> <span class="n">obj_type</span><span class="o">=</span><span class="s2">&quot;Image&quot;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="k">if</span> <span class="n">obj_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No object ID given, not adding annotation &gt;&gt;&gt;</span><span class="si">{</span><span class="n">annotation</span><span class="si">}</span><span class="s2">&lt;&lt;&lt;&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
+            <div class="codehilite"><pre><span></span><span class="nd">@connect_and_set_group</span>
+<span class="k">def</span> <span class="nf">new_project</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">proj_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a new Project in OMERO.</span>
 
-    <span class="c1"># the connection might be closed (e.g. after importing an image), so reconnect:</span>
-    <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">conn</span><span class="o">.</span><span class="n">_connected</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=protected-access</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Failed to (re-)establish connection to OMERO!&quot;</span><span class="p">)</span>
-
-    <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
-    <span class="n">target_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">target_obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to identify target object </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> in OMERO!&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="n">tag_ann</span> <span class="o">=</span> <span class="n">omero</span><span class="o">.</span><span class="n">gateway</span><span class="o">.</span><span class="n">TagAnnotationWrapper</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
-    <span class="n">tag_ann</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">annotation</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">desc</span><span class="p">:</span>
-        <span class="n">tag_ann</span><span class="o">.</span><span class="n">setDescription</span><span class="p">(</span><span class="n">desc</span><span class="p">)</span>
-    <span class="n">tag_ann</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-    <span class="n">target_obj</span><span class="o">.</span><span class="n">linkAnnotation</span><span class="p">(</span><span class="n">tag_ann</span><span class="p">)</span>
-
-    <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully added annotation to </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-
-    <span class="k">return</span> <span class="kc">True</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    conn : omero.gateway.BlitzGateway</span>
+<span class="sd">        The OMERO connection object.</span>
+<span class="sd">    id_str : str</span>
+<span class="sd">        The ID of an OMERO object, e.g. `G:4:Experimenter:23`</span>
+<span class="sd">    proj_name : str</span>
+<span class="sd">        The name of the project to be created.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Creating Projects is not yet implemented.&quot;</span><span class="p">)</span>
 </pre></div>
 
         </details>
 
-    
+            <div class="docstring"><p>Create a new Project in OMERO.</p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>conn</strong> (omero.gateway.BlitzGateway):
+The OMERO connection object.</li>
+<li><strong>id_str</strong> (str):
+The ID of an OMERO object, e.g. <code>G:4:Experimenter:23</code></li>
+<li><strong>proj_name</strong> (str):
+The name of the project to be created.</li>
+</ul>
+</div>
+
+
+                </section>
+                <section id="new_dataset">
+                            <div class="attr function"><a class="headerlink" href="#new_dataset">#&nbsp;&nbsp</a>
+
+                <div class="decorator">@connect_and_set_group</div>
+
+            <span class="def">def</span>
+            <span class="name">new_dataset</span><span class="signature">(conn, id_str, ds_name)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="nd">@connect_and_set_group</span>
+<span class="k">def</span> <span class="nf">new_dataset</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">ds_name</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create a new Project in OMERO.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    conn : omero.gateway.BlitzGateway</span>
+<span class="sd">        The OMERO connection object.</span>
+<span class="sd">    id_str : str</span>
+<span class="sd">        The ID of an OMERO object, e.g. `G:4:Project:123`</span>
+<span class="sd">    ds_name : str</span>
+<span class="sd">        The name of the dataset to be created.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Creating Datasets is not yet implemented.&quot;</span><span class="p">)</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Create a new Project in OMERO.</p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>conn</strong> (omero.gateway.BlitzGateway):
+The OMERO connection object.</li>
+<li><strong>id_str</strong> (str):
+The ID of an OMERO object, e.g. <code>G:4:Project:123</code></li>
+<li><strong>ds_name</strong> (str):
+The name of the dataset to be created.</li>
+</ul>
+</div>
+
 
                 </section>
     </main>

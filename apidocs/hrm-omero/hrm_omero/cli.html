@@ -37,6 +37,9 @@
                     <a class="function" href="#parse_arguments">parse_arguments</a>
             </li>
             <li>
+                    <a class="function" href="#arguments_parser">arguments_parser</a>
+            </li>
+            <li>
                     <a class="function" href="#verbosity_to_loglevel">verbosity_to_loglevel</a>
             </li>
             <li>
@@ -81,7 +84,7 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">hrm</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">omero</span> <span class="k">as</span> <span class="n">dotomero</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">transfer</span>
-<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">printlog</span>
+<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">printlog</span><span class="p">,</span> <span class="n">OmeroId</span>
 
 
 <span class="k">def</span> <span class="nf">bool_to_exitstatus</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
@@ -103,14 +106,33 @@
 <span class="sd">        0 in case `value` is `True`, 1 in case `value` is `False` and `value` itself in</span>
 <span class="sd">        case it is not a bool.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="n">value</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="k">return</span> <span class="n">value</span>
 
 
-<span class="k">def</span> <span class="nf">parse_arguments</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Parse the commandline arguments.&quot;&quot;&quot;</span>
+<span class="k">def</span> <span class="nf">parse_arguments</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+    <span class="sd">&quot;&quot;&quot;Parse the commandline arguments.</span>
+
+<span class="sd">    DEPRECATED function, use `arguments_parser()` instead!</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;parse_arguments()&#39; is deprecated and will be removed!&quot;</span><span class="p">)</span>
+    <span class="n">argparser</span> <span class="o">=</span> <span class="n">arguments_parser</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">argparser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="n">argparser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">arguments_parser</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Set up the commandline arguments parser.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    argparse.ArgumentParser</span>
+<span class="sd">        The parser instance ready to be run using its `parse_args()` method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># log.debug(&quot;Parsing command line arguments...&quot;)</span>
     <span class="n">argparser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">,</span> <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">RawDescriptionHelpFormatter</span>
@@ -238,12 +260,7 @@
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;annotation text to be added to the image in OMERO&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">argparser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">argparser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-        <span class="n">argparser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">argparser</span>
 
 
 <span class="k">def</span> <span class="nf">verbosity_to_loglevel</span><span class="p">(</span><span class="n">verbosity</span><span class="p">):</span>
@@ -274,7 +291,8 @@
 
 <span class="k">def</span> <span class="nf">run_task</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Parse commandline arguments and initiate the requested tasks.&quot;&quot;&quot;</span>
-    <span class="n">args</span> <span class="o">=</span> <span class="n">parse_arguments</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">argparser</span> <span class="o">=</span> <span class="n">arguments_parser</span><span class="p">()</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">argparser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
 
     <span class="c1"># one of the downsides of loguru is that the level of an existing logger can&#39;t be</span>
     <span class="c1"># changed - so to adjust verbosity we actually need to remove the default logger and</span>
@@ -309,7 +327,7 @@
     <span class="c1"># is actually calling the connector to get hold of user credentials.</span>
     <span class="n">passwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OMERO_PASSWORD&quot;</span><span class="p">)</span>
     <span class="c1"># while being deprecated an explicitly specified password still has priority:</span>
-    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">password</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">password</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
         <span class="n">passwd</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">password</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="s2">&quot;Using the &#39;--password&#39; parameter is deprecated!&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">passwd</span><span class="p">:</span>
@@ -322,7 +340,7 @@
 
     <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;retrieveChildren&quot;</span><span class="p">:</span>
         <span class="n">perform_action</span> <span class="o">=</span> <span class="n">formatting</span><span class="o">.</span><span class="n">print_children_json</span>
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;id_str&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">id</span><span class="p">}</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;omero_id&quot;</span><span class="p">:</span> <span class="n">OmeroId</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">id</span><span class="p">)}</span>
 
     <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;OMEROtoHRM&quot;</span><span class="p">:</span>
         <span class="n">perform_action</span> <span class="o">=</span> <span class="n">transfer</span><span class="o">.</span><span class="n">from_omero</span>
@@ -356,11 +374,14 @@
         <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">dry_run</span><span class="p">:</span>
             <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="s2">&quot;*** dry-run, only showing action and parameters ***&quot;</span><span class="p">)</span>
             <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;function: </span><span class="si">{</span><span class="n">perform_action</span><span class="o">.</span><span class="vm">__qualname__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;arguments: </span><span class="si">{</span><span class="n">kwargs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
 
             <span class="k">return</span> <span class="kc">True</span>
 
         <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+        <span class="c1"># FIXME: the call below fails with an Ice.ConnectionLostException in case the</span>
+        <span class="c1"># password is wrong or something else failed:</span>
         <span class="n">group</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getGroupFromContext</span><span class="p">()</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New OMERO connection [user=</span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">user</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The user&#39;s default group is </span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">getId</span><span class="p">()</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
@@ -412,10 +433,10 @@
 <span class="sd">        0 in case `value` is `True`, 1 in case `value` is `False` and `value` itself in</span>
 <span class="sd">        case it is not a bool.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="n">value</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">value</span>
+
+    <span class="k">return</span> <span class="n">value</span>
 </pre></div>
 
         </details>
@@ -454,8 +475,46 @@ case it is not a bool.</li>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">parse_arguments</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Parse the commandline arguments.&quot;&quot;&quot;</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">parse_arguments</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+    <span class="sd">&quot;&quot;&quot;Parse the commandline arguments.</span>
+
+<span class="sd">    DEPRECATED function, use `arguments_parser()` instead!</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;parse_arguments()&#39; is deprecated and will be removed!&quot;</span><span class="p">)</span>
+    <span class="n">argparser</span> <span class="o">=</span> <span class="n">arguments_parser</span><span class="p">()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">argparser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="n">argparser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Parse the commandline arguments.</p>
+
+<p>DEPRECATED function, use <code><a href="#arguments_parser">arguments_parser()</a></code> instead!</p>
+</div>
+
+
+                </section>
+                <section id="arguments_parser">
+                            <div class="attr function"><a class="headerlink" href="#arguments_parser">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">arguments_parser</span><span class="signature">()</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">arguments_parser</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Set up the commandline arguments parser.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    argparse.ArgumentParser</span>
+<span class="sd">        The parser instance ready to be run using its `parse_args()` method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># log.debug(&quot;Parsing command line arguments...&quot;)</span>
     <span class="n">argparser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span>
         <span class="n">description</span><span class="o">=</span><span class="vm">__doc__</span><span class="p">,</span> <span class="n">formatter_class</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">RawDescriptionHelpFormatter</span>
@@ -583,17 +642,18 @@ case it is not a bool.</li>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;annotation text to be added to the image in OMERO&quot;</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">argparser</span><span class="o">.</span><span class="n">print_help</span><span class="p">()</span>
-
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">argparser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-        <span class="n">argparser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">argparser</span>
 </pre></div>
 
         </details>
 
-            <div class="docstring"><p>Parse the commandline arguments.</p>
+            <div class="docstring"><p>Set up the commandline arguments parser.</p>
+
+<h6 id="returns">Returns</h6>
+
+<ul>
+<li><strong>argparse.ArgumentParser</strong>: The parser instance ready to be run using its <code>parse_args()</code> method.</li>
+</ul>
 </div>
 
 
@@ -667,7 +727,8 @@ Verbosity count as returned e.g. by the following argparse code:
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">run_task</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Parse commandline arguments and initiate the requested tasks.&quot;&quot;&quot;</span>
-    <span class="n">args</span> <span class="o">=</span> <span class="n">parse_arguments</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+    <span class="n">argparser</span> <span class="o">=</span> <span class="n">arguments_parser</span><span class="p">()</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">argparser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
 
     <span class="c1"># one of the downsides of loguru is that the level of an existing logger can&#39;t be</span>
     <span class="c1"># changed - so to adjust verbosity we actually need to remove the default logger and</span>
@@ -702,7 +763,7 @@ Verbosity count as returned e.g. by the following argparse code:
     <span class="c1"># is actually calling the connector to get hold of user credentials.</span>
     <span class="n">passwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OMERO_PASSWORD&quot;</span><span class="p">)</span>
     <span class="c1"># while being deprecated an explicitly specified password still has priority:</span>
-    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">password</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">password</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
         <span class="n">passwd</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">password</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="s2">&quot;Using the &#39;--password&#39; parameter is deprecated!&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">passwd</span><span class="p">:</span>
@@ -715,7 +776,7 @@ Verbosity count as returned e.g. by the following argparse code:
 
     <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;retrieveChildren&quot;</span><span class="p">:</span>
         <span class="n">perform_action</span> <span class="o">=</span> <span class="n">formatting</span><span class="o">.</span><span class="n">print_children_json</span>
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;id_str&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">id</span><span class="p">}</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;omero_id&quot;</span><span class="p">:</span> <span class="n">OmeroId</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">id</span><span class="p">)}</span>
 
     <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;OMEROtoHRM&quot;</span><span class="p">:</span>
         <span class="n">perform_action</span> <span class="o">=</span> <span class="n">transfer</span><span class="o">.</span><span class="n">from_omero</span>
@@ -749,11 +810,14 @@ Verbosity count as returned e.g. by the following argparse code:
         <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">dry_run</span><span class="p">:</span>
             <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="s2">&quot;*** dry-run, only showing action and parameters ***&quot;</span><span class="p">)</span>
             <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;function: </span><span class="si">{</span><span class="n">perform_action</span><span class="o">.</span><span class="vm">__qualname__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;arguments: </span><span class="si">{</span><span class="n">kwargs</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
 
             <span class="k">return</span> <span class="kc">True</span>
 
         <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+        <span class="c1"># FIXME: the call below fails with an Ice.ConnectionLostException in case the</span>
+        <span class="c1"># password is wrong or something else failed:</span>
         <span class="n">group</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getGroupFromContext</span><span class="p">()</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New OMERO connection [user=</span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">user</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The user&#39;s default group is </span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">getId</span><span class="p">()</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>

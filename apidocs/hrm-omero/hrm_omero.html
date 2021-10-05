@@ -50,6 +50,7 @@
   <ul>
     <li><a href="#using-poetry">Using poetry</a></li>
     <li><a href="#installing-a-pre-release-from-testpypi">Installing a pre-release from TestPyPI</a></li>
+    <li><a href="#testing">Testing</a></li>
     <li><a href="#generating-documentation">Generating Documentation</a></li>
     <li><a href="#todo-list">ToDo list</a></li>
   </ul></li>
@@ -75,7 +76,6 @@
                             <li><a href="hrm_omero/cli.html">hrm_omero.cli</a></li>
                             <li><a href="hrm_omero/decorators.html">hrm_omero.decorators</a></li>
                             <li><a href="hrm_omero/formatting.html">hrm_omero.formatting</a></li>
-                            <li><a href="hrm_omero/group.html">hrm_omero.group</a></li>
                             <li><a href="hrm_omero/hrm.html">hrm_omero.hrm</a></li>
                             <li><a href="hrm_omero/misc.html">hrm_omero.misc</a></li>
                             <li><a href="hrm_omero/omero.html">hrm_omero.omero</a></li>
@@ -130,7 +130,7 @@ environment</em> from it using the <code>--copies</code> flag - this will result
 setup that won't affect anything else on the system.</p>
 
 <div class="codehilite"><pre><span></span><code><span class="c1"># install the build-time requirements for Python 3.6 and Java 1.8 for Bio-Formats</span>
-sudo yum install openssl-devel readline-devel gcc-c++ java-1.8.0-openjdk
+sudo yum install openssl-devel bzip2-devel readline-devel gcc-c++ java-1.8.0-openjdk
 
 <span class="c1"># get pyenv and put it into your home directory or wherever you prefer it to be</span>
 git clone https://github.com/pyenv/pyenv.git ~/.pyenv
@@ -144,21 +144,24 @@ git clone https://github.com/pyenv/pyenv.git ~/.pyenv
 <span class="c1"># ask pyenv to install Python 3.6.15 (will end up in &quot;~/.pyenv/versions/3.6.15/&quot;)</span>
 pyenv install <span class="m">3</span>.6.15  <span class="c1"># takes a bit (compiling...)</span>
 
+<span class="c1"># define the target path for the virtual environment:</span>
+<span class="nv">$HRM_OMERO_VENV</span><span class="o">=</span><span class="s2">&quot;/opt/venvs/hrm-omero&quot;</span>
+
 <span class="c1"># create a bare, stand-alone Python 3.6 virtual environment</span>
-~/.pyenv/versions/3.6.15/bin/python -m venv --copies /opt/venvs/hrm-omero
+~/.pyenv/versions/3.6.15/bin/python -m venv --copies <span class="nv">$HRM_OMERO_VENV</span>
 
 <span class="c1"># now you can install the connector into this virtual environment - please note that the</span>
 <span class="c1"># installation takes quite a while (~15min) as it needs to build the ZeroC Ice bindings</span>
-/opt/venvs/hrm-omero/bin/pip install hrm-omero
+<span class="nv">$HRM_OMERO_VENV</span>/bin/pip install hrm-omero
 
 <span class="c1"># from now on you can simply call the connector using its full path, there is no need</span>
 <span class="c1"># to pre-activate the virtual environment - you could even drop your pyenv completely:</span>
-/opt/venvs/hrm-omero/bin/ome-hrm --help
+<span class="nv">$HRM_OMERO_VENV</span>/bin/ome-hrm --help
 
 <span class="c1"># this is even usable as a drop-in replacement for the legacy `ome_hrm.py` script:</span>
 <span class="nb">cd</span> <span class="nv">$PATH_TO_YOUR_HRM_INSTALLATION</span>/bin
 mv <span class="s2">&quot;ome_hrm.py&quot;</span> <span class="s2">&quot;__old__ome_hrm.py&quot;</span>
-ln -s <span class="s2">&quot;/opt/venvs/hrm-omero/bin/ome-hrm&quot;</span> <span class="s2">&quot;ome_hrm.py&quot;</span>
+ln -s <span class="s2">&quot;</span><span class="nv">$HRM_OMERO_VENV</span><span class="s2">/bin/ome-hrm&quot;</span> <span class="s2">&quot;ome_hrm.py&quot;</span>
 </code></pre></div>
 
 <h2 id="debugging">Debugging</h2>
@@ -167,24 +170,28 @@ ln -s <span class="s2">&quot;/opt/venvs/hrm-omero/bin/ome-hrm&quot;</span> <span
 cluttered up quite a bit on a production system. However, it is possible to increase the
 log level by specifying <code>-v</code>, <code>-vv</code> and so on.</p>
 
-<p>Currently it is not yet possible to ajust the log level that is being used when operated
-through the HRM web interface (which is the default). To do so, have a look in the
-<code><a href="hrm_omero/cli.html#run_task">hrm_omero.cli.run_task()</a></code> function. Log messages produced by the connector when called
-by HRM will usually end up in the web server's error log (as they go to <code>stderr</code>).</p>
+<p>Since this is not useful when being operated through the HRM web interface (which is
+the default) it's also possible to set the verbosity level by adjusting the
+<code>OMERO_CONNECTOR_LOGLEVEL</code> in <code>/etc/hrm.conf</code>.</p>
+
+<p>Valid settings are <code>"SUCCESS"</code>, <code>"INFO"</code>, <code>"DEBUG"</code> and <code>"TRACE"</code>. If the option is
+commented out in the configuration file, the level will be set to <code>WARNING</code>. Log
+messages produced by the connector when called by HRM will usually end up in the web
+server's error log (as they go to <code>stderr</code>).</p>
 
 <h2 id="example-usage">Example Usage</h2>
 
-<p>Store you username and password in variables:</p>
+<p>Store username and password in variables, export the OMERO_PASSWORD variable:</p>
 
-<div class="codehilite"><pre><span></span><code><span class="nb">read</span> OMEROUSER
-<span class="nb">read</span> OMEROPW
+<div class="codehilite"><pre><span></span><code><span class="nb">read</span> OMERO_USER
+<span class="nb">read</span> -s OMERO_PASSWORD
+<span class="nb">export</span> OMERO_PASSWORD   <span class="c1"># use &#39;set --export OMERO_PASSWORD $OMERO_PASSWORD&#39; for fish</span>
 </code></pre></div>
 
 <h3 id="verifying-credentials">Verifying Credentials</h3>
 
 <div class="codehilite"><pre><span></span><code>ome-hrm <span class="se">\</span>
-    --user <span class="nv">$OMEROUSER</span> <span class="se">\</span>
-    --password <span class="nv">$OMEROPW</span> <span class="se">\</span>
+    --user <span class="nv">$OMERO_USER</span> <span class="se">\</span>
     checkCredentials
 </code></pre></div>
 
@@ -201,8 +208,7 @@ by HRM will usually end up in the web server's error log (as they go to <code>st
 <p>Then run the actual command to fetch the information, the result will be a JSON tree:</p>
 
 <div class="codehilite"><pre><span></span><code>ome-hrm <span class="se">\</span>
-    --user <span class="nv">$OMEROUSER</span> <span class="se">\</span>
-    --password <span class="nv">$OMEROPW</span> <span class="se">\</span>
+    --user <span class="nv">$OMERO_USER</span> <span class="se">\</span>
     retrieveChildren <span class="se">\</span>
     --id <span class="s2">&quot;</span><span class="nv">$OMERO_ID</span><span class="s2">&quot;</span>
 </code></pre></div>
@@ -232,8 +238,7 @@ by HRM will usually end up in the web server's error log (as they go to <code>st
 <p>This will fetch the second image from the example tree above and store it in <code>/tmp/</code>:</p>
 
 <div class="codehilite"><pre><span></span><code>ome-hrm <span class="se">\</span>
-    --user <span class="nv">$OMEROUSER</span> <span class="se">\</span>
-    --password <span class="nv">$OMEROPW</span> <span class="se">\</span>
+    --user <span class="nv">$OMERO_USER</span> <span class="se">\</span>
     OMEROtoHRM <span class="se">\</span>
     --imageid <span class="s2">&quot;G:4:Image:1566150&quot;</span> <span class="se">\</span>
     --dest /tmp/
@@ -244,8 +249,7 @@ by HRM will usually end up in the web server's error log (as they go to <code>st
 <p>The command below will import a local image file into the example dataset from above:</p>
 
 <div class="codehilite"><pre><span></span><code>ome-hrm <span class="se">\</span>
-    --user <span class="nv">$OMEROUSER</span> <span class="se">\</span>
-    --password <span class="nv">$OMEROPW</span> <span class="se">\</span>
+    --user <span class="nv">$OMERO_USER</span> <span class="se">\</span>
     HRMtoOMERO <span class="se">\</span>
     --dset <span class="s2">&quot;G:4:Dataset:65432&quot;</span> <span class="se">\</span>
     --file test-image.tif
@@ -273,6 +277,24 @@ used:</p>
     -i https://test.pypi.org/simple/ <span class="se">\</span>
     --extra-index-url https://pypi.org/simple <span class="se">\</span>
     hrm-omero<span class="o">==</span><span class="m">0</span>.3.2.dev0
+</code></pre></div>
+
+<h2 id="testing">Testing</h2>
+
+<p>Testing is done through <a href="https://pytest.org/">pytest</a> and can be triggered by running this command:</p>
+
+<div class="codehilite"><pre><span></span><code>poetry run pytest
+</code></pre></div>
+
+<p>By default only <em>local</em> tests will be performed, all tests that require the connection
+to an actual OMERO instance are disabled. To activate them you need to pass the
+<code>--online</code> flag to the pytest call and a corresponding file <code>omero_test_settings.py</code>
+needs to be present in the repository root that contains the settings on how to connect
+to your OMERO, plus the information on what to test. See <code>tests/resources/settings/</code> for
+an example file, copy it to the repository root and make your adjustments there. Then
+run this command:</p>
+
+<div class="codehilite"><pre><span></span><code>poetry run pytest --online
 </code></pre></div>
 
 <h2 id="generating-documentation">Generating Documentation</h2>
@@ -305,6 +327,7 @@ generate the HTML documentation use this <code>poetry</code> command:</p>
 </ul></li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> (REJECTED) offer download of OME-TIFFs</li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> don't use a command line parameter for the OMERO password</li>
+<li><input type="checkbox" class="task-list-item-checkbox" disabled> add command line action to create new projects and datasets in OMERO</li>
 </ul>
 
 <h1 id="changelog">Changelog</h1>
@@ -329,7 +352,17 @@ parameter summary from an HRM job into a (nested) dict.</li>
 files that belong to the set of results from a certain HRM job.</li>
 <li><code><a href="hrm_omero/omero.html#add_annotation_keyvalue">hrm_omero.omero.add_annotation_keyvalue()</a></code> can be used to add so-called <a href="https://docs.openmicroscopy.org/omero/5.6/developers/Python.html#write-data">Map
 Annotations</a> (key-value pairs) to objects in OMERO.</li>
+<li>A decorator <code><a href="hrm_omero/decorators.html#connect_and_set_group">hrm_omero.decorators.connect_and_set_group()</a></code> is now available that can
+be used with functions that require a valid connection plus an OMERO object identifier
+pair (submitted on the command line as "<code>G:4:Image:12345</code>" or similar, passed on to
+the decorated function as <code>obj_type</code> and <code>obj_id</code>).</li>
 <li><code><a href="hrm_omero/misc.html#printlog">hrm_omero.misc.printlog()</a></code> can be used to push a message to the log and stdout.</li>
+<li>A class <code><a href="hrm_omero/misc.html#OmeroId">hrm_omero.misc.OmeroId</a></code> provides parsing, validation and access to all
+group-qualified OMERO object IDs (commonly passed as function parameter <code>id_str</code>
+throughout the existing code).</li>
+<li>The CLI has a new optional parameter <code>--dry-run</code> that prevents any action from being
+performed, instead the name of the function and the corresponding parameters that
+would be called are printed to stdout.</li>
 <li>Unit tests using <a href="https://docs.pytest.org/">pytest</a> and <a href="https://pypi.org/project/pytest-cov/">pytest-cov</a> (incomplete).</li>
 </ul>
 
@@ -340,8 +373,13 @@ Annotations</a> (key-value pairs) to objects in OMERO.</li>
 properly supported.</li>
 <li>HRM job parameter summaries are now being added as OMERO <a href="https://docs.openmicroscopy.org/omero/5.6/developers/Python.html#write-data">"Map Annotations"</a>
 instead of simply being a comment string.</li>
-<li>The function <code><a href="hrm_omero/omero.html#connect">hrm_omero.omero.connect()</a></code> is now deprecated and will be removed in a
-subsequent release.</li>
+<li>The command line parameter <code>--password</code> (or <code>-w</code>) is now <em>deprecated</em> in favor of
+using the environment variable described above.</li>
+<li>The following functions are now <em>deprecated</em> and will be removed in a future release.
+<ul>
+<li><code><a href="hrm_omero/omero.html#connect">hrm_omero.omero.connect()</a></code></li>
+<li><code><a href="hrm_omero/cli.html#parse_arguments">hrm_omero.cli.parse_arguments()</a></code></li>
+</ul></li>
 <li>Functions <code><a href="hrm_omero/transfer.html#to_omero">hrm_omero.transfer.to_omero()</a></code> and <code><a href="hrm_omero/transfer.html#from_omero">hrm_omero.transfer.from_omero()</a></code> are
 now raising a <code>ValueError</code> in case the provided <code>id_str</code> is malformed.</li>
 <li>Various improvements on log messages.</li>
