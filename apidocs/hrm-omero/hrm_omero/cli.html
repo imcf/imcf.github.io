@@ -379,12 +379,10 @@
 
             <span class="k">return</span> <span class="kc">True</span>
 
+        <span class="c1"># FIXME: the conn.connect() call should be removed once all actions (or rather</span>
+        <span class="c1"># the related functions) have adopted the decorator for ensuring a connection:</span>
         <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-        <span class="c1"># FIXME: the call below fails with an Ice.ConnectionLostException in case the</span>
-        <span class="c1"># password is wrong or something else failed:</span>
-        <span class="n">group</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getGroupFromContext</span><span class="p">()</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New OMERO connection [user=</span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">user</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The user&#39;s default group is </span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">getId</span><span class="p">()</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">perform_action</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -815,12 +813,10 @@ Verbosity count as returned e.g. by the following argparse code:
 
             <span class="k">return</span> <span class="kc">True</span>
 
+        <span class="c1"># FIXME: the conn.connect() call should be removed once all actions (or rather</span>
+        <span class="c1"># the related functions) have adopted the decorator for ensuring a connection:</span>
         <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-        <span class="c1"># FIXME: the call below fails with an Ice.ConnectionLostException in case the</span>
-        <span class="c1"># password is wrong or something else failed:</span>
-        <span class="n">group</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getGroupFromContext</span><span class="p">()</span>
         <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New OMERO connection [user=</span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">user</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The user&#39;s default group is </span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">getId</span><span class="p">()</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">perform_action</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 

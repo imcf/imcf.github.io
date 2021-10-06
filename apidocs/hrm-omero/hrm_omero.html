@@ -50,7 +50,10 @@
   <ul>
     <li><a href="#using-poetry">Using poetry</a></li>
     <li><a href="#installing-a-pre-release-from-testpypi">Installing a pre-release from TestPyPI</a></li>
-    <li><a href="#testing">Testing</a></li>
+    <li><a href="#testing">Testing</a>
+    <ul>
+      <li><a href="#prepare-an-omero-instance-for-tests">Prepare an OMERO instance for tests</a></li>
+    </ul></li>
     <li><a href="#generating-documentation">Generating Documentation</a></li>
     <li><a href="#todo-list">ToDo list</a></li>
   </ul></li>
@@ -276,7 +279,7 @@ used:</p>
 <div class="codehilite"><pre><span></span><code>pip install <span class="se">\</span>
     -i https://test.pypi.org/simple/ <span class="se">\</span>
     --extra-index-url https://pypi.org/simple <span class="se">\</span>
-    hrm-omero<span class="o">==</span><span class="m">0</span>.3.2.dev0
+    hrm-omero<span class="o">==</span><span class="m">0</span>.4.0.dev1
 </code></pre></div>
 
 <h2 id="testing">Testing</h2>
@@ -296,6 +299,12 @@ run this command:</p>
 
 <div class="codehilite"><pre><span></span><code>poetry run pytest --online
 </code></pre></div>
+
+<h3 id="prepare-an-omero-instance-for-tests">Prepare an OMERO instance for tests</h3>
+
+<p>See the example script in <code>resources/scripts/prepare-omero-for-testing.sh</code> on how to set
+up an OMERO instance so it can be used with the <code>--online</code> tests. Note that currently
+the settings file will still need to be adjusted for <em>user</em> and <em>object IDs</em>!</p>
 
 <h2 id="generating-documentation">Generating Documentation</h2>
 
@@ -328,6 +337,7 @@ generate the HTML documentation use this <code>poetry</code> command:</p>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> (REJECTED) offer download of OME-TIFFs</li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> don't use a command line parameter for the OMERO password</li>
 <li><input type="checkbox" class="task-list-item-checkbox" disabled> add command line action to create new projects and datasets in OMERO</li>
+<li><input type="checkbox" class="task-list-item-checkbox" disabled> lift assumption that datasets are always members of a project in OMERO</li>
 </ul>
 
 <h1 id="changelog">Changelog</h1>

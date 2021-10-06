@@ -74,6 +74,7 @@
 <span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">from</span> <span class="nn">loguru</span> <span class="kn">import</span> <span class="n">logger</span> <span class="k">as</span> <span class="n">log</span>
 <span class="kn">import</span> <span class="nn">omero.gateway</span>
+<span class="kn">from</span> <span class="nn">Ice</span> <span class="kn">import</span> <span class="n">ConnectionLostException</span>  <span class="c1"># pylint: disable-msg=no-name-in-module</span>
 
 <span class="kn">from</span> <span class="nn">.decorators</span> <span class="kn">import</span> <span class="n">connect_and_set_group</span>
 <span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">printlog</span><span class="p">,</span> <span class="n">parse_id_str</span>
@@ -133,6 +134,14 @@
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Connected to OMERO [user ID: </span><span class="si">{</span><span class="n">conn</span><span class="o">.</span><span class="n">getUserId</span><span class="p">()</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="s2">&quot;ERROR logging into OMERO.&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getGroupFromContext</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;User&#39;s default group is </span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">getId</span><span class="p">()</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ConnectionLostException</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Getting group context failed, password might be wrong!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
     <span class="k">return</span> <span class="n">connected</span>
 
 
@@ -377,6 +386,14 @@ The OMERO port number, by default 4064.</li>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Connected to OMERO [user ID: </span><span class="si">{</span><span class="n">conn</span><span class="o">.</span><span class="n">getUserId</span><span class="p">()</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="s2">&quot;ERROR logging into OMERO.&quot;</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">group</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getGroupFromContext</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;User&#39;s default group is </span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">getId</span><span class="p">()</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">group</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span><span class="si">}</span><span class="s2">).&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">ConnectionLostException</span><span class="p">:</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Getting group context failed, password might be wrong!&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
     <span class="k">return</span> <span class="n">connected</span>
 </pre></div>
 

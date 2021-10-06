@@ -34,6 +34,9 @@
                     <a class="function" href="#gen_obj_dict">gen_obj_dict</a>
             </li>
             <li>
+                    <a class="function" href="#print_obj">print_obj</a>
+            </li>
+            <li>
                     <a class="function" href="#gen_children">gen_children</a>
             </li>
             <li>
@@ -92,7 +95,7 @@
 <span class="sd">            }</span>
 <span class="sd">        ```</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">obj_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">obj_dict</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">obj_dict</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span>
     <span class="n">obj_dict</span><span class="p">[</span><span class="s2">&quot;class&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">OMERO_CLASS</span>
     <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">OMERO_CLASS</span> <span class="o">==</span> <span class="s2">&quot;Experimenter&quot;</span><span class="p">:</span>
@@ -107,6 +110,23 @@
     <span class="n">obj_dict</span><span class="p">[</span><span class="s2">&quot;id&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">id_pfx</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">obj</span><span class="o">.</span><span class="n">OMERO_CLASS</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">obj</span><span class="o">.</span><span class="n">getId</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="n">obj_dict</span><span class="p">[</span><span class="s2">&quot;children&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">return</span> <span class="n">obj_dict</span>
+
+
+<span class="k">def</span> <span class="nf">print_obj</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper method to display info about OMERO objects.</span>
+<span class="sd">    Not all objects will have a &quot;name&quot; or owner field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">obj_type</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">OMERO_CLASS</span>
+    <span class="n">oid</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">getId</span><span class="p">()</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;G:??:</span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">oid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="nb">dir</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span><span class="si">%s%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">  Name:&quot;</span><span class="si">%s</span><span class="s2">&quot; (owner=</span><span class="si">%s</span><span class="s2">)&quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="n">indent</span><span class="p">,</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">OMERO_CLASS</span><span class="p">,</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">getId</span><span class="p">(),</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">getName</span><span class="p">(),</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">getOwnerOmeName</span><span class="p">()))</span>
 
 
 <span class="k">def</span> <span class="nf">gen_children</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">):</span>
@@ -131,25 +151,37 @@
     <span class="n">gid</span> <span class="o">=</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">group</span>
     <span class="n">obj_type</span> <span class="o">=</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_type</span>
     <span class="n">oid</span> <span class="o">=</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;gid=</span><span class="si">{</span><span class="n">gid</span><span class="si">}</span><span class="s2"> | obj_type=</span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2"> | oid=</span><span class="si">{</span><span class="n">oid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;generating children for: gid=</span><span class="si">{</span><span class="n">gid</span><span class="si">}</span><span class="s2"> | obj_type=</span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2"> | oid=</span><span class="si">{</span><span class="n">oid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="n">children</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">conn</span><span class="o">.</span><span class="n">SERVICE_OPTS</span><span class="o">.</span><span class="n">setOmeroGroup</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
     <span class="n">obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">oid</span><span class="p">)</span>
     <span class="c1"># we need different child-wrappers, depending on the object type:</span>
     <span class="k">if</span> <span class="n">obj_type</span> <span class="o">==</span> <span class="s2">&quot;Experimenter&quot;</span><span class="p">:</span>
-        <span class="n">children_wrapper</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">listProjects</span><span class="p">(</span><span class="n">oid</span><span class="p">)</span>
+        <span class="n">children_wrapper</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">proj</span> <span class="ow">in</span> <span class="n">conn</span><span class="o">.</span><span class="n">listProjects</span><span class="p">(</span><span class="n">oid</span><span class="p">):</span>
+            <span class="n">children_wrapper</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">proj</span><span class="p">)</span>
+        <span class="c1"># OMERO.web is showing &quot;orphaned&quot; datasets (i.e. that do NOT belong to a</span>
+        <span class="c1"># certain project) at the top level, next to the projects - so we are going to</span>
+        <span class="c1"># add them to the tree at the same hierarchy level:</span>
+        <span class="n">datasets</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObjects</span><span class="p">(</span><span class="s2">&quot;Dataset&quot;</span><span class="p">,</span> <span class="n">opts</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;orphaned&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+        <span class="k">for</span> <span class="n">dataset</span> <span class="ow">in</span> <span class="n">datasets</span><span class="p">:</span>
+            <span class="c1"># print_obj(dataset)</span>
+            <span class="n">children_wrapper</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">obj_type</span> <span class="o">==</span> <span class="s2">&quot;ExperimenterGroup&quot;</span><span class="p">:</span>
         <span class="n">children_wrapper</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># FIXME</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">children_wrapper</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">listChildren</span><span class="p">()</span>
+
     <span class="c1"># now recurse into children:</span>
     <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children_wrapper</span><span class="p">:</span>
         <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gen_obj_dict</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="s2">&quot;G:&quot;</span> <span class="o">+</span> <span class="n">gid</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span><span class="p">))</span>
+
     <span class="c1"># set the on-demand flag unless the children are the last level:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">obj_type</span> <span class="o">==</span> <span class="s2">&quot;Dataset&quot;</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children</span><span class="p">:</span>
             <span class="n">child</span><span class="p">[</span><span class="s2">&quot;load_on_demand&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
     <span class="k">return</span> <span class="n">children</span>
 
 
@@ -250,7 +282,7 @@
 <span class="sd">            }</span>
 <span class="sd">        ```</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">obj_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">obj_dict</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">obj_dict</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span>
     <span class="n">obj_dict</span><span class="p">[</span><span class="s2">&quot;class&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">OMERO_CLASS</span>
     <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">OMERO_CLASS</span> <span class="o">==</span> <span class="s2">&quot;Experimenter&quot;</span><span class="p">:</span>
@@ -298,6 +330,41 @@ A string prefix that will be added to the <code>id</code> value, by default ''.<
 
 
                 </section>
+                <section id="print_obj">
+                            <div class="attr function"><a class="headerlink" href="#print_obj">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">print_obj</span><span class="signature">(obj, indent=0)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">print_obj</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper method to display info about OMERO objects.</span>
+<span class="sd">    Not all objects will have a &quot;name&quot; or owner field.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">obj_type</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">OMERO_CLASS</span>
+    <span class="n">oid</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">getId</span><span class="p">()</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;G:??:</span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">oid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="nb">dir</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;</span><span class="si">%s%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">  Name:&quot;</span><span class="si">%s</span><span class="s2">&quot; (owner=</span><span class="si">%s</span><span class="s2">)&quot;&quot;&quot;</span> <span class="o">%</span> <span class="p">(</span>
+        <span class="s2">&quot; &quot;</span> <span class="o">*</span> <span class="n">indent</span><span class="p">,</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">OMERO_CLASS</span><span class="p">,</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">getId</span><span class="p">(),</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">getName</span><span class="p">(),</span>
+        <span class="n">obj</span><span class="o">.</span><span class="n">getOwnerOmeName</span><span class="p">()))</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Helper method to display info about OMERO objects.
+Not all objects will have a "name" or owner field.</p>
+</div>
+
+
+                </section>
                 <section id="gen_children">
                             <div class="attr function"><a class="headerlink" href="#gen_children">#&nbsp;&nbsp</a>
 
@@ -330,25 +397,37 @@ A string prefix that will be added to the <code>id</code> value, by default ''.<
     <span class="n">gid</span> <span class="o">=</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">group</span>
     <span class="n">obj_type</span> <span class="o">=</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_type</span>
     <span class="n">oid</span> <span class="o">=</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;gid=</span><span class="si">{</span><span class="n">gid</span><span class="si">}</span><span class="s2"> | obj_type=</span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2"> | oid=</span><span class="si">{</span><span class="n">oid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;generating children for: gid=</span><span class="si">{</span><span class="n">gid</span><span class="si">}</span><span class="s2"> | obj_type=</span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2"> | oid=</span><span class="si">{</span><span class="n">oid</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="n">children</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">conn</span><span class="o">.</span><span class="n">SERVICE_OPTS</span><span class="o">.</span><span class="n">setOmeroGroup</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
     <span class="n">obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">oid</span><span class="p">)</span>
     <span class="c1"># we need different child-wrappers, depending on the object type:</span>
     <span class="k">if</span> <span class="n">obj_type</span> <span class="o">==</span> <span class="s2">&quot;Experimenter&quot;</span><span class="p">:</span>
-        <span class="n">children_wrapper</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">listProjects</span><span class="p">(</span><span class="n">oid</span><span class="p">)</span>
+        <span class="n">children_wrapper</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">proj</span> <span class="ow">in</span> <span class="n">conn</span><span class="o">.</span><span class="n">listProjects</span><span class="p">(</span><span class="n">oid</span><span class="p">):</span>
+            <span class="n">children_wrapper</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">proj</span><span class="p">)</span>
+        <span class="c1"># OMERO.web is showing &quot;orphaned&quot; datasets (i.e. that do NOT belong to a</span>
+        <span class="c1"># certain project) at the top level, next to the projects - so we are going to</span>
+        <span class="c1"># add them to the tree at the same hierarchy level:</span>
+        <span class="n">datasets</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObjects</span><span class="p">(</span><span class="s2">&quot;Dataset&quot;</span><span class="p">,</span> <span class="n">opts</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;orphaned&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+        <span class="k">for</span> <span class="n">dataset</span> <span class="ow">in</span> <span class="n">datasets</span><span class="p">:</span>
+            <span class="c1"># print_obj(dataset)</span>
+            <span class="n">children_wrapper</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">obj_type</span> <span class="o">==</span> <span class="s2">&quot;ExperimenterGroup&quot;</span><span class="p">:</span>
         <span class="n">children_wrapper</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># FIXME</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">children_wrapper</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">listChildren</span><span class="p">()</span>
+
     <span class="c1"># now recurse into children:</span>
     <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children_wrapper</span><span class="p">:</span>
         <span class="n">children</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gen_obj_dict</span><span class="p">(</span><span class="n">child</span><span class="p">,</span> <span class="s2">&quot;G:&quot;</span> <span class="o">+</span> <span class="n">gid</span> <span class="o">+</span> <span class="s2">&quot;:&quot;</span><span class="p">))</span>
+
     <span class="c1"># set the on-demand flag unless the children are the last level:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">obj_type</span> <span class="o">==</span> <span class="s2">&quot;Dataset&quot;</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">children</span><span class="p">:</span>
             <span class="n">child</span><span class="p">[</span><span class="s2">&quot;load_on_demand&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
     <span class="k">return</span> <span class="n">children</span>
 </pre></div>
 
