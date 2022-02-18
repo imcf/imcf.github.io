@@ -65,6 +65,8 @@
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
 <span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span> <span class="nn">stat</span>
 
 <span class="kn">from</span> <span class="nn">loguru</span> <span class="kn">import</span> <span class="n">logger</span> <span class="k">as</span> <span class="n">log</span>
 <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
@@ -75,7 +77,7 @@
 <span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">printlog</span><span class="p">,</span> <span class="n">parse_id_str</span>
 
 
-<span class="nd">@connect_and_set_group</span>
+<span class="c1"># @connect_and_set_group</span>
 <span class="k">def</span> <span class="nf">from_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Download the corresponding original file(s) from an image ID.</span>
 
@@ -112,11 +114,16 @@
     <span class="n">_</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to download </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> to [</span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
 
+    <span class="c1"># conn.setGroupForSession(-1)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">SERVICE_OPTS</span><span class="o">.</span><span class="n">setOmeroGroup</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># still working with OMERO-5.6.3</span>
     <span class="k">if</span> <span class="n">obj_type</span> <span class="o">!=</span> <span class="s2">&quot;Image&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Currently only the download of `Image` objects is supported!&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Currently only the download of &#39;Image&#39; objects is supported!&quot;</span><span class="p">)</span>
 
     <span class="c1"># check if dest is a directory, rewrite it otherwise:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dest</span><span class="p">):</span>
+        <span class="c1"># FIXME: this should raise a ValueError as it&#39;s quite counter-intuitive that</span>
+        <span class="c1"># specifying a file *name* for the target doesn&#39;t have an effect on how the</span>
+        <span class="c1"># downloaded file will be called actually!</span>
         <span class="n">dest</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
     <span class="kn">from</span> <span class="nn">omero_model_OriginalFileI</span> <span class="kn">import</span> <span class="n">OriginalFileI</span>
 
@@ -129,7 +136,7 @@
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="n">fset</span> <span class="o">=</span> <span class="n">target_obj</span><span class="o">.</span><span class="n">getFileset</span><span class="p">()</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">fset</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fset</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: no original file(s) for image </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> found!&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
@@ -137,24 +144,38 @@
     <span class="c1"># data) as an alternative has been discarded for the moment - see upstream HRM</span>
     <span class="c1"># ticket #398 (http://hrm.svi.nl:8080/redmine/issues/398)</span>
     <span class="n">downloads</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="c1"># assemble a list of items to download, check if any files already exist:</span>
+    <span class="c1"># assemble a list of items to download</span>
     <span class="k">for</span> <span class="n">fset_file</span> <span class="ow">in</span> <span class="n">fset</span><span class="o">.</span><span class="n">listFiles</span><span class="p">():</span>
-        <span class="n">tgt</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">fset_file</span><span class="o">.</span><span class="n">getName</span><span class="p">())</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tgt</span><span class="p">):</span>
-            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: target file &#39;</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">&#39; already existing!&quot;</span><span class="p">)</span>
+        <span class="c1"># for foo in dir(fset_file):</span>
+        <span class="c1">#     log.error(foo)</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="n">fset_file</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">fset_file</span><span class="o">.</span><span class="n">getPath</span><span class="p">()</span>
+        <span class="n">downloads</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">fset_file</span><span class="o">.</span><span class="n">getId</span><span class="p">(),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)))</span>
+
+    <span class="c1"># determine the common prefix, e.g. `hrm-test-02_3/2022-02/17/14-34-16.480/`</span>
+    <span class="n">all_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">downloads</span><span class="p">]</span>
+    <span class="n">strip</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">commonprefix</span><span class="p">(</span><span class="n">all_files</span><span class="p">)</span><span class="o">.</span><span class="n">rindex</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="c1"># strip the common prefix, check if any of the files already exist:</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">downloads</span><span class="p">):</span>
+        <span class="n">rel_path</span> <span class="o">=</span> <span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">strip</span><span class="p">:]</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;relative path: </span><span class="si">{</span><span class="n">rel_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">abs_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">rel_path</span><span class="p">)</span>
+        <span class="n">downloads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">abs_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">abs_path</span><span class="p">):</span>
+            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: file &#39;</span><span class="si">{</span><span class="n">abs_path</span><span class="si">}</span><span class="s2">&#39; already existing!&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="n">fset_id</span> <span class="o">=</span> <span class="n">fset_file</span><span class="o">.</span><span class="n">getId</span><span class="p">()</span>
-        <span class="n">downloads</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">fset_id</span><span class="p">,</span> <span class="n">tgt</span><span class="p">))</span>
     <span class="c1"># now initiate the downloads for all original files:</span>
-    <span class="k">for</span> <span class="p">(</span><span class="n">fset_id</span><span class="p">,</span> <span class="n">tgt</span><span class="p">)</span> <span class="ow">in</span> <span class="n">downloads</span><span class="p">:</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">file_id</span><span class="p">,</span> <span class="n">tgt</span><span class="p">)</span> <span class="ow">in</span> <span class="n">downloads</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">conn</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">OriginalFileI</span><span class="p">(</span><span class="n">fset_id</span><span class="p">),</span> <span class="n">tgt</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">tgt</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">OriginalFileI</span><span class="p">(</span><span class="n">file_id</span><span class="p">),</span> <span class="n">tgt</span><span class="p">)</span>
         <span class="k">except</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=bare-except</span>
-            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: downloading </span><span class="si">{</span><span class="n">fset_id</span><span class="si">}</span><span class="s2"> to &#39;</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">&#39; failed!&quot;</span><span class="p">)</span>
+            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: downloading </span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2"> to &#39;</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">&#39; failed!&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ID </span><span class="si">{</span><span class="n">fset_id</span><span class="si">}</span><span class="s2"> downloaded as &#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">tgt</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ID </span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2"> downloaded as &#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">tgt</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
     <span class="c1"># NOTE: for filesets with a single file or e.g. ICS/IDS pairs it makes</span>
     <span class="c1"># sense to use the target name of the first file to construct the name for</span>
     <span class="c1"># the thumbnail, but it is unclear whether this is a universal approach:</span>
@@ -184,22 +205,32 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to fetch thumbnail for OMERO image [</span><span class="si">{</span><span class="n">image_id</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Requested target location: [</span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+
+    <span class="n">base_dir</span><span class="p">,</span> <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
+    <span class="n">target_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">base_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;hrm_previews&quot;</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">target_dir</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">.preview_xy.jpg&quot;</span>
+
     <span class="n">image_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="s2">&quot;Image&quot;</span><span class="p">,</span> <span class="n">image_id</span><span class="p">)</span>
     <span class="n">image_data</span> <span class="o">=</span> <span class="n">image_obj</span><span class="o">.</span><span class="n">getThumbnail</span><span class="p">()</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;len(image_data)=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">image_data</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">thumbnail</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">image_data</span><span class="p">))</span>
-    <span class="n">base_dir</span><span class="p">,</span> <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
-    <span class="n">target</span> <span class="o">=</span> <span class="s2">&quot;/hrm_previews/&quot;</span> <span class="o">+</span> <span class="n">fname</span> <span class="o">+</span> <span class="s2">&quot;.preview_xy.jpg&quot;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">thumbnail</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">base_dir</span> <span class="o">+</span> <span class="n">target</span><span class="p">)</span>
-        <span class="c1"># TODO: os.chown() to fix permissions, see #457!</span>
+        <span class="n">target_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># for an unkown reason using mode=(S_IRWXU | S_IRWXG) on the `mkdir()` call</span>
+        <span class="c1"># doesn&#39;t seem to work, so we have to add group-write in a second step:</span>
+        <span class="n">target_dir</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">target_dir</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mode</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IWGRP</span><span class="p">)</span>
+        <span class="n">thumbnail</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">as_posix</span><span class="p">(),</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;jpeg&quot;</span><span class="p">)</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Thumbnail downloaded to &#39;</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">True</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mode</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IWGRP</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Added group-write permissions to &#39;</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=broad-except</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR downloading thumbnail to &#39;</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
+    <span class="k">return</span> <span class="kc">True</span>
 
-<span class="k">def</span> <span class="nf">to_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">image_file</span><span class="p">,</span> <span class="n">omero_logfile</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+
+<span class="k">def</span> <span class="nf">to_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">image_file</span><span class="p">,</span> <span class="n">omero_logfile</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">_fetch_zip_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Upload an image into a specific dataset in OMERO.</span>
 
 <span class="sd">    In case we know from the suffix that a given  format is not supported by OMERO, the</span>
@@ -224,6 +255,9 @@
 <span class="sd">        If the parameter is non-empty the `--debug ALL` option will be added to the</span>
 <span class="sd">        `omero` call with the output being placed in the specified file. If the</span>
 <span class="sd">        parameter is omitted or empty, debug messages will be disabled.</span>
+<span class="sd">    _fetch_zip_only : bool, optional</span>
+<span class="sd">        Replaces all parameters to the import call by `--advanced-help`, which is</span>
+<span class="sd">        **intended for INTERNAL TESTING ONLY**. No actual import will be attempted!</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -246,7 +280,9 @@
 
     <span class="n">_</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">dset_id</span> <span class="o">=</span> <span class="n">id_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">obj_type</span> <span class="o">!=</span> <span class="s2">&quot;Dataset&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;A &#39;--dset&#39; ID of the form &#39;G:7:Dataset:12345&#39; is required!&quot;</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Currently only the upload to &#39;Dataset&#39; objects is supported!&quot;</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># set the group for this import session:</span>
     <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
@@ -272,6 +308,7 @@
     <span class="c1"># TODO: check the more recent code mentioned by the OME developers in the forum</span>
     <span class="c1"># thread: https://forum.image.sc/t/automated-uploader-to-omero-in-python/38290</span>
     <span class="c1"># https://gitlab.com/openmicroscopy/incubator/omero-python-importer/-/blob/master/import.py)</span>
+    <span class="c1"># and also see https://pypi.org/project/omero-upload/</span>
     <span class="kn">from</span> <span class="nn">omero.cli</span> <span class="kn">import</span> <span class="n">CLI</span>
 
     <span class="n">cli</span> <span class="o">=</span> <span class="n">CLI</span><span class="p">()</span>
@@ -299,11 +336,30 @@
     <span class="c1">#### for ann_id in annotations:</span>
     <span class="c1">####     import_args.extend([&#39;--annotation_link&#39;, str(ann_id)])</span>
     <span class="n">import_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_fetch_zip_only</span><span class="p">:</span>
+        <span class="c1"># calling &#39;import --advanced-help&#39; will trigger the download of OMERO.java.zip</span>
+        <span class="c1"># in case it is not yet present (the extract_image_id() call will then fail,</span>
+        <span class="c1"># resulting in the whole function returning &quot;False&quot;)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="s2">&quot;As &#39;_fetch_zip_only&#39; is set NO IMPORT WILL BE ATTEMPTED!&quot;</span><span class="p">)</span>
+        <span class="n">import_args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;import&quot;</span><span class="p">,</span> <span class="s2">&quot;--advanced-help&quot;</span><span class="p">]</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;import_args: </span><span class="si">{</span><span class="n">import_args</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">cli</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">import_args</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">imported_id</span> <span class="o">=</span> <span class="n">extract_image_id</span><span class="p">(</span><span class="n">cap_stdout</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Imported OMERO image ID: </span><span class="si">{</span><span class="n">imported_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">PermissionError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+        <span class="n">omero_userdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OMERO_USERDIR&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;not-set&gt;&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Current OMERO_USERDIR value: </span><span class="si">{</span><span class="n">omero_userdir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span>
+            <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span>
+            <span class="p">(</span>
+                <span class="s2">&quot;Please make sure to read the documentation about the &#39;OMERO_USERDIR&#39; &quot;</span>
+                <span class="s2">&quot;environment variable and also check if the file to be imported has &quot;</span>
+                <span class="s2">&quot;appropriate permissions!&quot;</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=broad-except</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: uploading &#39;</span><span class="si">{</span><span class="n">image_file</span><span class="si">}</span><span class="s2">&#39; to </span><span class="si">{</span><span class="n">id_str</span><span class="si">}</span><span class="s2"> failed!&quot;</span><span class="p">)</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;OMERO error message: &gt;&gt;&gt;</span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&lt;&lt;&lt;&quot;</span><span class="p">)</span>
@@ -324,16 +380,14 @@
                 <section id="from_omero">
                             <div class="attr function"><a class="headerlink" href="#from_omero">#&nbsp;&nbsp</a>
 
-                <div class="decorator">@connect_and_set_group</div>
-
+        
             <span class="def">def</span>
             <span class="name">from_omero</span><span class="signature">(conn, id_str, dest)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="nd">@connect_and_set_group</span>
-<span class="k">def</span> <span class="nf">from_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">from_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Download the corresponding original file(s) from an image ID.</span>
 
 <span class="sd">    This only works for image IDs that were created with OMERO 5.0 or later as previous</span>
@@ -369,11 +423,16 @@
     <span class="n">_</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to download </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> to [</span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
 
+    <span class="c1"># conn.setGroupForSession(-1)</span>
+    <span class="n">conn</span><span class="o">.</span><span class="n">SERVICE_OPTS</span><span class="o">.</span><span class="n">setOmeroGroup</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># still working with OMERO-5.6.3</span>
     <span class="k">if</span> <span class="n">obj_type</span> <span class="o">!=</span> <span class="s2">&quot;Image&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Currently only the download of `Image` objects is supported!&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Currently only the download of &#39;Image&#39; objects is supported!&quot;</span><span class="p">)</span>
 
     <span class="c1"># check if dest is a directory, rewrite it otherwise:</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">dest</span><span class="p">):</span>
+        <span class="c1"># FIXME: this should raise a ValueError as it&#39;s quite counter-intuitive that</span>
+        <span class="c1"># specifying a file *name* for the target doesn&#39;t have an effect on how the</span>
+        <span class="c1"># downloaded file will be called actually!</span>
         <span class="n">dest</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
     <span class="kn">from</span> <span class="nn">omero_model_OriginalFileI</span> <span class="kn">import</span> <span class="n">OriginalFileI</span>
 
@@ -386,7 +445,7 @@
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="n">fset</span> <span class="o">=</span> <span class="n">target_obj</span><span class="o">.</span><span class="n">getFileset</span><span class="p">()</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">fset</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">fset</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: no original file(s) for image </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> found!&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
@@ -394,24 +453,38 @@
     <span class="c1"># data) as an alternative has been discarded for the moment - see upstream HRM</span>
     <span class="c1"># ticket #398 (http://hrm.svi.nl:8080/redmine/issues/398)</span>
     <span class="n">downloads</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="c1"># assemble a list of items to download, check if any files already exist:</span>
+    <span class="c1"># assemble a list of items to download</span>
     <span class="k">for</span> <span class="n">fset_file</span> <span class="ow">in</span> <span class="n">fset</span><span class="o">.</span><span class="n">listFiles</span><span class="p">():</span>
-        <span class="n">tgt</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">fset_file</span><span class="o">.</span><span class="n">getName</span><span class="p">())</span>
-        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">tgt</span><span class="p">):</span>
-            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: target file &#39;</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">&#39; already existing!&quot;</span><span class="p">)</span>
+        <span class="c1"># for foo in dir(fset_file):</span>
+        <span class="c1">#     log.error(foo)</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="n">fset_file</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span>
+        <span class="n">file_path</span> <span class="o">=</span> <span class="n">fset_file</span><span class="o">.</span><span class="n">getPath</span><span class="p">()</span>
+        <span class="n">downloads</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">fset_file</span><span class="o">.</span><span class="n">getId</span><span class="p">(),</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)))</span>
+
+    <span class="c1"># determine the common prefix, e.g. `hrm-test-02_3/2022-02/17/14-34-16.480/`</span>
+    <span class="n">all_files</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">downloads</span><span class="p">]</span>
+    <span class="n">strip</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">commonprefix</span><span class="p">(</span><span class="n">all_files</span><span class="p">)</span><span class="o">.</span><span class="n">rindex</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="c1"># strip the common prefix, check if any of the files already exist:</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">downloads</span><span class="p">):</span>
+        <span class="n">rel_path</span> <span class="o">=</span> <span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">strip</span><span class="p">:]</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;relative path: </span><span class="si">{</span><span class="n">rel_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">abs_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">rel_path</span><span class="p">)</span>
+        <span class="n">downloads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">abs_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">abs_path</span><span class="p">):</span>
+            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: file &#39;</span><span class="si">{</span><span class="n">abs_path</span><span class="si">}</span><span class="s2">&#39; already existing!&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="n">fset_id</span> <span class="o">=</span> <span class="n">fset_file</span><span class="o">.</span><span class="n">getId</span><span class="p">()</span>
-        <span class="n">downloads</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">fset_id</span><span class="p">,</span> <span class="n">tgt</span><span class="p">))</span>
     <span class="c1"># now initiate the downloads for all original files:</span>
-    <span class="k">for</span> <span class="p">(</span><span class="n">fset_id</span><span class="p">,</span> <span class="n">tgt</span><span class="p">)</span> <span class="ow">in</span> <span class="n">downloads</span><span class="p">:</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">file_id</span><span class="p">,</span> <span class="n">tgt</span><span class="p">)</span> <span class="ow">in</span> <span class="n">downloads</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">conn</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">OriginalFileI</span><span class="p">(</span><span class="n">fset_id</span><span class="p">),</span> <span class="n">tgt</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">tgt</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">OriginalFileI</span><span class="p">(</span><span class="n">file_id</span><span class="p">),</span> <span class="n">tgt</span><span class="p">)</span>
         <span class="k">except</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=bare-except</span>
-            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: downloading </span><span class="si">{</span><span class="n">fset_id</span><span class="si">}</span><span class="s2"> to &#39;</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">&#39; failed!&quot;</span><span class="p">)</span>
+            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: downloading </span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2"> to &#39;</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">&#39; failed!&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ID </span><span class="si">{</span><span class="n">fset_id</span><span class="si">}</span><span class="s2"> downloaded as &#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">tgt</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ID </span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2"> downloaded as &#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">tgt</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
     <span class="c1"># NOTE: for filesets with a single file or e.g. ICS/IDS pairs it makes</span>
     <span class="c1"># sense to use the target name of the first file to construct the name for</span>
     <span class="c1"># the thumbnail, but it is unclear whether this is a universal approach:</span>
@@ -492,19 +565,29 @@ The destination path.</li>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to fetch thumbnail for OMERO image [</span><span class="si">{</span><span class="n">image_id</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Requested target location: [</span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+
+    <span class="n">base_dir</span><span class="p">,</span> <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
+    <span class="n">target_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">base_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;hrm_previews&quot;</span>
+    <span class="n">target</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">target_dir</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">.preview_xy.jpg&quot;</span>
+
     <span class="n">image_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="s2">&quot;Image&quot;</span><span class="p">,</span> <span class="n">image_id</span><span class="p">)</span>
     <span class="n">image_data</span> <span class="o">=</span> <span class="n">image_obj</span><span class="o">.</span><span class="n">getThumbnail</span><span class="p">()</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;len(image_data)=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">image_data</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">thumbnail</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">image_data</span><span class="p">))</span>
-    <span class="n">base_dir</span><span class="p">,</span> <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
-    <span class="n">target</span> <span class="o">=</span> <span class="s2">&quot;/hrm_previews/&quot;</span> <span class="o">+</span> <span class="n">fname</span> <span class="o">+</span> <span class="s2">&quot;.preview_xy.jpg&quot;</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">thumbnail</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">base_dir</span> <span class="o">+</span> <span class="n">target</span><span class="p">)</span>
-        <span class="c1"># TODO: os.chown() to fix permissions, see #457!</span>
+        <span class="n">target_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># for an unkown reason using mode=(S_IRWXU | S_IRWXG) on the `mkdir()` call</span>
+        <span class="c1"># doesn&#39;t seem to work, so we have to add group-write in a second step:</span>
+        <span class="n">target_dir</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">target_dir</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mode</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IWGRP</span><span class="p">)</span>
+        <span class="n">thumbnail</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">as_posix</span><span class="p">(),</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;jpeg&quot;</span><span class="p">)</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Thumbnail downloaded to &#39;</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="kc">True</span>
+        <span class="n">target</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mode</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IWGRP</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Added group-write permissions to &#39;</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=broad-except</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR downloading thumbnail to &#39;</span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&#39;: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="kc">True</span>
 </pre></div>
 
         </details>
@@ -539,12 +622,12 @@ The destination filename.</li>
 
         
             <span class="def">def</span>
-            <span class="name">to_omero</span><span class="signature">(conn, id_str, image_file, omero_logfile=&#39;&#39;)</span>:
+            <span class="name">to_omero</span><span class="signature">(conn, id_str, image_file, omero_logfile=&#39;&#39;, _fetch_zip_only=False)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">to_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">image_file</span><span class="p">,</span> <span class="n">omero_logfile</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">to_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">image_file</span><span class="p">,</span> <span class="n">omero_logfile</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">_fetch_zip_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Upload an image into a specific dataset in OMERO.</span>
 
 <span class="sd">    In case we know from the suffix that a given  format is not supported by OMERO, the</span>
@@ -569,6 +652,9 @@ The destination filename.</li>
 <span class="sd">        If the parameter is non-empty the `--debug ALL` option will be added to the</span>
 <span class="sd">        `omero` call with the output being placed in the specified file. If the</span>
 <span class="sd">        parameter is omitted or empty, debug messages will be disabled.</span>
+<span class="sd">    _fetch_zip_only : bool, optional</span>
+<span class="sd">        Replaces all parameters to the import call by `--advanced-help`, which is</span>
+<span class="sd">        **intended for INTERNAL TESTING ONLY**. No actual import will be attempted!</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -591,7 +677,9 @@ The destination filename.</li>
 
     <span class="n">_</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">dset_id</span> <span class="o">=</span> <span class="n">id_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">obj_type</span> <span class="o">!=</span> <span class="s2">&quot;Dataset&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;A &#39;--dset&#39; ID of the form &#39;G:7:Dataset:12345&#39; is required!&quot;</span><span class="p">)</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Currently only the upload to &#39;Dataset&#39; objects is supported!&quot;</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="c1"># set the group for this import session:</span>
     <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
@@ -617,6 +705,7 @@ The destination filename.</li>
     <span class="c1"># TODO: check the more recent code mentioned by the OME developers in the forum</span>
     <span class="c1"># thread: https://forum.image.sc/t/automated-uploader-to-omero-in-python/38290</span>
     <span class="c1"># https://gitlab.com/openmicroscopy/incubator/omero-python-importer/-/blob/master/import.py)</span>
+    <span class="c1"># and also see https://pypi.org/project/omero-upload/</span>
     <span class="kn">from</span> <span class="nn">omero.cli</span> <span class="kn">import</span> <span class="n">CLI</span>
 
     <span class="n">cli</span> <span class="o">=</span> <span class="n">CLI</span><span class="p">()</span>
@@ -644,11 +733,30 @@ The destination filename.</li>
     <span class="c1">#### for ann_id in annotations:</span>
     <span class="c1">####     import_args.extend([&#39;--annotation_link&#39;, str(ann_id)])</span>
     <span class="n">import_args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_fetch_zip_only</span><span class="p">:</span>
+        <span class="c1"># calling &#39;import --advanced-help&#39; will trigger the download of OMERO.java.zip</span>
+        <span class="c1"># in case it is not yet present (the extract_image_id() call will then fail,</span>
+        <span class="c1"># resulting in the whole function returning &quot;False&quot;)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="s2">&quot;As &#39;_fetch_zip_only&#39; is set NO IMPORT WILL BE ATTEMPTED!&quot;</span><span class="p">)</span>
+        <span class="n">import_args</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;import&quot;</span><span class="p">,</span> <span class="s2">&quot;--advanced-help&quot;</span><span class="p">]</span>
     <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;import_args: </span><span class="si">{</span><span class="n">import_args</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">cli</span><span class="o">.</span><span class="n">invoke</span><span class="p">(</span><span class="n">import_args</span><span class="p">,</span> <span class="n">strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">imported_id</span> <span class="o">=</span> <span class="n">extract_image_id</span><span class="p">(</span><span class="n">cap_stdout</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Imported OMERO image ID: </span><span class="si">{</span><span class="n">imported_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">PermissionError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+        <span class="n">omero_userdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OMERO_USERDIR&quot;</span><span class="p">,</span> <span class="s2">&quot;&lt;not-set&gt;&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Current OMERO_USERDIR value: </span><span class="si">{</span><span class="n">omero_userdir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span>
+            <span class="s2">&quot;ERROR&quot;</span><span class="p">,</span>
+            <span class="p">(</span>
+                <span class="s2">&quot;Please make sure to read the documentation about the &#39;OMERO_USERDIR&#39; &quot;</span>
+                <span class="s2">&quot;environment variable and also check if the file to be imported has &quot;</span>
+                <span class="s2">&quot;appropriate permissions!&quot;</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=broad-except</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: uploading &#39;</span><span class="si">{</span><span class="n">image_file</span><span class="si">}</span><span class="s2">&#39; to </span><span class="si">{</span><span class="n">id_str</span><span class="si">}</span><span class="s2"> failed!&quot;</span><span class="p">)</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;OMERO error message: &gt;&gt;&gt;</span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&lt;&lt;&lt;&quot;</span><span class="p">)</span>
@@ -688,6 +796,9 @@ The prefix of files to be used to capture OMERO's <code>import</code> call stder
 If the parameter is non-empty the <code>--debug ALL</code> option will be added to the
 <code>omero</code> call with the output being placed in the specified file. If the
 parameter is omitted or empty, debug messages will be disabled.</li>
+<li><strong>_fetch_zip_only</strong> (bool, optional):
+Replaces all parameters to the import call by <code>--advanced-help</code>, which is
+<strong>intended for INTERNAL TESTING ONLY</strong>. No actual import will be attempted!</li>
 </ul>
 
 <h6 id="returns">Returns</h6>

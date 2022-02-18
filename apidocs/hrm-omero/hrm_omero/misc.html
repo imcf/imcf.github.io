@@ -74,7 +74,7 @@
 <span class="kn">from</span> <span class="nn">loguru</span> <span class="kn">import</span> <span class="n">logger</span> <span class="k">as</span> <span class="n">log</span>
 
 
-<span class="k">class</span> <span class="nc">OmeroId</span><span class="p">():</span>
+<span class="k">class</span> <span class="nc">OmeroId</span><span class="p">:</span>
 
     <span class="sd">&quot;&quot;&quot;Representation of a (group-qualified) OMERO object ID.</span>
 
@@ -111,6 +111,7 @@
 <span class="sd">        ValueError</span>
 <span class="sd">            Raised in case a malformed `id_str` was given.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parsing ID string: [</span><span class="si">{</span><span class="n">id_str</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">id_str</span> <span class="o">==</span> <span class="s2">&quot;ROOT&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">=</span> <span class="s2">&quot;BaseTree&quot;</span>
@@ -123,7 +124,7 @@
             <span class="nb">int</span><span class="p">(</span><span class="n">group_id</span><span class="p">)</span>  <span class="c1"># raises a TypeError if cast to int fails</span>
             <span class="nb">int</span><span class="p">(</span><span class="n">obj_id</span><span class="p">)</span>  <span class="c1"># raises a TypeError if cast to int fails</span>
             <span class="k">if</span> <span class="n">group_type</span> <span class="o">!=</span> <span class="s2">&quot;G&quot;</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid group qualifier &#39;</span><span class="si">{</span><span class="n">group_type</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">obj_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
                 <span class="s2">&quot;Image&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;Dataset&quot;</span><span class="p">,</span>
@@ -131,10 +132,13 @@
                 <span class="s2">&quot;Experimenter&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;ExperimenterGroup&quot;</span><span class="p">,</span>
             <span class="p">]:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid object type &#39;</span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">obj_id</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid object ID &#39;</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
             <span class="c1"># pylint: disable-msg=raise-missing-from</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Malformed `id_str`, expecting `G:[gid]:[type]:[oid]`!&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Malformed id_str &#39;</span><span class="si">{</span><span class="n">id_str</span><span class="si">}</span><span class="s2">&#39;, expecting `G:[gid]:[type]:[oid]`.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
 
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validated ID string: group=</span><span class="si">{</span><span class="n">group_id</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="n">group_id</span>
@@ -143,7 +147,6 @@
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;G:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">group</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">&quot;</span>
-
 
 
 <span class="k">def</span> <span class="nf">printlog</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">message</span><span class="p">):</span>
@@ -184,7 +187,7 @@
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">OmeroId</span><span class="p">():</span>
+            <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">OmeroId</span><span class="p">:</span>
 
     <span class="sd">&quot;&quot;&quot;Representation of a (group-qualified) OMERO object ID.</span>
 
@@ -221,6 +224,7 @@
 <span class="sd">        ValueError</span>
 <span class="sd">            Raised in case a malformed `id_str` was given.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parsing ID string: [</span><span class="si">{</span><span class="n">id_str</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">id_str</span> <span class="o">==</span> <span class="s2">&quot;ROOT&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">=</span> <span class="s2">&quot;BaseTree&quot;</span>
@@ -233,7 +237,7 @@
             <span class="nb">int</span><span class="p">(</span><span class="n">group_id</span><span class="p">)</span>  <span class="c1"># raises a TypeError if cast to int fails</span>
             <span class="nb">int</span><span class="p">(</span><span class="n">obj_id</span><span class="p">)</span>  <span class="c1"># raises a TypeError if cast to int fails</span>
             <span class="k">if</span> <span class="n">group_type</span> <span class="o">!=</span> <span class="s2">&quot;G&quot;</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid group qualifier &#39;</span><span class="si">{</span><span class="n">group_type</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">obj_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
                 <span class="s2">&quot;Image&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;Dataset&quot;</span><span class="p">,</span>
@@ -241,10 +245,13 @@
                 <span class="s2">&quot;Experimenter&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;ExperimenterGroup&quot;</span><span class="p">,</span>
             <span class="p">]:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid object type &#39;</span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">obj_id</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid object ID &#39;</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
             <span class="c1"># pylint: disable-msg=raise-missing-from</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Malformed `id_str`, expecting `G:[gid]:[type]:[oid]`!&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Malformed id_str &#39;</span><span class="si">{</span><span class="n">id_str</span><span class="si">}</span><span class="s2">&#39;, expecting `G:[gid]:[type]:[oid]`.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
 
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validated ID string: group=</span><span class="si">{</span><span class="n">group_id</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="n">group_id</span>
@@ -318,6 +325,7 @@ the properties <code>group</code>, <code>obj_type</code> and <code>obj_id</code>
 <span class="sd">        ValueError</span>
 <span class="sd">            Raised in case a malformed `id_str` was given.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parsing ID string: [</span><span class="si">{</span><span class="n">id_str</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">id_str</span> <span class="o">==</span> <span class="s2">&quot;ROOT&quot;</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">=</span> <span class="s2">&quot;BaseTree&quot;</span>
@@ -330,7 +338,7 @@ the properties <code>group</code>, <code>obj_type</code> and <code>obj_id</code>
             <span class="nb">int</span><span class="p">(</span><span class="n">group_id</span><span class="p">)</span>  <span class="c1"># raises a TypeError if cast to int fails</span>
             <span class="nb">int</span><span class="p">(</span><span class="n">obj_id</span><span class="p">)</span>  <span class="c1"># raises a TypeError if cast to int fails</span>
             <span class="k">if</span> <span class="n">group_type</span> <span class="o">!=</span> <span class="s2">&quot;G&quot;</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid group qualifier &#39;</span><span class="si">{</span><span class="n">group_type</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">obj_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
                 <span class="s2">&quot;Image&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;Dataset&quot;</span><span class="p">,</span>
@@ -338,10 +346,13 @@ the properties <code>group</code>, <code>obj_type</code> and <code>obj_id</code>
                 <span class="s2">&quot;Experimenter&quot;</span><span class="p">,</span>
                 <span class="s2">&quot;ExperimenterGroup&quot;</span><span class="p">,</span>
             <span class="p">]:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid object type &#39;</span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">obj_id</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid object ID &#39;</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
             <span class="c1"># pylint: disable-msg=raise-missing-from</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Malformed `id_str`, expecting `G:[gid]:[type]:[oid]`!&quot;</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Malformed id_str &#39;</span><span class="si">{</span><span class="n">id_str</span><span class="si">}</span><span class="s2">&#39;, expecting `G:[gid]:[type]:[oid]`.&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
 
         <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validated ID string: group=</span><span class="si">{</span><span class="n">group_id</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">group</span> <span class="o">=</span> <span class="n">group_id</span>

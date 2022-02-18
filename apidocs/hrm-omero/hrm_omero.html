@@ -32,10 +32,15 @@
                     <ul>
   <li><a href="#the-hrm-omero-connector">The HRM-OMERO connector</a>
   <ul>
-    <li><a href="#installation">Installation</a>
+    <li><a href="#setup">Setup</a>
     <ul>
-      <li><a href="#distributions-that-include-python-36-or-newer-eg-ubuntu-2004">Distributions that include Python 3.6 or newer (e.g. Ubuntu 20.04)</a></li>
-      <li><a href="#centos-6">CentOS 6</a></li>
+      <li><a href="#installing-requirements">Installing requirements</a>
+      <ul>
+        <li><a href="#centos-rhel-7-and-8">CentOS / RHEL 7 and 8</a></li>
+        <li><a href="#ubuntu-2004">Ubuntu 20.04</a></li>
+      </ul></li>
+      <li><a href="#installing-the-hrm-omero-package">Installing the HRM-OMERO package</a></li>
+      <li><a href="#configuration">Configuration</a></li>
     </ul></li>
     <li><a href="#debugging">Debugging</a></li>
     <li><a href="#example-usage">Example Usage</a>
@@ -104,57 +109,62 @@ hrm_omero    </h1>
 
 <h1 id="the-hrm-omero-connector">The HRM-OMERO connector</h1>
 
-<p>This project provides a connector to allow for communication between an <a href="https://github.com/aarpon/hrm/blob/master/bin/ome_hrm.py">HRM (Huygens
-Remote Manager)</a> and an <a href="https://github.com/aarpon/hrm/blob/master/bin/hrm_config.py">OMERO server</a>.</p>
+<p>This project provides a connector to allow for communication between an <a href="https://huygens-rm.org/">HRM (Huygens
+Remote Manager)</a> and an <a href="https://www.openmicroscopy.org/omero/">OMERO server</a>.</p>
 
 <p>Its purpose is to simplify the data transfer by allowing raw images to be downloaded
 from OMERO as well as uploading deconvolution results back to OMERO directly from within
 the HRM web interface.</p>
 
-<h2 id="installation">Installation</h2>
+<h2 id="setup">Setup</h2>
 
-<h3 id="distributions-that-include-python-36-or-newer-eg-ubuntu-2004">Distributions that include Python 3.6 or newer (e.g. Ubuntu 20.04)</h3>
+<h3 id="installing-requirements">Installing requirements</h3>
 
-<div class="codehilite"><pre><span></span><code>pip install hrm-omero
-</code></pre></div>
-
-<h3 id="centos-6">CentOS 6</h3>
-
-<p><a href="https://wiki.centos.org/About/Product">CentOS 6</a> is EOL since 2020-11-30, so you should really consider upgrading to a newer
-release. However, we know that sometimes this is not easily doable due to dependencies,
-hardware support or whatever reason - so here are instructions to make the connector
-work on that old distribution.</p>
-
-<p>It's strongly recommended to use <a href="https://github.com/pyenv/pyenv">pyenv</a> for installing <em>Python 3.6</em>, which is the
-absolute minimum for using the HRM-OMERO connector (or its actual dependencies, to be
-fully correct). In case you don't want <em>pyenv</em> to mess with your system setup, you can
-simply ask it to install that version somewhere and then only create a <em>virtual
-environment</em> from it using the <code>--copies</code> flag - this will result in a standalone
-setup that won't affect anything else on the system.</p>
+<h4 id="centos-rhel-7-and-8">CentOS / RHEL 7 and 8</h4>
 
 <div class="codehilite"><pre><span></span><code><span class="c1"># install the build-time requirements for Python 3.6 and Java 1.8 for Bio-Formats</span>
-sudo yum install openssl-devel bzip2-devel readline-devel gcc-c++ java-1.8.0-openjdk
-
-<span class="c1"># get pyenv and put it into your home directory or wherever you prefer it to be</span>
-git clone https://github.com/pyenv/pyenv.git ~/.pyenv
-
-<span class="c1"># activate pyenv *FOR THIS SHELL ONLY* (needs to be done whenever you want to use it)</span>
-<span class="nb">export</span> <span class="nv">PYENV_ROOT</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$HOME</span><span class="s2">/.pyenv&quot;</span>
-<span class="nb">export</span> <span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$PYENV_ROOT</span><span class="s2">/bin:</span><span class="nv">$PATH</span><span class="s2">&quot;</span>
-<span class="nb">eval</span> <span class="s2">&quot;</span><span class="k">$(</span>pyenv init --path<span class="k">)</span><span class="s2">&quot;</span>
-<span class="nb">eval</span> <span class="s2">&quot;</span><span class="k">$(</span>pyenv init -<span class="k">)</span><span class="s2">&quot;</span>
-
-<span class="c1"># ask pyenv to install Python 3.6.15 (will end up in &quot;~/.pyenv/versions/3.6.15/&quot;)</span>
-pyenv install <span class="m">3</span>.6.15  <span class="c1"># takes a bit (compiling...)</span>
+sudo yum install <span class="se">\</span>
+    python36 <span class="se">\</span>
+    python36-devel <span class="se">\</span>
+    openssl-devel <span class="se">\</span>
+    bzip2-devel <span class="se">\</span>
+    readline-devel <span class="se">\</span>
+    gcc-c++ <span class="se">\</span>
+    java-1.8.0-openjdk
 
 <span class="c1"># define the target path for the virtual environment:</span>
-<span class="nv">$HRM_OMERO_VENV</span><span class="o">=</span><span class="s2">&quot;/opt/venvs/hrm-omero&quot;</span>
+<span class="nv">HRM_OMERO_VENV</span><span class="o">=</span><span class="s2">&quot;/opt/venvs/hrm-omero&quot;</span>
 
-<span class="c1"># create a bare, stand-alone Python 3.6 virtual environment</span>
-~/.pyenv/versions/3.6.15/bin/python -m venv --copies <span class="nv">$HRM_OMERO_VENV</span>
+<span class="c1"># create a Python 3.6 virtual environment:</span>
+python3 -m venv <span class="nv">$HRM_OMERO_VENV</span>
 
-<span class="c1"># now you can install the connector into this virtual environment - please note that the</span>
-<span class="c1"># installation takes quite a while (~15min) as it needs to build the ZeroC Ice bindings</span>
+<span class="c1"># upgrade pip, install wheel:</span>
+<span class="nv">$HRM_OMERO_VENV</span>/bin/pip install --upgrade pip wheel
+</code></pre></div>
+
+<h4 id="ubuntu-2004">Ubuntu 20.04</h4>
+
+<div class="codehilite"><pre><span></span><code>apt install -y python3.8-venv
+
+<span class="c1"># define the target path for the virtual environment:</span>
+<span class="nv">HRM_OMERO_VENV</span><span class="o">=</span><span class="s2">&quot;/opt/venvs/hrm-omero&quot;</span>
+
+<span class="c1"># create a Python 3.6 virtual environment:</span>
+python3 -m venv <span class="nv">$HRM_OMERO_VENV</span>
+
+<span class="c1"># upgrade pip, install wheel:</span>
+<span class="nv">$HRM_OMERO_VENV</span>/bin/pip install --upgrade pip wheel
+
+<span class="c1"># install the pre-built Ice wheel from the OME project:</span>
+<span class="nv">$ICE_WHEEL</span><span class="o">=</span><span class="s2">&quot;zeroc_ice-3.6.5-cp38-cp38-linux_x86_64.whl&quot;</span>
+wget <span class="s2">&quot;https://github.com/ome/zeroc-ice-ubuntu2004/releases/download/0.2.0/</span><span class="nv">$ICE_WHEEL</span><span class="s2">&quot;</span>
+<span class="nv">$HRM_OMERO_VENV</span>/bin/pip install <span class="nv">$ICE_WHEEL</span>
+</code></pre></div>
+
+<h3 id="installing-the-hrm-omero-package">Installing the HRM-OMERO package</h3>
+
+<div class="codehilite"><pre><span></span><code><span class="c1"># install the connector - please note that it takes quite a while (~15min) as it needs</span>
+<span class="c1"># to build (compile) the ZeroC Ice bindings:</span>
 <span class="nv">$HRM_OMERO_VENV</span>/bin/pip install hrm-omero
 
 <span class="c1"># from now on you can simply call the connector using its full path, there is no need</span>
@@ -167,7 +177,27 @@ mv <span class="s2">&quot;ome_hrm.py&quot;</span> <span class="s2">&quot;__old__
 ln -s <span class="s2">&quot;</span><span class="nv">$HRM_OMERO_VENV</span><span class="s2">/bin/ome-hrm&quot;</span> <span class="s2">&quot;ome_hrm.py&quot;</span>
 </code></pre></div>
 
+<h3 id="configuration">Configuration</h3>
+
+<p>Add the following lines to <code>/etc/hrm.conf</code> and fill in the desired values:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1"># Interaction with OMERO (if switched on in hrm/config).</span>
+<span class="nv">OMERO_HOSTNAME</span><span class="o">=</span><span class="s2">&quot;omero.example.xy&quot;</span>
+<span class="c1"># OMERO_PORT=&quot;4064&quot;</span>
+<span class="nv">OMERO_CONNECTOR_LOGLEVEL</span><span class="o">=</span><span class="s2">&quot;DEBUG&quot;</span>
+<span class="c1"># OMERO_CONNECTOR_LOGFILE_DISABLED=&quot;true&quot;</span>
+<span class="nv">OMERO_USERDIR</span><span class="o">=</span><span class="s2">&quot;/var/cache/omero&quot;</span>
+</code></pre></div>
+
 <h2 id="debugging">Debugging</h2>
+
+<p>The connector will try to place log messages in a file in the location specified as
+<code>$HRM_LOG</code> in the HRM configuration file <strong>unless</strong> a configuration option named
+<code>$OMERO_CONNECTOR_LOGFILE_DISABLED</code> is present and non-empty. In a standard setup this
+will result in the log file being <code>/var/log/hrm/omero-connector.log</code>.</p>
+
+<p>In addtion, log messages produced by the connector when called by HRM will be sent to
+<code>stderr</code>, which usually means they will end up in the web server's <em>error log</em>.</p>
 
 <p>By default the connector will be rather silent as otherwise the log files will be
 cluttered up quite a bit on a production system. However, it is possible to increase the
@@ -178,9 +208,7 @@ the default) it's also possible to set the verbosity level by adjusting the
 <code>OMERO_CONNECTOR_LOGLEVEL</code> in <code>/etc/hrm.conf</code>.</p>
 
 <p>Valid settings are <code>"SUCCESS"</code>, <code>"INFO"</code>, <code>"DEBUG"</code> and <code>"TRACE"</code>. If the option is
-commented out in the configuration file, the level will be set to <code>WARNING</code>. Log
-messages produced by the connector when called by HRM will usually end up in the web
-server's error log (as they go to <code>stderr</code>).</p>
+commented out in the configuration file, the level will be set to <code>WARNING</code>.</p>
 
 <h2 id="example-usage">Example Usage</h2>
 
@@ -291,20 +319,47 @@ used:</p>
 
 <p>By default only <em>local</em> tests will be performed, all tests that require the connection
 to an actual OMERO instance are disabled. To activate them you need to pass the
-<code>--online</code> flag to the pytest call and a corresponding file <code>omero_test_settings.py</code>
-needs to be present in the repository root that contains the settings on how to connect
-to your OMERO, plus the information on what to test. See <code>tests/resources/settings/</code> for
-an example file, copy it to the repository root and make your adjustments there. Then
+<code>--online</code> flag to the pytest call and a corresponding file <code>site_specific.py</code> needs to
+be present in <code>tests/online/settings/</code> that contains the settings on how to connect to
+your OMERO, plus the mapping of object and user IDs. See <code>tests/resources/settings/</code> for
+a template file, copy it to the repository root and make your adjustments there. Then
 run this command:</p>
 
 <div class="codehilite"><pre><span></span><code>poetry run pytest --online
 </code></pre></div>
 
+<p>NOTE: each online test does a connectivity check first, if the OMERO server specified in
+the site-specific settings can't be reached they will be skipped (instead of generating
+tons of failed test results).</p>
+
 <h3 id="prepare-an-omero-instance-for-tests">Prepare an OMERO instance for tests</h3>
 
-<p>See the example script in <code>resources/scripts/prepare-omero-for-testing.sh</code> on how to set
-up an OMERO instance so it can be used with the <code>--online</code> tests. Note that currently
-the settings file will still need to be adjusted for <em>user</em> and <em>object IDs</em>!</p>
+<p>It is recommended to test against an isolated OMERO instance to avoid messing up any
+production data. The script in <code>resources/omero-recipes/setup-ubuntu-20-04.sh</code> can be
+used to install OMERO quickly on Ubuntu 20.04. A reasonable approach would be this:</p>
+
+<ul>
+<li>Create a VM / container with a basic Ubuntu 20.04 installation.</li>
+<li>Copy the OMERO-setup-script into the VM / container.</li>
+<li>Run the setup script <em>from within</em> the VM / container.</li>
+</ul>
+
+<p>Once OMERO is running, you can use the preparation script to create the required groups,
+users, projects, ... in that OMERO instance. Please note that the preparation script is
+meant to be run <strong>from the HRM-OMERO development environment</strong> (i.e. not from within
+your shiny new OMERO-VM)!</p>
+
+<p>Please <strong>note</strong> that values for the OMERO server address, passwords for the omero <code>root</code>
+user and the additional users created during the preparation can be <em>pre-seeded</em> by
+providing an input file, see <code>resources/scripts/omero-seeds.inc.sh</code> for an example.</p>
+
+<p>Assuming you copied the seeds file to <code>my-omero-seeds.inc.sh</code>, you can simply run the
+preparation script like this:</p>
+
+<div class="codehilite"><pre><span></span><code>bash resources/scripts/prepare-omero-for-testing.sh <span class="se">\</span>
+    resources/scripts/my-omero-seeds.inc.sh <span class="se">\</span>
+    tests/resources/settings/site_specific.yml
+</code></pre></div>
 
 <h2 id="generating-documentation">Generating Documentation</h2>
 
@@ -320,24 +375,36 @@ generate the HTML documentation use this <code>poetry</code> command:</p>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> use "key-value pairs" for the HRM job parameter summaries</li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> trees for different groups
 <ul>
-<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> (REJECTED) requesting groups through a commandline option</li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> (REJECTED) <strike>requesting groups through a commandline option</strike></li>
 </ul></li>
-<li><input type="checkbox" class="task-list-item-checkbox" disabled> logging
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> logging
 <ul>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> proper logging (<a href="https://github.com/Delgan/loguru">loguru</a>)</li>
-<li><input type="checkbox" class="task-list-item-checkbox" disabled> separate logfile for the connector</li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> separate logfile for the connector</li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> adjust log verbosity through a parameter</li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> adjust log verbosity through the configuration file</li>
 </ul></li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> allow debug logging of the "omero import" call
 <ul>
-<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> (REJECTED) requested through a command line argument</li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> (REJECTED) <strike>requested through a command line argument</strike></li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> through the configuration file</li>
 </ul></li>
-<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> (REJECTED) offer download of OME-TIFFs</li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> (REJECTED) <strike>offer download of OME-TIFFs</strike></li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> don't use a command line parameter for the OMERO password</li>
 <li><input type="checkbox" class="task-list-item-checkbox" disabled> add command line action to create new projects and datasets in OMERO</li>
-<li><input type="checkbox" class="task-list-item-checkbox" disabled> lift assumption that datasets are always members of a project in OMERO</li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> lift assumption that datasets are always members of a project in OMERO</li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> create target directory for thumbnails in case it doesn't exist</li>
+<li><input type="checkbox" class="task-list-item-checkbox" disabled> create documentation on the <code>OMERO_USERDIR</code> configuration</li>
+<li><input type="checkbox" class="task-list-item-checkbox" disabled> make log verbosity setting optional in the configuration file, otherwise
+  <code>Adding a file sink for logging failed: Level '' does not exist</code> is issued
+  from <code><a href="hrm_omero/cli.html">hrm_omero.cli</a>:logger_add_file_sink</code> if nothing is present</li>
+<li><input type="checkbox" class="task-list-item-checkbox" disabled> try to catch "assert failed" errors when uploading data to OMERO, this usually
+  indicates that the file / fileset was refused by Bio-Formats</li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> retain structure of complex multi-file datasets like Olympus <code>.vsi</code> that
+  expects files to be in specific sub-directories etc.</li>
+<li><input type="checkbox" class="task-list-item-checkbox" disabled> look into permissions of directories created during transfers from OMERO, either
+  a <code>chmod</code> should be applied or the setup instructions need to be adapted so those
+  directories get created with correct permissions</li>
 </ul>
 
 <h1 id="changelog">Changelog</h1>
@@ -354,6 +421,9 @@ calling <code>ps fu -e</code> or similar) and also prevents it from showing up i
 stack trace in case an uncaught exception is raised.</li>
 <li>Log level of the HRM-OMERO connector itself can now be set through the configuration
 option <code>OMERO_CONNECTOR_LOGLEVEL</code> in the HRM config file.</li>
+<li>Log messages of the connector will also be placed in a separate log file in the
+default location defined via <code>HRM_LOG</code> in the HRM config file. This can be disabled by
+setting <code>OMERO_CONNECTOR_LOGFILE_DISABLED=true</code>.</li>
 <li>Debug logging for the OMERO <em>import call</em> can now be requested be setting the
 configuration option <code>OMERO_DEBUG_LOG</code> in the HRM config file.</li>
 <li><code><a href="hrm_omero/hrm.html#parse_summary">hrm_omero.hrm.parse_summary()</a></code> has been added to provide a function for parsing the
@@ -362,6 +432,8 @@ parameter summary from an HRM job into a (nested) dict.</li>
 files that belong to the set of results from a certain HRM job.</li>
 <li><code><a href="hrm_omero/omero.html#add_annotation_keyvalue">hrm_omero.omero.add_annotation_keyvalue()</a></code> can be used to add so-called <a href="https://docs.openmicroscopy.org/omero/5.6/developers/Python.html#write-data">Map
 Annotations</a> (key-value pairs) to objects in OMERO.</li>
+<li><code><a href="hrm_omero/omero.html#find_recently_imported">hrm_omero.omero.find_recently_imported()</a></code> tries to identify an image in OMERO using
+the import timestamp and the object label as criteria.</li>
 <li>A decorator <code><a href="hrm_omero/decorators.html#connect_and_set_group">hrm_omero.decorators.connect_and_set_group()</a></code> is now available that can
 be used with functions that require a valid connection plus an OMERO object identifier
 pair (submitted on the command line as "<code>G:4:Image:12345</code>" or similar, passed on to
@@ -383,6 +455,13 @@ would be called are printed to stdout.</li>
 properly supported.</li>
 <li>HRM job parameter summaries are now being added as OMERO <a href="https://docs.openmicroscopy.org/omero/5.6/developers/Python.html#write-data">"Map Annotations"</a>
 instead of simply being a comment string.</li>
+<li>Formats like e.g. Olympus <code>.vsi</code> requiring their files to be placed in a specific
+directory structure are now properly supported.</li>
+<li><em>Datasets</em> in OMERO that are not associated to a <em>Project</em> will no longer be ignored
+but rather be shown on the same level than the user's projects, just as OMERO.web and
+OMERO.insight are doing it.</li>
+<li>The target directory for downloading preview thumbnails from OMERO will be created
+automatically in case it doesn't exist yet.</li>
 <li>The command line parameter <code>--password</code> (or <code>-w</code>) is now <em>deprecated</em> in favor of
 using the environment variable described above.</li>
 <li>The following functions are now <em>deprecated</em> and will be removed in a future release.
@@ -516,7 +595,7 @@ connector</a> that used to be shipped with the HRM itself previously.</p>
 <span class="sd">.. include:: ../../API-CHANGES.md</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.4.0-dev2&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.4.0-dev5&quot;</span>
 </pre></div>
 
         </details>

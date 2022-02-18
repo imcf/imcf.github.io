@@ -59,7 +59,7 @@
 <span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">from</span> <span class="nn">loguru</span> <span class="kn">import</span> <span class="n">logger</span> <span class="k">as</span> <span class="n">log</span>
 
-<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">parse_id_str</span>
+<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">OmeroId</span>
 
 
 <span class="k">def</span> <span class="nf">connect_and_set_group</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
@@ -69,41 +69,38 @@
 <span class="sd">    connection to OMERO as well as the group for the connection / session to be switched</span>
 <span class="sd">    explicitly.</span>
 
-<span class="sd">    In addition it also validates the `id_str` parameter to make sure only values are</span>
-<span class="sd">    accepted that will potentially work with the respective OMERO calls.</span>
-
-<span class="sd">    IMPORTANT: this decorator alters the signature of the function that is called - it</span>
-<span class="sd">    is **required** for the function to be decorated to have the first three parameters</span>
-<span class="sd">    of its signature to be `conn, obj_type, obj_id` as described in the **Other</span>
-<span class="sd">    Parameters** section below.</span>
+<span class="sd">    In addition it also checks the `omero_id` parameter and ensures it is an</span>
+<span class="sd">    object of type `hrm_omero.misc.OmeroId`. In case the parameter received is a</span>
+<span class="sd">    string, it will automatically create the corresponding `OmeroId` object,</span>
+<span class="sd">    which also checks the values of the ID for sanity.</span>
 
 <span class="sd">    Other Parameters</span>
 <span class="sd">    ----------------</span>
 <span class="sd">    conn : omero.gateway.BlitzGateway</span>
 <span class="sd">        The OMERO connection object.</span>
-<span class="sd">    obj_type : str</span>
-<span class="sd">        A valid OMERO object type, e.g. `Image` or `Dataset`.</span>
-<span class="sd">    obj_id : str or int</span>
-<span class="sd">        An OMERO object id, e.g. `1573559`.</span>
+<span class="sd">    omero_id : str or hrm_omero.misc.OmeroId</span>
+<span class="sd">        The fully qualified ID of an OMERO object (e.g. `G:23:Image:42`) as</span>
+<span class="sd">        a string or as an `hrm_omero.misc.OmeroId` object directly.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">wrapper_connect_and_set_group</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">wrapper_connect_and_set_group</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Inner wrapper function for the `connect_and_set_group` decorator.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        conn : omero.gateway.BlitzGateway</span>
 <span class="sd">            The OMERO connection object.</span>
-<span class="sd">        id_str : str</span>
-<span class="sd">            The ID of an OMERO object (e.g. `G:23:Image:42`).</span>
+<span class="sd">        omero_id : str or hrm_omero.misc.OmeroId</span>
+<span class="sd">            The fully qualified ID of an OMERO object (e.g. `G:23:Image:42`) as</span>
+<span class="sd">            a string or as an `hrm_omero.misc.OmeroId` object directly.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
 <span class="sd">            Raised in case the OMERO connection can&#39;t be established.</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            Raised in case a malformed `id_str` was given.</span>
+<span class="sd">            Raised in case a malformed `omero_id` was given.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># the connection might be closed (e.g. after importing an image), so force</span>
         <span class="c1"># re-establish it (note that `conn._connected` might even report the wrong</span>
@@ -113,13 +110,15 @@
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Failed to (re-)establish connection to OMERO!&quot;</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Successfully (re-)connected to OMERO!&quot;</span><span class="p">)</span>
 
-        <span class="n">group_id</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
+        <span class="c1"># if the ID is passed as a string parse it into an OmeroId object:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">omero_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">omero_id</span> <span class="o">=</span> <span class="n">OmeroId</span><span class="p">(</span><span class="n">omero_id</span><span class="p">)</span>
 
         <span class="c1"># set the OMERO group for the current connection session:</span>
-        <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">group_id</span><span class="p">)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Set OMERO session group to [</span><span class="si">{</span><span class="n">group_id</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Set OMERO session group to [</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
 
-        <span class="n">func</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">wrapper_connect_and_set_group</span>
 </pre></div>
@@ -144,41 +143,38 @@
 <span class="sd">    connection to OMERO as well as the group for the connection / session to be switched</span>
 <span class="sd">    explicitly.</span>
 
-<span class="sd">    In addition it also validates the `id_str` parameter to make sure only values are</span>
-<span class="sd">    accepted that will potentially work with the respective OMERO calls.</span>
-
-<span class="sd">    IMPORTANT: this decorator alters the signature of the function that is called - it</span>
-<span class="sd">    is **required** for the function to be decorated to have the first three parameters</span>
-<span class="sd">    of its signature to be `conn, obj_type, obj_id` as described in the **Other</span>
-<span class="sd">    Parameters** section below.</span>
+<span class="sd">    In addition it also checks the `omero_id` parameter and ensures it is an</span>
+<span class="sd">    object of type `hrm_omero.misc.OmeroId`. In case the parameter received is a</span>
+<span class="sd">    string, it will automatically create the corresponding `OmeroId` object,</span>
+<span class="sd">    which also checks the values of the ID for sanity.</span>
 
 <span class="sd">    Other Parameters</span>
 <span class="sd">    ----------------</span>
 <span class="sd">    conn : omero.gateway.BlitzGateway</span>
 <span class="sd">        The OMERO connection object.</span>
-<span class="sd">    obj_type : str</span>
-<span class="sd">        A valid OMERO object type, e.g. `Image` or `Dataset`.</span>
-<span class="sd">    obj_id : str or int</span>
-<span class="sd">        An OMERO object id, e.g. `1573559`.</span>
+<span class="sd">    omero_id : str or hrm_omero.misc.OmeroId</span>
+<span class="sd">        The fully qualified ID of an OMERO object (e.g. `G:23:Image:42`) as</span>
+<span class="sd">        a string or as an `hrm_omero.misc.OmeroId` object directly.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="nd">@functools</span><span class="o">.</span><span class="n">wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">wrapper_connect_and_set_group</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">wrapper_connect_and_set_group</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Inner wrapper function for the `connect_and_set_group` decorator.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        conn : omero.gateway.BlitzGateway</span>
 <span class="sd">            The OMERO connection object.</span>
-<span class="sd">        id_str : str</span>
-<span class="sd">            The ID of an OMERO object (e.g. `G:23:Image:42`).</span>
+<span class="sd">        omero_id : str or hrm_omero.misc.OmeroId</span>
+<span class="sd">            The fully qualified ID of an OMERO object (e.g. `G:23:Image:42`) as</span>
+<span class="sd">            a string or as an `hrm_omero.misc.OmeroId` object directly.</span>
 
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        RuntimeError</span>
 <span class="sd">            Raised in case the OMERO connection can&#39;t be established.</span>
 <span class="sd">        ValueError</span>
-<span class="sd">            Raised in case a malformed `id_str` was given.</span>
+<span class="sd">            Raised in case a malformed `omero_id` was given.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># the connection might be closed (e.g. after importing an image), so force</span>
         <span class="c1"># re-establish it (note that `conn._connected` might even report the wrong</span>
@@ -188,13 +184,15 @@
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Failed to (re-)establish connection to OMERO!&quot;</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Successfully (re-)connected to OMERO!&quot;</span><span class="p">)</span>
 
-        <span class="n">group_id</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
+        <span class="c1"># if the ID is passed as a string parse it into an OmeroId object:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">omero_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">omero_id</span> <span class="o">=</span> <span class="n">OmeroId</span><span class="p">(</span><span class="n">omero_id</span><span class="p">)</span>
 
         <span class="c1"># set the OMERO group for the current connection session:</span>
-        <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">group_id</span><span class="p">)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Set OMERO session group to [</span><span class="si">{</span><span class="n">group_id</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">)</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Set OMERO session group to [</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
 
-        <span class="n">func</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">wrapper_connect_and_set_group</span>
 </pre></div>
@@ -207,23 +205,19 @@
 connection to OMERO as well as the group for the connection / session to be switched
 explicitly.</p>
 
-<p>In addition it also validates the <code>id_str</code> parameter to make sure only values are
-accepted that will potentially work with the respective OMERO calls.</p>
-
-<p>IMPORTANT: this decorator alters the signature of the function that is called - it
-is <strong>required</strong> for the function to be decorated to have the first three parameters
-of its signature to be <code>conn, obj_type, obj_id</code> as described in the <strong>Other
-Parameters</strong> section below.</p>
+<p>In addition it also checks the <code>omero_id</code> parameter and ensures it is an
+object of type <code><a href="misc.html#OmeroId">hrm_omero.misc.OmeroId</a></code>. In case the parameter received is a
+string, it will automatically create the corresponding <code>OmeroId</code> object,
+which also checks the values of the ID for sanity.</p>
 
 <h6 id="other-parameters">Other Parameters</h6>
 
 <ul>
 <li><strong>conn</strong> (omero.gateway.BlitzGateway):
 The OMERO connection object.</li>
-<li><strong>obj_type</strong> (str):
-A valid OMERO object type, e.g. <code>Image</code> or <code>Dataset</code>.</li>
-<li><strong>obj_id</strong> (str or int):
-An OMERO object id, e.g. <code>1573559</code>.</li>
+<li><strong>omero_id</strong> (str or <a href="misc.html#OmeroId">hrm_omero.misc.OmeroId</a>):
+The fully qualified ID of an OMERO object (e.g. <code>G:23:Image:42</code>) as
+a string or as an <code><a href="misc.html#OmeroId">hrm_omero.misc.OmeroId</a></code> object directly.</li>
 </ul>
 </div>
 
