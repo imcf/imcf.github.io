@@ -55,12 +55,16 @@
   <ul>
     <li><a href="#using-poetry">Using poetry</a></li>
     <li><a href="#installing-a-pre-release-from-testpypi">Installing a pre-release from TestPyPI</a></li>
-    <li><a href="#testing">Testing</a>
+    <li><a href="#updating-local-dev-wheels">Updating local <code>dev</code> wheels</a></li>
+    <li><a href="#testing">Testing</a></li>
+    <li><a href="#testing-against-an-omero-instance">Testing against an OMERO instance</a>
     <ul>
-      <li><a href="#prepare-an-omero-instance-for-tests">Prepare an OMERO instance for tests</a></li>
+      <li><a href="#setting-up-omero">Setting up OMERO</a></li>
+      <li><a href="#preparing-omero-for-testing">Preparing OMERO for testing</a></li>
     </ul></li>
     <li><a href="#generating-documentation">Generating Documentation</a></li>
     <li><a href="#todo-list">ToDo list</a></li>
+    <li><a href="#planned-features">Planned features</a></li>
   </ul></li>
   <li><a href="#changelog">Changelog</a>
   <ul>
@@ -120,6 +124,11 @@ the HRM web interface.</p>
 
 <h3 id="installing-requirements">Installing requirements</h3>
 
+<p><strong>NOTE</strong>: strictly speaking, Java is only required for uploading data from the HRM to
+OMERO, so in case for whatever reason you are planning to use the connector in a
+unidirectional way only you might skip installing the Java packages below. Keep in mind
+this scenario won't be tested by us though.</p>
+
 <h4 id="centos-rhel-7-and-8">CentOS / RHEL 7 and 8</h4>
 
 <div class="codehilite"><pre><span></span><code><span class="c1"># install the build-time requirements for Python 3.6 and Java 1.8 for Bio-Formats</span>
@@ -144,7 +153,9 @@ python3 -m venv <span class="nv">$HRM_OMERO_VENV</span>
 
 <h4 id="ubuntu-2004">Ubuntu 20.04</h4>
 
-<div class="codehilite"><pre><span></span><code>apt install -y python3.8-venv
+<div class="codehilite"><pre><span></span><code>apt install -y <span class="se">\</span>
+    python3.8-venv <span class="se">\</span>
+    openjdk-11-jre-headless
 
 <span class="c1"># define the target path for the virtual environment:</span>
 <span class="nv">HRM_OMERO_VENV</span><span class="o">=</span><span class="s2">&quot;/opt/venvs/hrm-omero&quot;</span>
@@ -186,12 +197,39 @@ ln -s <span class="s2">&quot;</span><span class="nv">$HRM_OMERO_VENV</span><span
 <span class="c1"># OMERO_PORT=&quot;4064&quot;</span>
 <span class="nv">OMERO_CONNECTOR_LOGLEVEL</span><span class="o">=</span><span class="s2">&quot;DEBUG&quot;</span>
 <span class="c1"># OMERO_CONNECTOR_LOGFILE_DISABLED=&quot;true&quot;</span>
-<span class="nv">OMERO_USERDIR</span><span class="o">=</span><span class="s2">&quot;/var/cache/omero&quot;</span>
 </code></pre></div>
+
+<p>On top of that it is necessary to explicitly set two environment variables for the
+Apache process. By default (at least on recent Ubuntu and CentOS / RHEL versions) the
+system user running Apache is not allowed to write to its <code>$HOME</code> directory for security
+reasons. Therefore it is required to specify where the OMERO Python bindings and also
+Java may store cache files and preferences. This can be done by running the following
+command:</p>
+
+<div class="codehilite"><pre><span></span><code>systemctl edit apache2.service  <span class="c1"># Debian / Ubuntu</span>
+systemctl edit httpd.service  <span class="c1"># CentOS / RHEL / AlmaLinux</span>
+</code></pre></div>
+
+<p>There, add the following section, adjusting the path if desired:</p>
+
+<pre><code>[Service]
+Environment=OMERO_USERDIR=/var/cache/omero
+Environment=JAVA_OPTS="-Djava.util.prefs.userRoot=/var/cache/omero/javaUserRoot"
+</code></pre>
+
+<p>Now make sure the specified directory exists and is writable by the Apache system user:</p>
+
+<div class="codehilite"><pre><span></span><code>mkdir -v /var/cache/omero
+chown www-data:www-data /var/cache/omero  <span class="c1"># Debian / Ubuntu</span>
+chown apache:apache /var/cache/omero  <span class="c1"># CentOS / RHEL / AlmaLinux</span>
+</code></pre></div>
+
+<p>Finally, restart <em>Apache</em> by running the respective <code>systemctl</code> command from above while
+replacing <code>edit</code> for <code>restart</code>.</p>
 
 <h2 id="debugging">Debugging</h2>
 
-<p>The connector will try to place log messages in a file in the location specified as
+<p>The connector will try to place log messages in a file in the <em>directory</em> specified as
 <code>$HRM_LOG</code> in the HRM configuration file <strong>unless</strong> a configuration option named
 <code>$OMERO_CONNECTOR_LOGFILE_DISABLED</code> is present and non-empty. In a standard setup this
 will result in the log file being <code>/var/log/hrm/omero-connector.log</code>.</p>
@@ -310,6 +348,31 @@ used:</p>
     hrm-omero<span class="o">==</span><span class="m">0</span>.4.0.dev1
 </code></pre></div>
 
+<h2 id="updating-local-dev-wheels">Updating local <code>dev</code> wheels</h2>
+
+<p>One common scenario is to work on the source tree using your local Desktop and manually
+testing interaction with the HRM's web interface in a container by (repeatedly) creating
+wheel packages through poetry and pip-installing them inside the container.</p>
+
+<p>However, when installing a wheel with the same version (e.g. <code>0.4.0-dev7</code>) multiple
+times subsequently, pip's <code>--force</code> option has to be used. Unfortunately this will also
+try to re-build the <code>Ice</code> wheel from scratch which is quite a time-consuming process. To
+avoid this, you can simply use the locally cached <code>Ice</code> wheel and supply it along the
+command to "force-reinstall" the <code>hrm-omero</code> wheel, e.g. like this:</p>
+
+<div class="codehilite"><pre><span></span><code><span class="c1"># find the previously built and cached Ice wheel:</span>
+<span class="nv">ICE_WHEEL</span><span class="o">=</span><span class="k">$(</span>find .cache/pip/wheels/ <span class="p">|</span> grep -i ice<span class="k">)</span>
+<span class="c1"># move it out of the cache to preserve it and have a shorter path:</span>
+mv -v <span class="s2">&quot;</span><span class="nv">$ICE_WHEEL</span><span class="s2">&quot;</span> .
+
+<span class="c1"># use &#39;pip&#39; to install the new hrm-omero wheel while using the previous Ice:</span>
+/opt/venvs/hrm-omero/bin/pip install <span class="se">\</span>
+    --upgrade <span class="se">\</span>
+    --force <span class="se">\</span>
+    zeroc_ice-3.6.5-cp36-cp36m-linux_x86_64.whl <span class="se">\</span>
+    hrm_omero-0.4.0.dev7-py3-none-any.whl
+</code></pre></div>
+
 <h2 id="testing">Testing</h2>
 
 <p>Testing is done through <a href="https://pytest.org/">pytest</a> and can be triggered by running this command:</p>
@@ -318,7 +381,15 @@ used:</p>
 </code></pre></div>
 
 <p>By default only <em>local</em> tests will be performed, all tests that require the connection
-to an actual OMERO instance are disabled. To activate them you need to pass the
+to an actual OMERO instance are disabled. See the next section for instructions on
+testing with an OMERO server.</p>
+
+<h2 id="testing-against-an-omero-instance">Testing against an OMERO instance</h2>
+
+<p>Please see the following sub-sections on how to set up and prepare an OMERO installation
+that can serve for running the full suite of <code>hrm-omero</code> tests.</p>
+
+<p>To activate the <em>online</em> tests interacting with an OMERO instance you need to pass the
 <code>--online</code> flag to the pytest call and a corresponding file <code>site_specific.py</code> needs to
 be present in <code>tests/online/settings/</code> that contains the settings on how to connect to
 your OMERO, plus the mapping of object and user IDs. See <code>tests/resources/settings/</code> for
@@ -332,7 +403,7 @@ run this command:</p>
 the site-specific settings can't be reached they will be skipped (instead of generating
 tons of failed test results).</p>
 
-<h3 id="prepare-an-omero-instance-for-tests">Prepare an OMERO instance for tests</h3>
+<h3 id="setting-up-omero">Setting up OMERO</h3>
 
 <p>It is recommended to test against an isolated OMERO instance to avoid messing up any
 production data. The script in <code>resources/omero-recipes/setup-ubuntu-20-04.sh</code> can be
@@ -343,6 +414,11 @@ used to install OMERO quickly on Ubuntu 20.04. A reasonable approach would be th
 <li>Copy the OMERO-setup-script into the VM / container.</li>
 <li>Run the setup script <em>from within</em> the VM / container.</li>
 </ul>
+
+<p>⚠️ It is strongly recommended to <em>snapshot</em> your container / VM at this point, so you can
+easily go back to the initial ("fresh") OMERO state later on. ⚠️</p>
+
+<h3 id="preparing-omero-for-testing">Preparing OMERO for testing</h3>
 
 <p>Once OMERO is running, you can use the preparation script to create the required groups,
 users, projects, ... in that OMERO instance. Please note that the preparation script is
@@ -356,7 +432,11 @@ providing an input file, see <code>resources/scripts/omero-seeds.inc.sh</code> f
 <p>Assuming you copied the seeds file to <code>my-omero-seeds.inc.sh</code>, you can simply run the
 preparation script like this:</p>
 
-<div class="codehilite"><pre><span></span><code>bash resources/scripts/prepare-omero-for-testing.sh <span class="se">\</span>
+<div class="codehilite"><pre><span></span><code><span class="c1"># get yourself a poetry shell that has access to the `omero` command:</span>
+poetry shell
+
+<span class="c1"># run the OMERO preparation script:</span>
+bash resources/scripts/prepare-omero-for-testing.sh <span class="se">\</span>
     resources/scripts/my-omero-seeds.inc.sh <span class="se">\</span>
     tests/resources/settings/site_specific.yml
 </code></pre></div>
@@ -372,6 +452,8 @@ generate the HTML documentation use this <code>poetry</code> command:</p>
 <h2 id="todo-list">ToDo list</h2>
 
 <ul>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> sort tree levels (users, projects, ...) alphabetically, by default they are
+  returned in the same order as OMERO is iterating them</li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> use "key-value pairs" for the HRM job parameter summaries</li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> trees for different groups
 <ul>
@@ -391,20 +473,24 @@ generate the HTML documentation use this <code>poetry</code> command:</p>
 </ul></li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> (REJECTED) <strike>offer download of OME-TIFFs</strike></li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> don't use a command line parameter for the OMERO password</li>
-<li><input type="checkbox" class="task-list-item-checkbox" disabled> add command line action to create new projects and datasets in OMERO</li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> lift assumption that datasets are always members of a project in OMERO</li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> create target directory for thumbnails in case it doesn't exist</li>
-<li><input type="checkbox" class="task-list-item-checkbox" disabled> create documentation on the <code>OMERO_USERDIR</code> configuration</li>
-<li><input type="checkbox" class="task-list-item-checkbox" disabled> make log verbosity setting optional in the configuration file, otherwise
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> create documentation on the <code>OMERO_USERDIR</code> configuration</li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> make log verbosity setting optional in the configuration file, otherwise
   <code>Adding a file sink for logging failed: Level '' does not exist</code> is issued
   from <code><a href="hrm_omero/cli.html">hrm_omero.cli</a>:logger_add_file_sink</code> if nothing is present</li>
-<li><input type="checkbox" class="task-list-item-checkbox" disabled> try to catch "assert failed" errors when uploading data to OMERO, this usually
-  indicates that the file / fileset was refused by Bio-Formats</li>
 <li><input type="checkbox" class="task-list-item-checkbox" checked disabled> retain structure of complex multi-file datasets like Olympus <code>.vsi</code> that
   expects files to be in specific sub-directories etc.</li>
-<li><input type="checkbox" class="task-list-item-checkbox" disabled> look into permissions of directories created during transfers from OMERO, either
-  a <code>chmod</code> should be applied or the setup instructions need to be adapted so those
-  directories get created with correct permissions</li>
+<li><input type="checkbox" class="task-list-item-checkbox" checked disabled> add group-write permissions to files and directories created by the connector</li>
+</ul>
+
+<h2 id="planned-features">Planned features</h2>
+
+<ul>
+<li><input type="checkbox" class="task-list-item-checkbox" disabled> add command line action to create new projects and datasets in OMERO</li>
+<li><input type="checkbox" class="task-list-item-checkbox" disabled> speed up tree-loading by avoiding the necessary repeated calls to the connector</li>
+<li><input type="checkbox" class="task-list-item-checkbox" disabled> catch "assert failed" errors when uploading data to OMERO, this usually
+  indicates that the file / fileset was refused by Bio-Formats</li>
 </ul>
 
 <h1 id="changelog">Changelog</h1>
@@ -445,7 +531,7 @@ throughout the existing code).</li>
 <li>The CLI has a new optional parameter <code>--dry-run</code> that prevents any action from being
 performed, instead the name of the function and the corresponding parameters that
 would be called are printed to stdout.</li>
-<li>Unit tests using <a href="https://docs.pytest.org/">pytest</a> and <a href="https://pypi.org/project/pytest-cov/">pytest-cov</a> (incomplete).</li>
+<li>Unit tests using <a href="https://docs.pytest.org/">pytest</a> and <a href="https://pypi.org/project/pytest-cov/">pytest-cov</a>.</li>
 </ul>
 
 <h3 id="changes">Changes</h3>
@@ -457,6 +543,10 @@ properly supported.</li>
 instead of simply being a comment string.</li>
 <li>Formats like e.g. Olympus <code>.vsi</code> requiring their files to be placed in a specific
 directory structure are now properly supported.</li>
+<li>Tree levels (users, projects, ...) are now sorted alphabetically instead of the
+(seemingly) random order as they are returned by OMERO with the exception of the
+current user always being listed first on the group level, followed by their
+colleagues.</li>
 <li><em>Datasets</em> in OMERO that are not associated to a <em>Project</em> will no longer be ignored
 but rather be shown on the same level than the user's projects, just as OMERO.web and
 OMERO.insight are doing it.</li>
@@ -595,7 +685,7 @@ connector</a> that used to be shipped with the HRM itself previously.</p>
 <span class="sd">.. include:: ../../API-CHANGES.md</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.4.0-dev5&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.4.0&quot;</span>
 </pre></div>
 
         </details>

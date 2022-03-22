@@ -48,6 +48,9 @@
             <li>
                     <a class="function" href="#parse_id_str">parse_id_str</a>
             </li>
+            <li>
+                    <a class="function" href="#changemodes">changemodes</a>
+            </li>
     </ul>
 
 
@@ -70,6 +73,8 @@
                         <details>
             <summary>View Source</summary>
             <div class="codehilite"><pre><span></span><span class="sd">&quot;&quot;&quot;Miscellaneous functions used across the package.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
 
 <span class="kn">from</span> <span class="nn">loguru</span> <span class="kn">import</span> <span class="n">logger</span> <span class="k">as</span> <span class="n">log</span>
 
@@ -171,6 +176,39 @@
     <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DEPRECATED call to </span><span class="si">{</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
     <span class="n">omero_id</span> <span class="o">=</span> <span class="n">OmeroId</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span>
+
+
+<span class="k">def</span> <span class="nf">changemodes</span><span class="p">(</span><span class="n">basepath</span><span class="p">,</span> <span class="n">elements</span><span class="p">,</span> <span class="n">dmode</span><span class="o">=</span><span class="mo">0o775</span><span class="p">,</span> <span class="n">fmode</span><span class="o">=</span><span class="mo">0o664</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recursive `chmod` function in the spirit of `os.makedirs()`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    basepath : str</span>
+<span class="sd">        The base path where to look for the given elements.</span>
+<span class="sd">    elements : list(str)</span>
+<span class="sd">        A list of file and directory names relative to `basepath`.</span>
+<span class="sd">    dmode : int, optional</span>
+<span class="sd">        The mode to use for directories, by default `0o775`</span>
+<span class="sd">    fmode : int, optional</span>
+<span class="sd">        The mode to use for files, by default `0o664`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">basepath</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adjusting permissions on [</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">] to [</span><span class="si">{</span><span class="n">dmode</span><span class="si">:</span><span class="s2">o</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">dmode</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adjusting permissions on [</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">] to [</span><span class="si">{</span><span class="n">fmode</span><span class="si">:</span><span class="s2">o</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">fmode</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">dirpath</span><span class="p">,</span> <span class="n">dirnames</span><span class="p">,</span> <span class="n">filenames</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">dname</span> <span class="ow">in</span> <span class="n">dirnames</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adjusting permissions on [</span><span class="si">{</span><span class="n">dname</span><span class="si">}</span><span class="s2">] to [</span><span class="si">{</span><span class="n">dmode</span><span class="si">:</span><span class="s2">o</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span> <span class="n">dname</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="n">dmode</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adjusting permissions on [</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">] to [</span><span class="si">{</span><span class="n">fmode</span><span class="si">:</span><span class="s2">o</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span> <span class="n">fname</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="n">fmode</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -457,6 +495,69 @@ The message to be printed and logged.</li>
         </details>
 
             <div class="docstring"><p>Legacy wrapper to <code><a href="#OmeroId">hrm_omero.misc.OmeroId</a></code>.</p>
+</div>
+
+
+                </section>
+                <section id="changemodes">
+                            <div class="attr function"><a class="headerlink" href="#changemodes">#&nbsp;&nbsp</a>
+
+        
+            <span class="def">def</span>
+            <span class="name">changemodes</span><span class="signature">(basepath, elements, dmode=509, fmode=436)</span>:
+    </div>
+
+                <details>
+            <summary>View Source</summary>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">changemodes</span><span class="p">(</span><span class="n">basepath</span><span class="p">,</span> <span class="n">elements</span><span class="p">,</span> <span class="n">dmode</span><span class="o">=</span><span class="mo">0o775</span><span class="p">,</span> <span class="n">fmode</span><span class="o">=</span><span class="mo">0o664</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Recursive `chmod` function in the spirit of `os.makedirs()`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    basepath : str</span>
+<span class="sd">        The base path where to look for the given elements.</span>
+<span class="sd">    elements : list(str)</span>
+<span class="sd">        A list of file and directory names relative to `basepath`.</span>
+<span class="sd">    dmode : int, optional</span>
+<span class="sd">        The mode to use for directories, by default `0o775`</span>
+<span class="sd">    fmode : int, optional</span>
+<span class="sd">        The mode to use for files, by default `0o664`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">basepath</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adjusting permissions on [</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">] to [</span><span class="si">{</span><span class="n">dmode</span><span class="si">:</span><span class="s2">o</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">dmode</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adjusting permissions on [</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">] to [</span><span class="si">{</span><span class="n">fmode</span><span class="si">:</span><span class="s2">o</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">fmode</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">dirpath</span><span class="p">,</span> <span class="n">dirnames</span><span class="p">,</span> <span class="n">filenames</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">dname</span> <span class="ow">in</span> <span class="n">dirnames</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adjusting permissions on [</span><span class="si">{</span><span class="n">dname</span><span class="si">}</span><span class="s2">] to [</span><span class="si">{</span><span class="n">dmode</span><span class="si">:</span><span class="s2">o</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span> <span class="n">dname</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="n">dmode</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adjusting permissions on [</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">] to [</span><span class="si">{</span><span class="n">fmode</span><span class="si">:</span><span class="s2">o</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span> <span class="n">fname</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="n">fmode</span><span class="p">)</span>
+</pre></div>
+
+        </details>
+
+            <div class="docstring"><p>Recursive <code>chmod</code> function in the spirit of <code>os.makedirs()</code>.</p>
+
+<h6 id="parameters">Parameters</h6>
+
+<ul>
+<li><strong>basepath</strong> (str):
+The base path where to look for the given elements.</li>
+<li><strong>elements</strong> (list(str)):
+A list of file and directory names relative to <code>basepath</code>.</li>
+<li><strong>dmode</strong> (int, optional):
+The mode to use for directories, by default <code>0o775</code></li>
+<li><strong>fmode</strong> (int, optional):
+The mode to use for files, by default <code>0o664</code></li>
+</ul>
 </div>
 
 

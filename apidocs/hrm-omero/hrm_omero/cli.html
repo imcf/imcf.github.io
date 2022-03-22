@@ -46,9 +46,6 @@
                     <a class="function" href="#logger_add_file_sink">logger_add_file_sink</a>
             </li>
             <li>
-                    <a class="function" href="#set_omero_userdir">set_omero_userdir</a>
-            </li>
-            <li>
                     <a class="function" href="#run_task">run_task</a>
             </li>
             <li>
@@ -319,32 +316,12 @@
         <span class="n">log_base</span> <span class="o">=</span> <span class="n">hrm_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;HRM_LOG&quot;</span><span class="p">,</span> <span class="s2">&quot;/var/log/hrm&quot;</span><span class="p">)</span>
         <span class="n">target</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">log_base</span><span class="si">}</span><span class="s2">/omero-connector.log&quot;</span>
 
-    <span class="n">log_level</span> <span class="o">=</span> <span class="n">hrm_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OMERO_CONNECTOR_LOGLEVEL&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">log_level</span> <span class="o">=</span> <span class="n">hrm_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OMERO_CONNECTOR_LOGLEVEL&quot;</span><span class="p">,</span> <span class="s2">&quot;INFO&quot;</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">log_level</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Added file sink for logging: </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=broad-except</span>
         <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Adding a file sink for logging failed: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">set_omero_userdir</span><span class="p">(</span><span class="n">hrm_config</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Set the OMERO_USERDIR environment variable if defined in the config.</span>
-
-<span class="sd">    This affects where the OME libraries will try to place stuff (like the OMERO server</span>
-<span class="sd">    zip file) instead of simply trying to dump it into the current user&#39;s `$HOME`</span>
-<span class="sd">    directory which will likely fail if called from the HRM web interface as the user</span>
-<span class="sd">    usually will be the web server system account and that one doesn&#39;t have write</span>
-<span class="sd">    permissions for its home directory on properly configured systems.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    hrm_config : dict</span>
-<span class="sd">        A parsed HRM configuration file as returned by `hrm_omero.hrm.parse_config()`.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">omero_userdir</span> <span class="o">=</span> <span class="n">hrm_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OMERO_USERDIR&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">omero_userdir</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting &#39;OMERO_USERDIR=</span><span class="se">\&quot;</span><span class="si">{</span><span class="n">omero_userdir</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;OMERO_USERDIR&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">omero_userdir</span>
 
 
 <span class="k">def</span> <span class="nf">run_task</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
@@ -373,8 +350,6 @@
         <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Log level set from config file: </span><span class="si">{</span><span class="n">log_level</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="n">logger_add_file_sink</span><span class="p">(</span><span class="n">hrm_config</span><span class="p">)</span>
-
-    <span class="n">set_omero_userdir</span><span class="p">(</span><span class="n">hrm_config</span><span class="p">)</span>
 
     <span class="c1"># NOTE: reading the OMERO password from an environment variable instead of an</span>
     <span class="c1"># argument supplied on the command line improves handling of this sensitive data as</span>
@@ -819,7 +794,7 @@ Verbosity count as returned e.g. by the following argparse code:
         <span class="n">log_base</span> <span class="o">=</span> <span class="n">hrm_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;HRM_LOG&quot;</span><span class="p">,</span> <span class="s2">&quot;/var/log/hrm&quot;</span><span class="p">)</span>
         <span class="n">target</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">log_base</span><span class="si">}</span><span class="s2">/omero-connector.log&quot;</span>
 
-    <span class="n">log_level</span> <span class="o">=</span> <span class="n">hrm_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OMERO_CONNECTOR_LOGLEVEL&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="n">log_level</span> <span class="o">=</span> <span class="n">hrm_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OMERO_CONNECTOR_LOGLEVEL&quot;</span><span class="p">,</span> <span class="s2">&quot;INFO&quot;</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="n">log_level</span><span class="p">)</span>
         <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Added file sink for logging: </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
@@ -844,56 +819,6 @@ A parsed HRM configuration file as returned by <code><a href="hrm.html#parse_con
 The path for the log file to be used. If empty (or skipped) the default
 <code>$HRM_LOG/omero-connector.log</code> will be used, falling back to
 <code>HRM_LOG="/var/log/hrm"</code> in case <code>$HRM_LOG</code> is not set in the hrm configuration.</li>
-</ul>
-</div>
-
-
-                </section>
-                <section id="set_omero_userdir">
-                            <div class="attr function"><a class="headerlink" href="#set_omero_userdir">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">set_omero_userdir</span><span class="signature">(hrm_config)</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">set_omero_userdir</span><span class="p">(</span><span class="n">hrm_config</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Set the OMERO_USERDIR environment variable if defined in the config.</span>
-
-<span class="sd">    This affects where the OME libraries will try to place stuff (like the OMERO server</span>
-<span class="sd">    zip file) instead of simply trying to dump it into the current user&#39;s `$HOME`</span>
-<span class="sd">    directory which will likely fail if called from the HRM web interface as the user</span>
-<span class="sd">    usually will be the web server system account and that one doesn&#39;t have write</span>
-<span class="sd">    permissions for its home directory on properly configured systems.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    hrm_config : dict</span>
-<span class="sd">        A parsed HRM configuration file as returned by `hrm_omero.hrm.parse_config()`.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">omero_userdir</span> <span class="o">=</span> <span class="n">hrm_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OMERO_USERDIR&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">omero_userdir</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting &#39;OMERO_USERDIR=</span><span class="se">\&quot;</span><span class="si">{</span><span class="n">omero_userdir</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
-        <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;OMERO_USERDIR&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">omero_userdir</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Set the OMERO_USERDIR environment variable if defined in the config.</p>
-
-<p>This affects where the OME libraries will try to place stuff (like the OMERO server
-zip file) instead of simply trying to dump it into the current user's <code>$HOME</code>
-directory which will likely fail if called from the HRM web interface as the user
-usually will be the web server system account and that one doesn't have write
-permissions for its home directory on properly configured systems.</p>
-
-<h6 id="parameters">Parameters</h6>
-
-<ul>
-<li><strong>hrm_config</strong> (dict):
-A parsed HRM configuration file as returned by <code><a href="hrm.html#parse_config">hrm_omero.hrm.parse_config()</a></code>.</li>
 </ul>
 </div>
 
@@ -935,8 +860,6 @@ A parsed HRM configuration file as returned by <code><a href="hrm.html#parse_con
         <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Log level set from config file: </span><span class="si">{</span><span class="n">log_level</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="n">logger_add_file_sink</span><span class="p">(</span><span class="n">hrm_config</span><span class="p">)</span>
-
-    <span class="n">set_omero_userdir</span><span class="p">(</span><span class="n">hrm_config</span><span class="p">)</span>
 
     <span class="c1"># NOTE: reading the OMERO password from an environment variable instead of an</span>
     <span class="c1"># argument supplied on the command line improves handling of this sensitive data as</span>

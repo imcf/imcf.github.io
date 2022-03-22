@@ -74,7 +74,7 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">hrm</span>
 <span class="kn">from</span> <span class="nn">.decorators</span> <span class="kn">import</span> <span class="n">connect_and_set_group</span>
 <span class="kn">from</span> <span class="nn">.omero</span> <span class="kn">import</span> <span class="n">extract_image_id</span><span class="p">,</span> <span class="n">add_annotation_keyvalue</span>
-<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">printlog</span><span class="p">,</span> <span class="n">parse_id_str</span>
+<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">printlog</span><span class="p">,</span> <span class="n">parse_id_str</span><span class="p">,</span> <span class="n">changemodes</span>
 
 
 <span class="c1"># @connect_and_set_group</span>
@@ -157,9 +157,11 @@
     <span class="n">strip</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">commonprefix</span><span class="p">(</span><span class="n">all_files</span><span class="p">)</span><span class="o">.</span><span class="n">rindex</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
 
     <span class="c1"># strip the common prefix, check if any of the files already exist:</span>
+    <span class="n">top_level</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">downloads</span><span class="p">):</span>
         <span class="n">rel_path</span> <span class="o">=</span> <span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">strip</span><span class="p">:]</span>
         <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;relative path: </span><span class="si">{</span><span class="n">rel_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">top_level</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rel_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">abs_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">rel_path</span><span class="p">)</span>
         <span class="n">downloads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">abs_path</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">abs_path</span><span class="p">):</span>
@@ -169,13 +171,16 @@
     <span class="c1"># now initiate the downloads for all original files:</span>
     <span class="k">for</span> <span class="p">(</span><span class="n">file_id</span><span class="p">,</span> <span class="n">tgt</span><span class="p">)</span> <span class="ow">in</span> <span class="n">downloads</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Downloading original file [</span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2">] to [</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
             <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">tgt</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">conn</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">OriginalFileI</span><span class="p">(</span><span class="n">file_id</span><span class="p">),</span> <span class="n">tgt</span><span class="p">)</span>
         <span class="k">except</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=bare-except</span>
             <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: downloading </span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2"> to &#39;</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">&#39; failed!&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
-
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ID </span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2"> downloaded as &#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">tgt</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="n">changemodes</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">top_level</span><span class="p">)</span>
+
     <span class="c1"># NOTE: for filesets with a single file or e.g. ICS/IDS pairs it makes</span>
     <span class="c1"># sense to use the target name of the first file to construct the name for</span>
     <span class="c1"># the thumbnail, but it is unclear whether this is a universal approach:</span>
@@ -369,7 +374,11 @@
         <span class="n">tempdir</span><span class="o">.</span><span class="n">cleanup</span><span class="p">()</span>
 
     <span class="n">target_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;G:</span><span class="si">{</span><span class="n">gid</span><span class="si">}</span><span class="s2">:Image:</span><span class="si">{</span><span class="n">imported_id</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="n">add_annotation_keyvalue</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">hrm</span><span class="o">.</span><span class="n">parse_summary</span><span class="p">(</span><span class="n">image_file</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">hrm</span><span class="o">.</span><span class="n">parse_summary</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span>
+        <span class="n">add_annotation_keyvalue</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">summary</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pragma: no cover # pylint: disable-msg=broad-except</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating a parameter summary from [</span><span class="si">{</span><span class="n">image_file</span><span class="si">}</span><span class="s2">] failed: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="kc">True</span>
 </pre></div>
@@ -466,9 +475,11 @@
     <span class="n">strip</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">commonprefix</span><span class="p">(</span><span class="n">all_files</span><span class="p">)</span><span class="o">.</span><span class="n">rindex</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
 
     <span class="c1"># strip the common prefix, check if any of the files already exist:</span>
+    <span class="n">top_level</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">pair</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">downloads</span><span class="p">):</span>
         <span class="n">rel_path</span> <span class="o">=</span> <span class="n">pair</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">strip</span><span class="p">:]</span>
         <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;relative path: </span><span class="si">{</span><span class="n">rel_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">top_level</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rel_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">abs_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">rel_path</span><span class="p">)</span>
         <span class="n">downloads</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">pair</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">abs_path</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">abs_path</span><span class="p">):</span>
@@ -478,13 +489,16 @@
     <span class="c1"># now initiate the downloads for all original files:</span>
     <span class="k">for</span> <span class="p">(</span><span class="n">file_id</span><span class="p">,</span> <span class="n">tgt</span><span class="p">)</span> <span class="ow">in</span> <span class="n">downloads</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Downloading original file [</span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2">] to [</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
             <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">tgt</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">conn</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">OriginalFileI</span><span class="p">(</span><span class="n">file_id</span><span class="p">),</span> <span class="n">tgt</span><span class="p">)</span>
         <span class="k">except</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=bare-except</span>
             <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: downloading </span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2"> to &#39;</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">&#39; failed!&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
-
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ID </span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2"> downloaded as &#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">tgt</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+
+    <span class="n">changemodes</span><span class="p">(</span><span class="n">dest</span><span class="p">,</span> <span class="n">top_level</span><span class="p">)</span>
+
     <span class="c1"># NOTE: for filesets with a single file or e.g. ICS/IDS pairs it makes</span>
     <span class="c1"># sense to use the target name of the first file to construct the name for</span>
     <span class="c1"># the thumbnail, but it is unclear whether this is a universal approach:</span>
@@ -766,7 +780,11 @@ The destination filename.</li>
         <span class="n">tempdir</span><span class="o">.</span><span class="n">cleanup</span><span class="p">()</span>
 
     <span class="n">target_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;G:</span><span class="si">{</span><span class="n">gid</span><span class="si">}</span><span class="s2">:Image:</span><span class="si">{</span><span class="n">imported_id</span><span class="si">}</span><span class="s2">&quot;</span>
-    <span class="n">add_annotation_keyvalue</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">hrm</span><span class="o">.</span><span class="n">parse_summary</span><span class="p">(</span><span class="n">image_file</span><span class="p">))</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">summary</span> <span class="o">=</span> <span class="n">hrm</span><span class="o">.</span><span class="n">parse_summary</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span>
+        <span class="n">add_annotation_keyvalue</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">summary</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pragma: no cover # pylint: disable-msg=broad-except</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Creating a parameter summary from [</span><span class="si">{</span><span class="n">image_file</span><span class="si">}</span><span class="s2">] failed: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="kc">True</span>
 </pre></div>
