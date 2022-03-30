@@ -105,20 +105,45 @@
         <span class="c1"># the connection might be closed (e.g. after importing an image), so force</span>
         <span class="c1"># re-establish it (note that `conn._connected` might even report the wrong</span>
         <span class="c1"># state initially, or also after reconnecting!)</span>
-        <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+        <span class="c1">#</span>
+        <span class="c1">##### WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING #####</span>
+        <span class="c1">#</span>
+        <span class="c1"># calling `conn.connect()` and `conn.setGroupForSession` subsequently (i.e.)</span>
+        <span class="c1"># multiple times during one session has unexpected side effects, e.g. when using</span>
+        <span class="c1"># the decorator for `transfer.fetch_thumbnail()` will make the call to</span>
+        <span class="c1"># `conn.getObject()` return `None`</span>
+        <span class="c1">#</span>
+        <span class="c1">##### WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING #####</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Getting username to see if connection is alive...&quot;</span><span class="p">)</span>
+            <span class="n">username</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getUser</span><span class="p">()</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got username: </span><span class="si">{</span><span class="n">username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Getting username FAILED, trying to reconnect...&quot;</span><span class="p">)</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="n">conn</span><span class="o">.</span><span class="n">_connected</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=protected-access</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Failed to (re-)establish connection to OMERO!&quot;</span><span class="p">)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Successfully (re-)connected to OMERO!&quot;</span><span class="p">)</span>
+        <span class="n">username</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getUser</span><span class="p">()</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully (re-)connected to OMERO as [</span><span class="si">{</span><span class="n">username</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
 
         <span class="c1"># if the ID is passed as a string parse it into an OmeroId object:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">omero_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">omero_id</span> <span class="o">=</span> <span class="n">OmeroId</span><span class="p">(</span><span class="n">omero_id</span><span class="p">)</span>
 
         <span class="c1"># set the OMERO group for the current connection session:</span>
-        <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Set OMERO session group to [</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+        <span class="n">gid</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getGroupFromContext</span><span class="p">()</span><span class="o">.</span><span class="n">getId</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting OMERO session group to [</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">)</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">SERVICE_OPTS</span><span class="o">.</span><span class="n">setOmeroGroup</span><span class="p">(</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">)</span>
+        <span class="n">gid</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">SERVICE_OPTS</span><span class="o">.</span><span class="n">getOmeroGroup</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
+        <span class="n">gid</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getGroupFromContext</span><span class="p">()</span><span class="o">.</span><span class="n">getId</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting OMERO group to [</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="si">}</span><span class="s2">] FAILED!&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">wrapper_connect_and_set_group</span>
 </pre></div>
@@ -179,20 +204,45 @@
         <span class="c1"># the connection might be closed (e.g. after importing an image), so force</span>
         <span class="c1"># re-establish it (note that `conn._connected` might even report the wrong</span>
         <span class="c1"># state initially, or also after reconnecting!)</span>
-        <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+        <span class="c1">#</span>
+        <span class="c1">##### WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING #####</span>
+        <span class="c1">#</span>
+        <span class="c1"># calling `conn.connect()` and `conn.setGroupForSession` subsequently (i.e.)</span>
+        <span class="c1"># multiple times during one session has unexpected side effects, e.g. when using</span>
+        <span class="c1"># the decorator for `transfer.fetch_thumbnail()` will make the call to</span>
+        <span class="c1"># `conn.getObject()` return `None`</span>
+        <span class="c1">#</span>
+        <span class="c1">##### WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING #####</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Getting username to see if connection is alive...&quot;</span><span class="p">)</span>
+            <span class="n">username</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getUser</span><span class="p">()</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got username: </span><span class="si">{</span><span class="n">username</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Getting username FAILED, trying to reconnect...&quot;</span><span class="p">)</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="n">conn</span><span class="o">.</span><span class="n">_connected</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=protected-access</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Failed to (re-)establish connection to OMERO!&quot;</span><span class="p">)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">success</span><span class="p">(</span><span class="s2">&quot;Successfully (re-)connected to OMERO!&quot;</span><span class="p">)</span>
+        <span class="n">username</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getUser</span><span class="p">()</span><span class="o">.</span><span class="n">getName</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Successfully (re-)connected to OMERO as [</span><span class="si">{</span><span class="n">username</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
 
         <span class="c1"># if the ID is passed as a string parse it into an OmeroId object:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">omero_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="n">omero_id</span> <span class="o">=</span> <span class="n">OmeroId</span><span class="p">(</span><span class="n">omero_id</span><span class="p">)</span>
 
         <span class="c1"># set the OMERO group for the current connection session:</span>
-        <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">)</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Set OMERO session group to [</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+        <span class="n">gid</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getGroupFromContext</span><span class="p">()</span><span class="o">.</span><span class="n">getId</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting OMERO session group to [</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
+            <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">)</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">SERVICE_OPTS</span><span class="o">.</span><span class="n">setOmeroGroup</span><span class="p">(</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">)</span>
+        <span class="n">gid</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">SERVICE_OPTS</span><span class="o">.</span><span class="n">getOmeroGroup</span><span class="p">()</span>
+        <span class="n">log</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
+        <span class="n">gid</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getGroupFromContext</span><span class="p">()</span><span class="o">.</span><span class="n">getId</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">int</span><span class="p">(</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">):</span>
+            <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting OMERO group to [</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="si">}</span><span class="s2">] FAILED!&quot;</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">*</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">wrapper_connect_and_set_group</span>
 </pre></div>

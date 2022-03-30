@@ -34,9 +34,6 @@
                     <a class="function" href="#bool_to_exitstatus">bool_to_exitstatus</a>
             </li>
             <li>
-                    <a class="function" href="#parse_arguments">parse_arguments</a>
-            </li>
-            <li>
                     <a class="function" href="#arguments_parser">arguments_parser</a>
             </li>
             <li>
@@ -87,7 +84,7 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">hrm</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">omero</span> <span class="k">as</span> <span class="n">_omero</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">transfer</span>
-<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">printlog</span><span class="p">,</span> <span class="n">OmeroId</span>
+<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">printlog</span>
 
 
 <span class="k">def</span> <span class="nf">bool_to_exitstatus</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
@@ -113,19 +110,6 @@
         <span class="k">return</span> <span class="ow">not</span> <span class="n">value</span>
 
     <span class="k">return</span> <span class="n">value</span>
-
-
-<span class="k">def</span> <span class="nf">parse_arguments</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
-    <span class="sd">&quot;&quot;&quot;Parse the commandline arguments.</span>
-
-<span class="sd">    DEPRECATED function, use `arguments_parser()` instead!</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;parse_arguments()&#39; is deprecated and will be removed!&quot;</span><span class="p">)</span>
-    <span class="n">argparser</span> <span class="o">=</span> <span class="n">arguments_parser</span><span class="p">()</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">argparser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-        <span class="n">argparser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
 
 
 <span class="k">def</span> <span class="nf">arguments_parser</span><span class="p">():</span>
@@ -167,21 +151,6 @@
         <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;print requested action and parameters without actually performing it&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="c1"># deprecated arguments group</span>
-    <span class="n">dep_args</span> <span class="o">=</span> <span class="n">argparser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span>
-        <span class="s2">&quot;DEPRECATED arguments&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;See the documentation for instructions on how to adapt your call!&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">dep_args</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;-w&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;--password&quot;</span><span class="p">,</span>
-        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">&quot;OMERO password  ******** DEPRECATED ********&quot;</span>
-            <span class="s2">&quot;Use the environment variable &#39;OMERO_PASSWORD&#39; instead!&quot;</span>
-        <span class="p">),</span>
     <span class="p">)</span>
 
     <span class="c1"># required arguments group</span>
@@ -363,12 +332,6 @@
     <span class="c1"># beyond this seems a bit pointless here as an admin could also modify the code that</span>
     <span class="c1"># is actually calling the connector to get hold of user credentials.</span>
     <span class="n">passwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OMERO_PASSWORD&quot;</span><span class="p">)</span>
-    <span class="c1"># while being deprecated an explicitly specified password still has priority:</span>
-    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">password</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-        <span class="n">passwd</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">password</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Using the &#39;--password&#39; parameter is deprecated!&quot;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Using password from environment.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">passwd</span><span class="p">:</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="s2">&quot;ERROR: no password given to connect to OMERO!&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
@@ -381,13 +344,13 @@
     <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;retrieveChildren&quot;</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="s2">&quot;retrieveChildren&quot;</span><span class="p">)</span>
         <span class="n">perform_action</span> <span class="o">=</span> <span class="n">formatting</span><span class="o">.</span><span class="n">print_children_json</span>
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;omero_id&quot;</span><span class="p">:</span> <span class="n">OmeroId</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">id</span><span class="p">)}</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;omero_id&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">id</span><span class="p">}</span>
 
     <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;OMEROtoHRM&quot;</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="s2">&quot;OMEROtoHRM&quot;</span><span class="p">)</span>
         <span class="n">perform_action</span> <span class="o">=</span> <span class="n">transfer</span><span class="o">.</span><span class="n">from_omero</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;id_str&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">imageid</span><span class="p">,</span>
+            <span class="s2">&quot;omero_id&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">imageid</span><span class="p">,</span>
             <span class="s2">&quot;dest&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">dest</span><span class="p">,</span>
         <span class="p">}</span>
 
@@ -395,7 +358,7 @@
         <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="s2">&quot;HRMtoOMERO&quot;</span><span class="p">)</span>
         <span class="n">perform_action</span> <span class="o">=</span> <span class="n">transfer</span><span class="o">.</span><span class="n">to_omero</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;id_str&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">dset</span><span class="p">,</span>
+            <span class="s2">&quot;omero_id&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">dset</span><span class="p">,</span>
             <span class="s2">&quot;image_file&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="p">,</span>
             <span class="s2">&quot;omero_logfile&quot;</span><span class="p">:</span> <span class="n">omero_logfile</span><span class="p">,</span>
         <span class="p">}</span>
@@ -421,12 +384,6 @@
                 <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
 
             <span class="k">return</span> <span class="kc">True</span>
-
-        <span class="c1"># FIXME: the conn.connect() call should be removed once all actions (or rather</span>
-        <span class="c1"># the related functions) have adopted the decorator for ensuring a connection:</span>
-        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">action</span> <span class="o">!=</span> <span class="s2">&quot;checkCredentials&quot;</span><span class="p">:</span>
-            <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New OMERO connection [user=</span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">user</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">perform_action</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -510,38 +467,6 @@ case it is not a bool.</li>
 
 
                 </section>
-                <section id="parse_arguments">
-                            <div class="attr function"><a class="headerlink" href="#parse_arguments">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">parse_arguments</span><span class="signature">(args)</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">parse_arguments</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
-    <span class="sd">&quot;&quot;&quot;Parse the commandline arguments.</span>
-
-<span class="sd">    DEPRECATED function, use `arguments_parser()` instead!</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;&#39;parse_arguments()&#39; is deprecated and will be removed!&quot;</span><span class="p">)</span>
-    <span class="n">argparser</span> <span class="o">=</span> <span class="n">arguments_parser</span><span class="p">()</span>
-    <span class="k">try</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">argparser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">IOError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-        <span class="n">argparser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">err</span><span class="p">))</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Parse the commandline arguments.</p>
-
-<p>DEPRECATED function, use <code><a href="#arguments_parser">arguments_parser()</a></code> instead!</p>
-</div>
-
-
-                </section>
                 <section id="arguments_parser">
                             <div class="attr function"><a class="headerlink" href="#arguments_parser">#&nbsp;&nbsp</a>
 
@@ -591,21 +516,6 @@ case it is not a bool.</li>
         <span class="n">action</span><span class="o">=</span><span class="s2">&quot;store_true&quot;</span><span class="p">,</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="n">help</span><span class="o">=</span><span class="s2">&quot;print requested action and parameters without actually performing it&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-
-    <span class="c1"># deprecated arguments group</span>
-    <span class="n">dep_args</span> <span class="o">=</span> <span class="n">argparser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span>
-        <span class="s2">&quot;DEPRECATED arguments&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;See the documentation for instructions on how to adapt your call!&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
-    <span class="n">dep_args</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span>
-        <span class="s2">&quot;-w&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;--password&quot;</span><span class="p">,</span>
-        <span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">help</span><span class="o">=</span><span class="p">(</span>
-            <span class="s2">&quot;OMERO password  ******** DEPRECATED ********&quot;</span>
-            <span class="s2">&quot;Use the environment variable &#39;OMERO_PASSWORD&#39; instead!&quot;</span>
-        <span class="p">),</span>
     <span class="p">)</span>
 
     <span class="c1"># required arguments group</span>
@@ -873,12 +783,6 @@ The path for the log file to be used. If empty (or skipped) the default
     <span class="c1"># beyond this seems a bit pointless here as an admin could also modify the code that</span>
     <span class="c1"># is actually calling the connector to get hold of user credentials.</span>
     <span class="n">passwd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;OMERO_PASSWORD&quot;</span><span class="p">)</span>
-    <span class="c1"># while being deprecated an explicitly specified password still has priority:</span>
-    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">password</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-        <span class="n">passwd</span> <span class="o">=</span> <span class="n">args</span><span class="o">.</span><span class="n">password</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Using the &#39;--password&#39; parameter is deprecated!&quot;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">log</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Using password from environment.&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">passwd</span><span class="p">:</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="s2">&quot;ERROR: no password given to connect to OMERO!&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
@@ -891,13 +795,13 @@ The path for the log file to be used. If empty (or skipped) the default
     <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;retrieveChildren&quot;</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="s2">&quot;retrieveChildren&quot;</span><span class="p">)</span>
         <span class="n">perform_action</span> <span class="o">=</span> <span class="n">formatting</span><span class="o">.</span><span class="n">print_children_json</span>
-        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;omero_id&quot;</span><span class="p">:</span> <span class="n">OmeroId</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">id</span><span class="p">)}</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;omero_id&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">id</span><span class="p">}</span>
 
     <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;OMEROtoHRM&quot;</span><span class="p">:</span>
         <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="s2">&quot;OMEROtoHRM&quot;</span><span class="p">)</span>
         <span class="n">perform_action</span> <span class="o">=</span> <span class="n">transfer</span><span class="o">.</span><span class="n">from_omero</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;id_str&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">imageid</span><span class="p">,</span>
+            <span class="s2">&quot;omero_id&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">imageid</span><span class="p">,</span>
             <span class="s2">&quot;dest&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">dest</span><span class="p">,</span>
         <span class="p">}</span>
 
@@ -905,7 +809,7 @@ The path for the log file to be used. If empty (or skipped) the default
         <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="s2">&quot;HRMtoOMERO&quot;</span><span class="p">)</span>
         <span class="n">perform_action</span> <span class="o">=</span> <span class="n">transfer</span><span class="o">.</span><span class="n">to_omero</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;id_str&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">dset</span><span class="p">,</span>
+            <span class="s2">&quot;omero_id&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">dset</span><span class="p">,</span>
             <span class="s2">&quot;image_file&quot;</span><span class="p">:</span> <span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="p">,</span>
             <span class="s2">&quot;omero_logfile&quot;</span><span class="p">:</span> <span class="n">omero_logfile</span><span class="p">,</span>
         <span class="p">}</span>
@@ -931,12 +835,6 @@ The path for the log file to be used. If empty (or skipped) the default
                 <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: [</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
 
             <span class="k">return</span> <span class="kc">True</span>
-
-        <span class="c1"># FIXME: the conn.connect() call should be removed once all actions (or rather</span>
-        <span class="c1"># the related functions) have adopted the decorator for ensuring a connection:</span>
-        <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">action</span> <span class="o">!=</span> <span class="s2">&quot;checkCredentials&quot;</span><span class="p">:</span>
-            <span class="n">conn</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
-            <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New OMERO connection [user=</span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">user</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">perform_action</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 

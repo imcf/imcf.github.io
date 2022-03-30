@@ -74,11 +74,11 @@
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">hrm</span>
 <span class="kn">from</span> <span class="nn">.decorators</span> <span class="kn">import</span> <span class="n">connect_and_set_group</span>
 <span class="kn">from</span> <span class="nn">.omero</span> <span class="kn">import</span> <span class="n">extract_image_id</span><span class="p">,</span> <span class="n">add_annotation_keyvalue</span>
-<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">printlog</span><span class="p">,</span> <span class="n">parse_id_str</span><span class="p">,</span> <span class="n">changemodes</span>
+<span class="kn">from</span> <span class="nn">.misc</span> <span class="kn">import</span> <span class="n">printlog</span><span class="p">,</span> <span class="n">changemodes</span>
 
 
-<span class="c1"># @connect_and_set_group</span>
-<span class="k">def</span> <span class="nf">from_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
+<span class="nd">@connect_and_set_group</span>
+<span class="k">def</span> <span class="nf">from_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Download the corresponding original file(s) from an image ID.</span>
 
 <span class="sd">    This only works for image IDs that were created with OMERO 5.0 or later as previous</span>
@@ -96,8 +96,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    conn : omero.gateway.BlitzGateway</span>
 <span class="sd">        The OMERO connection object.</span>
-<span class="sd">    id_str : str</span>
-<span class="sd">        The ID of the OMERO image (e.g. `G:23:Image:42`).</span>
+<span class="sd">    omero_id : hrm_omero.misc.OmeroId</span>
+<span class="sd">        The ID of the OMERO image to be downloaded.</span>
 <span class="sd">    dest : str</span>
 <span class="sd">        The destination path.</span>
 
@@ -111,12 +111,11 @@
 <span class="sd">    ValueError</span>
 <span class="sd">        Raised in case an object that is not of type `Image` was requested.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to download </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> to [</span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Downloading </span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> to [</span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
 
     <span class="c1"># conn.setGroupForSession(-1)</span>
     <span class="n">conn</span><span class="o">.</span><span class="n">SERVICE_OPTS</span><span class="o">.</span><span class="n">setOmeroGroup</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># still working with OMERO-5.6.3</span>
-    <span class="k">if</span> <span class="n">obj_type</span> <span class="o">!=</span> <span class="s2">&quot;Image&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">!=</span> <span class="s2">&quot;Image&quot;</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Currently only the download of &#39;Image&#39; objects is supported!&quot;</span><span class="p">)</span>
 
     <span class="c1"># check if dest is a directory, rewrite it otherwise:</span>
@@ -130,14 +129,14 @@
     <span class="c1"># use image objects and getFileset() methods to determine original files,</span>
     <span class="c1"># see the following OME forum thread for some more details:</span>
     <span class="c1"># https://www.openmicroscopy.org/community/viewtopic.php?f=6&amp;t=7563</span>
-    <span class="n">target_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">)</span>
+    <span class="n">target_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">omero_id</span><span class="o">.</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">target_obj</span><span class="p">:</span>
-        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: can&#39;t find image with ID </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: can&#39;t find image with ID [</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">]!&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="n">fset</span> <span class="o">=</span> <span class="n">target_obj</span><span class="o">.</span><span class="n">getFileset</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">fset</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: no original file(s) for image </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> found!&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: no original file(s) for [</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">] found!&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="c1"># NOTE: the idea of offering to download the OME-TIFF from OMERO (i.e. the converted</span>
@@ -174,8 +173,8 @@
             <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Downloading original file [</span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2">] to [</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
             <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">tgt</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">conn</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">OriginalFileI</span><span class="p">(</span><span class="n">file_id</span><span class="p">),</span> <span class="n">tgt</span><span class="p">)</span>
-        <span class="k">except</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=bare-except</span>
-            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: downloading </span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2"> to &#39;</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">&#39; failed!&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=broad-except</span>
+            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: downloading </span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2"> to &#39;</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">&#39; failed: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ID </span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2"> downloaded as &#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">tgt</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
 
@@ -184,11 +183,11 @@
     <span class="c1"># NOTE: for filesets with a single file or e.g. ICS/IDS pairs it makes</span>
     <span class="c1"># sense to use the target name of the first file to construct the name for</span>
     <span class="c1"># the thumbnail, but it is unclear whether this is a universal approach:</span>
-    <span class="n">fetch_thumbnail</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">,</span> <span class="n">downloads</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">fetch_thumbnail</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="n">downloads</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">return</span> <span class="kc">True</span>
 
 
-<span class="k">def</span> <span class="nf">fetch_thumbnail</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">image_id</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">fetch_thumbnail</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Download the thumbnail of a given image from OMERO.</span>
 
 <span class="sd">    OMERO provides thumbnails for stored images, this function downloads the thumbnail</span>
@@ -198,8 +197,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    conn : omero.gateway.BlitzGateway</span>
 <span class="sd">        The OMERO connection object.</span>
-<span class="sd">    image_id : str</span>
-<span class="sd">        An OMERO object ID of an image (e.g. &#39;102&#39;).</span>
+<span class="sd">    omero_id : hrm_omero.misc.OmeroId</span>
+<span class="sd">        The ID of the OMERO image to fetch the thumbnail for.</span>
 <span class="sd">    dest : str</span>
 <span class="sd">        The destination filename.</span>
 
@@ -208,19 +207,26 @@
 <span class="sd">    bool</span>
 <span class="sd">        True in case the download was successful, False otherwise.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to fetch thumbnail for OMERO image [</span><span class="si">{</span><span class="n">image_id</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+    <span class="c1">##### WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING #####</span>
+    <span class="c1">#</span>
+    <span class="c1"># do NOT decorate this function using `@connect_and_set_group`, see the</span>
+    <span class="c1"># explanation in the decorator definition for more details</span>
+    <span class="c1">#</span>
+    <span class="c1">##### WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING #####</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to fetch thumbnail for OMERO image [</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Requested target location: [</span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
 
     <span class="n">base_dir</span><span class="p">,</span> <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
     <span class="n">target_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">base_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;hrm_previews&quot;</span>
     <span class="n">target</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">target_dir</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">.preview_xy.jpg&quot;</span>
 
-    <span class="n">image_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="s2">&quot;Image&quot;</span><span class="p">,</span> <span class="n">image_id</span><span class="p">)</span>
+    <span class="n">image_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="s2">&quot;Image&quot;</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span><span class="p">)</span>
     <span class="n">image_data</span> <span class="o">=</span> <span class="n">image_obj</span><span class="o">.</span><span class="n">getThumbnail</span><span class="p">()</span>
     <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;len(image_data)=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">image_data</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">thumbnail</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">image_data</span><span class="p">))</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">target_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># TODO: consider using `misc.changemodes()`</span>
         <span class="c1"># for an unkown reason using mode=(S_IRWXU | S_IRWXG) on the `mkdir()` call</span>
         <span class="c1"># doesn&#39;t seem to work, so we have to add group-write in a second step:</span>
         <span class="n">target_dir</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">target_dir</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mode</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IWGRP</span><span class="p">)</span>
@@ -235,7 +241,8 @@
     <span class="k">return</span> <span class="kc">True</span>
 
 
-<span class="k">def</span> <span class="nf">to_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">image_file</span><span class="p">,</span> <span class="n">omero_logfile</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">_fetch_zip_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="nd">@connect_and_set_group</span>
+<span class="k">def</span> <span class="nf">to_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="n">image_file</span><span class="p">,</span> <span class="n">omero_logfile</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">_fetch_zip_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Upload an image into a specific dataset in OMERO.</span>
 
 <span class="sd">    In case we know from the suffix that a given  format is not supported by OMERO, the</span>
@@ -251,8 +258,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    conn : omero.gateway.BlitzGateway</span>
 <span class="sd">        The OMERO connection object.</span>
-<span class="sd">    id_str : str</span>
-<span class="sd">        The ID of the target dataset in OMERO (e.g. `G:7:Dataset:23`).</span>
+<span class="sd">    omero_id : hrm_omero.misc.OmeroId</span>
+<span class="sd">        The ID of the target dataset in OMERO.</span>
 <span class="sd">    image_file : str</span>
 <span class="sd">        The local image file including the full path.</span>
 <span class="sd">    omero_logfile : str, optional</span>
@@ -274,23 +281,20 @@
 <span class="sd">    TypeError</span>
 <span class="sd">        Raised in case `image_file` is in a format that is not supported by OMERO.</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        Raised in case `id_str` has an invalid format.</span>
+<span class="sd">        Raised in case `omero_id` is not pointing to a dataset.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># TODO: revisit this, as e.g. BDV .h5 files are supported for now!</span>
+    <span class="c1"># NOTE: BDV .h5 files are supported by OMERO, but it&#39;s not a use-case for the</span>
+    <span class="c1"># HRM-OMERO connector at the moment, so we&#39;re simply refusing them for now:</span>
     <span class="k">if</span> <span class="n">image_file</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;.hdf5&quot;</span><span class="p">)):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ERROR importing [</span><span class="si">{</span><span class="n">image_file</span><span class="si">}</span><span class="s2">]: HDF5 format not supported by OMERO!&quot;</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="n">_</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">dset_id</span> <span class="o">=</span> <span class="n">id_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">obj_type</span> <span class="o">!=</span> <span class="s2">&quot;Dataset&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">!=</span> <span class="s2">&quot;Dataset&quot;</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Currently only the upload to &#39;Dataset&#39; objects is supported!&quot;</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="c1"># set the group for this import session:</span>
-    <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
 
     <span class="c1"># we have to create the annotations *before* we actually upload the image</span>
     <span class="c1"># data itself and link them to the image during the upload - the other way</span>
@@ -329,7 +333,7 @@
         <span class="n">import_args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;ALL&quot;</span><span class="p">])</span>
         <span class="n">import_args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--errs&quot;</span><span class="p">,</span> <span class="n">omero_logfile</span><span class="p">])</span>
 
-    <span class="n">import_args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="n">dset_id</span><span class="p">])</span>
+    <span class="n">import_args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span><span class="p">])</span>
 
     <span class="c1"># capture stdout and request YAML format to parse the output later on:</span>
     <span class="n">tempdir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;hrm-omero__&quot;</span><span class="p">)</span>
@@ -366,14 +370,14 @@
         <span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=broad-except</span>
-        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: uploading &#39;</span><span class="si">{</span><span class="n">image_file</span><span class="si">}</span><span class="s2">&#39; to </span><span class="si">{</span><span class="n">id_str</span><span class="si">}</span><span class="s2"> failed!&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: uploading &#39;</span><span class="si">{</span><span class="n">image_file</span><span class="si">}</span><span class="s2">&#39; to </span><span class="si">{</span><span class="n">omero_id</span><span class="si">}</span><span class="s2"> failed!&quot;</span><span class="p">)</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;OMERO error message: &gt;&gt;&gt;</span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&lt;&lt;&lt;&quot;</span><span class="p">)</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;import_args: </span><span class="si">{</span><span class="n">import_args</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">finally</span><span class="p">:</span>
         <span class="n">tempdir</span><span class="o">.</span><span class="n">cleanup</span><span class="p">()</span>
 
-    <span class="n">target_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;G:</span><span class="si">{</span><span class="n">gid</span><span class="si">}</span><span class="s2">:Image:</span><span class="si">{</span><span class="n">imported_id</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">target_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;G:</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="si">}</span><span class="s2">:Image:</span><span class="si">{</span><span class="n">imported_id</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">summary</span> <span class="o">=</span> <span class="n">hrm</span><span class="o">.</span><span class="n">parse_summary</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span>
         <span class="n">add_annotation_keyvalue</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">summary</span><span class="p">)</span>
@@ -389,14 +393,16 @@
                 <section id="from_omero">
                             <div class="attr function"><a class="headerlink" href="#from_omero">#&nbsp;&nbsp</a>
 
-        
+                <div class="decorator">@connect_and_set_group</div>
+
             <span class="def">def</span>
-            <span class="name">from_omero</span><span class="signature">(conn, id_str, dest)</span>:
+            <span class="name">from_omero</span><span class="signature">(conn, omero_id, dest)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">from_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="nd">@connect_and_set_group</span>
+<span class="k">def</span> <span class="nf">from_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Download the corresponding original file(s) from an image ID.</span>
 
 <span class="sd">    This only works for image IDs that were created with OMERO 5.0 or later as previous</span>
@@ -414,8 +420,8 @@
 <span class="sd">    ----------</span>
 <span class="sd">    conn : omero.gateway.BlitzGateway</span>
 <span class="sd">        The OMERO connection object.</span>
-<span class="sd">    id_str : str</span>
-<span class="sd">        The ID of the OMERO image (e.g. `G:23:Image:42`).</span>
+<span class="sd">    omero_id : hrm_omero.misc.OmeroId</span>
+<span class="sd">        The ID of the OMERO image to be downloaded.</span>
 <span class="sd">    dest : str</span>
 <span class="sd">        The destination path.</span>
 
@@ -429,12 +435,11 @@
 <span class="sd">    ValueError</span>
 <span class="sd">        Raised in case an object that is not of type `Image` was requested.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span> <span class="o">=</span> <span class="n">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to download </span><span class="si">{</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> to [</span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Downloading </span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">obj_type</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> to [</span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
 
     <span class="c1"># conn.setGroupForSession(-1)</span>
     <span class="n">conn</span><span class="o">.</span><span class="n">SERVICE_OPTS</span><span class="o">.</span><span class="n">setOmeroGroup</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># still working with OMERO-5.6.3</span>
-    <span class="k">if</span> <span class="n">obj_type</span> <span class="o">!=</span> <span class="s2">&quot;Image&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">!=</span> <span class="s2">&quot;Image&quot;</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Currently only the download of &#39;Image&#39; objects is supported!&quot;</span><span class="p">)</span>
 
     <span class="c1"># check if dest is a directory, rewrite it otherwise:</span>
@@ -448,14 +453,14 @@
     <span class="c1"># use image objects and getFileset() methods to determine original files,</span>
     <span class="c1"># see the following OME forum thread for some more details:</span>
     <span class="c1"># https://www.openmicroscopy.org/community/viewtopic.php?f=6&amp;t=7563</span>
-    <span class="n">target_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">)</span>
+    <span class="n">target_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="n">omero_id</span><span class="o">.</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">target_obj</span><span class="p">:</span>
-        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: can&#39;t find image with ID </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: can&#39;t find image with ID [</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">]!&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="n">fset</span> <span class="o">=</span> <span class="n">target_obj</span><span class="o">.</span><span class="n">getFileset</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">fset</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
-        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: no original file(s) for image </span><span class="si">{</span><span class="n">obj_id</span><span class="si">}</span><span class="s2"> found!&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: no original file(s) for [</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">] found!&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
 
     <span class="c1"># NOTE: the idea of offering to download the OME-TIFF from OMERO (i.e. the converted</span>
@@ -492,8 +497,8 @@
             <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Downloading original file [</span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2">] to [</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
             <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">tgt</span><span class="p">),</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             <span class="n">conn</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">OriginalFileI</span><span class="p">(</span><span class="n">file_id</span><span class="p">),</span> <span class="n">tgt</span><span class="p">)</span>
-        <span class="k">except</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=bare-except</span>
-            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: downloading </span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2"> to &#39;</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">&#39; failed!&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=broad-except</span>
+            <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: downloading </span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2"> to &#39;</span><span class="si">{</span><span class="n">tgt</span><span class="si">}</span><span class="s2">&#39; failed: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;SUCCESS&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ID </span><span class="si">{</span><span class="n">file_id</span><span class="si">}</span><span class="s2"> downloaded as &#39;</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">tgt</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
 
@@ -502,7 +507,7 @@
     <span class="c1"># NOTE: for filesets with a single file or e.g. ICS/IDS pairs it makes</span>
     <span class="c1"># sense to use the target name of the first file to construct the name for</span>
     <span class="c1"># the thumbnail, but it is unclear whether this is a universal approach:</span>
-    <span class="n">fetch_thumbnail</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">obj_id</span><span class="p">,</span> <span class="n">downloads</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">fetch_thumbnail</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="n">downloads</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
     <span class="k">return</span> <span class="kc">True</span>
 </pre></div>
 
@@ -526,8 +531,8 @@ preview until the user hits "re-generate preview".</p>
 <ul>
 <li><strong>conn</strong> (omero.gateway.BlitzGateway):
 The OMERO connection object.</li>
-<li><strong>id_str</strong> (str):
-The ID of the OMERO image (e.g. <code>G:23:Image:42</code>).</li>
+<li><strong>omero_id</strong> (<a href="misc.html#OmeroId">hrm_omero.misc.OmeroId</a>):
+The ID of the OMERO image to be downloaded.</li>
 <li><strong>dest</strong> (str):
 The destination path.</li>
 </ul>
@@ -552,12 +557,12 @@ The destination path.</li>
 
         
             <span class="def">def</span>
-            <span class="name">fetch_thumbnail</span><span class="signature">(conn, image_id, dest)</span>:
+            <span class="name">fetch_thumbnail</span><span class="signature">(conn, omero_id, dest)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">fetch_thumbnail</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">image_id</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">fetch_thumbnail</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="n">dest</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Download the thumbnail of a given image from OMERO.</span>
 
 <span class="sd">    OMERO provides thumbnails for stored images, this function downloads the thumbnail</span>
@@ -567,8 +572,8 @@ The destination path.</li>
 <span class="sd">    ----------</span>
 <span class="sd">    conn : omero.gateway.BlitzGateway</span>
 <span class="sd">        The OMERO connection object.</span>
-<span class="sd">    image_id : str</span>
-<span class="sd">        An OMERO object ID of an image (e.g. &#39;102&#39;).</span>
+<span class="sd">    omero_id : hrm_omero.misc.OmeroId</span>
+<span class="sd">        The ID of the OMERO image to fetch the thumbnail for.</span>
 <span class="sd">    dest : str</span>
 <span class="sd">        The destination filename.</span>
 
@@ -577,19 +582,26 @@ The destination path.</li>
 <span class="sd">    bool</span>
 <span class="sd">        True in case the download was successful, False otherwise.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to fetch thumbnail for OMERO image [</span><span class="si">{</span><span class="n">image_id</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
+    <span class="c1">##### WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING #####</span>
+    <span class="c1">#</span>
+    <span class="c1"># do NOT decorate this function using `@connect_and_set_group`, see the</span>
+    <span class="c1"># explanation in the decorator definition for more details</span>
+    <span class="c1">#</span>
+    <span class="c1">##### WARNING - WARNING - WARNING - WARNING - WARNING - WARNING - WARNING #####</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trying to fetch thumbnail for OMERO image [</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span><span class="si">}</span><span class="s2">]...&quot;</span><span class="p">)</span>
     <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Requested target location: [</span><span class="si">{</span><span class="n">dest</span><span class="si">}</span><span class="s2">].&quot;</span><span class="p">)</span>
 
     <span class="n">base_dir</span><span class="p">,</span> <span class="n">fname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">dest</span><span class="p">)</span>
     <span class="n">target_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">base_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;hrm_previews&quot;</span>
     <span class="n">target</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">target_dir</span><span class="p">)</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fname</span><span class="si">}</span><span class="s2">.preview_xy.jpg&quot;</span>
 
-    <span class="n">image_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="s2">&quot;Image&quot;</span><span class="p">,</span> <span class="n">image_id</span><span class="p">)</span>
+    <span class="n">image_obj</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">getObject</span><span class="p">(</span><span class="s2">&quot;Image&quot;</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span><span class="p">)</span>
     <span class="n">image_data</span> <span class="o">=</span> <span class="n">image_obj</span><span class="o">.</span><span class="n">getThumbnail</span><span class="p">()</span>
     <span class="n">log</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;len(image_data)=</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">image_data</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="n">thumbnail</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">image_data</span><span class="p">))</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">target_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1"># TODO: consider using `misc.changemodes()`</span>
         <span class="c1"># for an unkown reason using mode=(S_IRWXU | S_IRWXG) on the `mkdir()` call</span>
         <span class="c1"># doesn&#39;t seem to work, so we have to add group-write in a second step:</span>
         <span class="n">target_dir</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">target_dir</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mode</span> <span class="o">|</span> <span class="n">stat</span><span class="o">.</span><span class="n">S_IWGRP</span><span class="p">)</span>
@@ -616,8 +628,8 @@ image and places it as preview in the corresponding HRM directory.</p>
 <ul>
 <li><strong>conn</strong> (omero.gateway.BlitzGateway):
 The OMERO connection object.</li>
-<li><strong>image_id</strong> (str):
-An OMERO object ID of an image (e.g. '102').</li>
+<li><strong>omero_id</strong> (<a href="misc.html#OmeroId">hrm_omero.misc.OmeroId</a>):
+The ID of the OMERO image to fetch the thumbnail for.</li>
 <li><strong>dest</strong> (str):
 The destination filename.</li>
 </ul>
@@ -634,14 +646,16 @@ The destination filename.</li>
                 <section id="to_omero">
                             <div class="attr function"><a class="headerlink" href="#to_omero">#&nbsp;&nbsp</a>
 
-        
+                <div class="decorator">@connect_and_set_group</div>
+
             <span class="def">def</span>
-            <span class="name">to_omero</span><span class="signature">(conn, id_str, image_file, omero_logfile=&#39;&#39;, _fetch_zip_only=False)</span>:
+            <span class="name">to_omero</span><span class="signature">(conn, omero_id, image_file, omero_logfile=&#39;&#39;, _fetch_zip_only=False)</span>:
     </div>
 
                 <details>
             <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">to_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">id_str</span><span class="p">,</span> <span class="n">image_file</span><span class="p">,</span> <span class="n">omero_logfile</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">_fetch_zip_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <div class="codehilite"><pre><span></span><span class="nd">@connect_and_set_group</span>
+<span class="k">def</span> <span class="nf">to_omero</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">omero_id</span><span class="p">,</span> <span class="n">image_file</span><span class="p">,</span> <span class="n">omero_logfile</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">_fetch_zip_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Upload an image into a specific dataset in OMERO.</span>
 
 <span class="sd">    In case we know from the suffix that a given  format is not supported by OMERO, the</span>
@@ -657,8 +671,8 @@ The destination filename.</li>
 <span class="sd">    ----------</span>
 <span class="sd">    conn : omero.gateway.BlitzGateway</span>
 <span class="sd">        The OMERO connection object.</span>
-<span class="sd">    id_str : str</span>
-<span class="sd">        The ID of the target dataset in OMERO (e.g. `G:7:Dataset:23`).</span>
+<span class="sd">    omero_id : hrm_omero.misc.OmeroId</span>
+<span class="sd">        The ID of the target dataset in OMERO.</span>
 <span class="sd">    image_file : str</span>
 <span class="sd">        The local image file including the full path.</span>
 <span class="sd">    omero_logfile : str, optional</span>
@@ -680,23 +694,20 @@ The destination filename.</li>
 <span class="sd">    TypeError</span>
 <span class="sd">        Raised in case `image_file` is in a format that is not supported by OMERO.</span>
 <span class="sd">    ValueError</span>
-<span class="sd">        Raised in case `id_str` has an invalid format.</span>
+<span class="sd">        Raised in case `omero_id` is not pointing to a dataset.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># TODO: revisit this, as e.g. BDV .h5 files are supported for now!</span>
+    <span class="c1"># NOTE: BDV .h5 files are supported by OMERO, but it&#39;s not a use-case for the</span>
+    <span class="c1"># HRM-OMERO connector at the moment, so we&#39;re simply refusing them for now:</span>
     <span class="k">if</span> <span class="n">image_file</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span><span class="o">.</span><span class="n">endswith</span><span class="p">((</span><span class="s2">&quot;.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;.hdf5&quot;</span><span class="p">)):</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;ERROR importing [</span><span class="si">{</span><span class="n">image_file</span><span class="si">}</span><span class="s2">]: HDF5 format not supported by OMERO!&quot;</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="n">_</span><span class="p">,</span> <span class="n">gid</span><span class="p">,</span> <span class="n">obj_type</span><span class="p">,</span> <span class="n">dset_id</span> <span class="o">=</span> <span class="n">id_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">obj_type</span> <span class="o">!=</span> <span class="s2">&quot;Dataset&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_type</span> <span class="o">!=</span> <span class="s2">&quot;Dataset&quot;</span><span class="p">:</span>
         <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Currently only the upload to &#39;Dataset&#39; objects is supported!&quot;</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="c1"># set the group for this import session:</span>
-    <span class="n">conn</span><span class="o">.</span><span class="n">setGroupForSession</span><span class="p">(</span><span class="n">gid</span><span class="p">)</span>
 
     <span class="c1"># we have to create the annotations *before* we actually upload the image</span>
     <span class="c1"># data itself and link them to the image during the upload - the other way</span>
@@ -735,7 +746,7 @@ The destination filename.</li>
         <span class="n">import_args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--debug&quot;</span><span class="p">,</span> <span class="s2">&quot;ALL&quot;</span><span class="p">])</span>
         <span class="n">import_args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;--errs&quot;</span><span class="p">,</span> <span class="n">omero_logfile</span><span class="p">])</span>
 
-    <span class="n">import_args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="n">dset_id</span><span class="p">])</span>
+    <span class="n">import_args</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;-d&quot;</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span><span class="p">])</span>
 
     <span class="c1"># capture stdout and request YAML format to parse the output later on:</span>
     <span class="n">tempdir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">(</span><span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;hrm-omero__&quot;</span><span class="p">)</span>
@@ -772,14 +783,14 @@ The destination filename.</li>
         <span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># pylint: disable-msg=broad-except</span>
-        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: uploading &#39;</span><span class="si">{</span><span class="n">image_file</span><span class="si">}</span><span class="s2">&#39; to </span><span class="si">{</span><span class="n">id_str</span><span class="si">}</span><span class="s2"> failed!&quot;</span><span class="p">)</span>
+        <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;ERROR: uploading &#39;</span><span class="si">{</span><span class="n">image_file</span><span class="si">}</span><span class="s2">&#39; to </span><span class="si">{</span><span class="n">omero_id</span><span class="si">}</span><span class="s2"> failed!&quot;</span><span class="p">)</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;ERROR&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;OMERO error message: &gt;&gt;&gt;</span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&lt;&lt;&lt;&quot;</span><span class="p">)</span>
         <span class="n">printlog</span><span class="p">(</span><span class="s2">&quot;WARNING&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;import_args: </span><span class="si">{</span><span class="n">import_args</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">finally</span><span class="p">:</span>
         <span class="n">tempdir</span><span class="o">.</span><span class="n">cleanup</span><span class="p">()</span>
 
-    <span class="n">target_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;G:</span><span class="si">{</span><span class="n">gid</span><span class="si">}</span><span class="s2">:Image:</span><span class="si">{</span><span class="n">imported_id</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">target_id</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;G:</span><span class="si">{</span><span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="si">}</span><span class="s2">:Image:</span><span class="si">{</span><span class="n">imported_id</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">summary</span> <span class="o">=</span> <span class="n">hrm</span><span class="o">.</span><span class="n">parse_summary</span><span class="p">(</span><span class="n">image_file</span><span class="p">)</span>
         <span class="n">add_annotation_keyvalue</span><span class="p">(</span><span class="n">conn</span><span class="p">,</span> <span class="n">target_id</span><span class="p">,</span> <span class="n">summary</span><span class="p">)</span>
@@ -805,8 +816,8 @@ arguments, and finally running <code>cli.invoke()</code>. This eventually trigge
 <ul>
 <li><strong>conn</strong> (omero.gateway.BlitzGateway):
 The OMERO connection object.</li>
-<li><strong>id_str</strong> (str):
-The ID of the target dataset in OMERO (e.g. <code>G:7:Dataset:23</code>).</li>
+<li><strong>omero_id</strong> (<a href="misc.html#OmeroId">hrm_omero.misc.OmeroId</a>):
+The ID of the target dataset in OMERO.</li>
 <li><strong>image_file</strong> (str):
 The local image file including the full path.</li>
 <li><strong>omero_logfile</strong> (str, optional):
@@ -829,7 +840,7 @@ Replaces all parameters to the import call by <code>--advanced-help</code>, whic
 
 <ul>
 <li><strong>TypeError</strong>: Raised in case <code>image_file</code> is in a format that is not supported by OMERO.</li>
-<li><strong>ValueError</strong>: Raised in case <code>id_str</code> has an invalid format.</li>
+<li><strong>ValueError</strong>: Raised in case <code>omero_id</code> is not pointing to a dataset.</li>
 </ul>
 </div>
 

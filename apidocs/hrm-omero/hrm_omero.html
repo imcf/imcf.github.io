@@ -41,6 +41,12 @@
       </ul></li>
       <li><a href="#installing-the-hrm-omero-package">Installing the HRM-OMERO package</a></li>
       <li><a href="#configuration">Configuration</a></li>
+      <li><a href="#creating-the-omero-cache-location">Creating the OMERO cache location</a></li>
+      <li><a href="#setting-environment-variables">Setting environment variables</a>
+      <ul>
+        <li><a href="#php-running-as-apache-module-mod_php">PHP running as Apache module (<code>mod_php</code>)</a></li>
+        <li><a href="#php-running-through-php-fpm">PHP running through <code>PHP-FPM</code></a></li>
+      </ul></li>
     </ul></li>
     <li><a href="#debugging">Debugging</a></li>
     <li><a href="#example-usage">Example Usage</a>
@@ -68,11 +74,17 @@
   </ul></li>
   <li><a href="#changelog">Changelog</a>
   <ul>
+    <li><a href="#100">1.0.0</a>
+    <ul>
+      <li><a href="#new-in-100">New in 1.0.0</a></li>
+      <li><a href="#changes-in-100">Changes in 1.0.0</a></li>
+      <li><a href="#fixes-in-100">Fixes in 1.0.0</a></li>
+    </ul></li>
     <li><a href="#040">0.4.0</a>
     <ul>
-      <li><a href="#new">New</a></li>
-      <li><a href="#changes">Changes</a></li>
-      <li><a href="#fixes">Fixes</a></li>
+      <li><a href="#new-in-040">New in 0.4.0</a></li>
+      <li><a href="#changes-in-040">Changes in 0.4.0</a></li>
+      <li><a href="#fixes-in-040">Fixes in 0.4.0</a></li>
     </ul></li>
   </ul></li>
   <li><a href="#api-changes">API Changes</a>
@@ -160,14 +172,14 @@ python3 -m venv <span class="nv">$HRM_OMERO_VENV</span>
 <span class="c1"># define the target path for the virtual environment:</span>
 <span class="nv">HRM_OMERO_VENV</span><span class="o">=</span><span class="s2">&quot;/opt/venvs/hrm-omero&quot;</span>
 
-<span class="c1"># create a Python 3.6 virtual environment:</span>
+<span class="c1"># create a Python 3.8 virtual environment:</span>
 python3 -m venv <span class="nv">$HRM_OMERO_VENV</span>
 
 <span class="c1"># upgrade pip, install wheel:</span>
 <span class="nv">$HRM_OMERO_VENV</span>/bin/pip install --upgrade pip wheel
 
 <span class="c1"># install the pre-built Ice wheel from the OME project:</span>
-<span class="nv">$ICE_WHEEL</span><span class="o">=</span><span class="s2">&quot;zeroc_ice-3.6.5-cp38-cp38-linux_x86_64.whl&quot;</span>
+<span class="nv">ICE_WHEEL</span><span class="o">=</span><span class="s2">&quot;zeroc_ice-3.6.5-cp38-cp38-linux_x86_64.whl&quot;</span>
 wget <span class="s2">&quot;https://github.com/ome/zeroc-ice-ubuntu2004/releases/download/0.2.0/</span><span class="nv">$ICE_WHEEL</span><span class="s2">&quot;</span>
 <span class="nv">$HRM_OMERO_VENV</span>/bin/pip install <span class="nv">$ICE_WHEEL</span>
 </code></pre></div>
@@ -199,12 +211,33 @@ ln -s <span class="s2">&quot;</span><span class="nv">$HRM_OMERO_VENV</span><span
 <span class="c1"># OMERO_CONNECTOR_LOGFILE_DISABLED=&quot;true&quot;</span>
 </code></pre></div>
 
-<p>On top of that it is necessary to explicitly set two environment variables for the
-Apache process. By default (at least on recent Ubuntu and CentOS / RHEL versions) the
-system user running Apache is not allowed to write to its <code>$HOME</code> directory for security
-reasons. Therefore it is required to specify where the OMERO Python bindings and also
-Java may store cache files and preferences. This can be done by running the following
-command:</p>
+<h3 id="creating-the-omero-cache-location">Creating the OMERO cache location</h3>
+
+<p>By default (at least on recent Ubuntu and CentOS / RHEL versions) the system user
+running Apache / PHP is not allowed to write to its <code>$HOME</code> directory for security
+reasons. Therefore it is necessary to specify where the OMERO Python bindings and also
+Java may store cache files and preferences.</p>
+
+<p>To create this directory and ensure it is writable by the Apache system user run the
+following commands (pick only the appropriate one for the <code>chown</code> call matching your
+distribution):</p>
+
+<div class="codehilite"><pre><span></span><code>mkdir -v /var/cache/omero
+chown www-data:www-data /var/cache/omero  <span class="c1"># Debian / Ubuntu</span>
+chown apache:apache /var/cache/omero  <span class="c1"># CentOS / RHEL / AlmaLinux</span>
+</code></pre></div>
+
+<h3 id="setting-environment-variables">Setting environment variables</h3>
+
+<p>In addition it is required to explicitly set two environment variables for the connector
+process. The approach depends on the way PHP is configured on your installation, please
+follow the corresponding section below.</p>
+
+<h4 id="php-running-as-apache-module-mod_php">PHP running as Apache module (<code>mod_php</code>)</h4>
+
+<p>If your installation is running PHP as an Apache module you will need to create an
+override file for <code>systemd</code> that will set the environment as required, this can be done
+by running the <code>edit</code> command:</p>
 
 <div class="codehilite"><pre><span></span><code>systemctl edit apache2.service  <span class="c1"># Debian / Ubuntu</span>
 systemctl edit httpd.service  <span class="c1"># CentOS / RHEL / AlmaLinux</span>
@@ -217,15 +250,32 @@ Environment=OMERO_USERDIR=/var/cache/omero
 Environment=JAVA_OPTS="-Djava.util.prefs.userRoot=/var/cache/omero/javaUserRoot"
 </code></pre>
 
-<p>Now make sure the specified directory exists and is writable by the Apache system user:</p>
+<p>Then restart <em>Apache</em> by running the respective <code>systemctl</code> command from above while
+replacing <code>edit</code> for <code>restart</code>.</p>
 
-<div class="codehilite"><pre><span></span><code>mkdir -v /var/cache/omero
-chown www-data:www-data /var/cache/omero  <span class="c1"># Debian / Ubuntu</span>
-chown apache:apache /var/cache/omero  <span class="c1"># CentOS / RHEL / AlmaLinux</span>
+<h4 id="php-running-through-php-fpm">PHP running through <code>PHP-FPM</code></h4>
+
+<p>If your installation is running <code>PHP-FPM</code> instead (<em>FastCGI Process Manager</em>), you will
+need to update the corresponding PHP-FPM pool config file. On CentOS / RHEL / ... 8 this
+will be done through:</p>
+
+<div class="codehilite"><pre><span></span><code>vim /etc/php-fpm.d/www.conf
 </code></pre></div>
 
-<p>Finally, restart <em>Apache</em> by running the respective <code>systemctl</code> command from above while
-replacing <code>edit</code> for <code>restart</code>.</p>
+<p>In the file, find the section on setting <em>environment variable</em> and add this below:</p>
+
+<pre><code>env[OMERO_USERDIR] = /var/cache/omero
+env[JAVA_OPTS] = "-Djava.util.prefs.userRoot=/var/cache/omero/javaUserRoot"
+</code></pre>
+
+<p>Then restart <code>php-fpm.service</code> by running</p>
+
+<div class="codehilite"><pre><span></span><code>systemctl restart php-fpm.service
+</code></pre></div>
+
+<p>Note that unlike what many tutorials on the web are saying it is <strong>not necessary</strong> to
+alter the <code>clear_env</code> setting in the configuration file. On the contrary, this is very
+much discouraged as it would expose a lot of potentially critical information to PHP.</p>
 
 <h2 id="debugging">Debugging</h2>
 
@@ -495,9 +545,22 @@ generate the HTML documentation use this <code>poetry</code> command:</p>
 
 <h1 id="changelog">Changelog</h1>
 
+<h2 id="100">1.0.0</h2>
+
+<h3 id="new-in-100">New in 1.0.0</h3>
+
+<h3 id="changes-in-100">Changes in 1.0.0</h3>
+
+<ul>
+<li>The previously deprecated option of providing the password through a command line
+argument has been removed.</li>
+</ul>
+
+<h3 id="fixes-in-100">Fixes in 1.0.0</h3>
+
 <h2 id="040">0.4.0</h2>
 
-<h3 id="new">New</h3>
+<h3 id="new-in-040">New in 0.4.0</h3>
 
 <ul>
 <li>An environment variable <code>OMERO_PASSWORD</code> can (and should!) now be used to supply the
@@ -534,7 +597,7 @@ would be called are printed to stdout.</li>
 <li>Unit tests using <a href="https://docs.pytest.org/">pytest</a> and <a href="https://pypi.org/project/pytest-cov/">pytest-cov</a>.</li>
 </ul>
 
-<h3 id="changes">Changes</h3>
+<h3 id="changes-in-040">Changes in 0.4.0</h3>
 
 <ul>
 <li>Uploading images to OMERO into another group than the user's default one is now
@@ -566,7 +629,7 @@ now raising a <code>ValueError</code> in case the provided <code>id_str</code> i
 <li>New dependencies: <a href="https://pypi.org/project/Pillow/">Pillow</a></li>
 </ul>
 
-<h3 id="fixes">Fixes</h3>
+<h3 id="fixes-in-040">Fixes in 0.4.0</h3>
 
 <ul>
 <li>Thumbnail download has been adapted to recent code changes in OMERO.</li>
@@ -685,7 +748,7 @@ connector</a> that used to be shipped with the HRM itself previously.</p>
 <span class="sd">.. include:: ../../API-CHANGES.md</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;0.4.0&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.0.0-dev0&quot;</span>
 </pre></div>
 
         </details>

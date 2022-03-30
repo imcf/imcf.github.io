@@ -46,9 +46,6 @@
                     <a class="function" href="#printlog">printlog</a>
             </li>
             <li>
-                    <a class="function" href="#parse_id_str">parse_id_str</a>
-            </li>
-            <li>
                     <a class="function" href="#changemodes">changemodes</a>
             </li>
     </ul>
@@ -86,7 +83,17 @@
 <span class="sd">    The purpose of this class is to facilitate parsing and access of the</span>
 <span class="sd">    ubiquitious target IDs denoting objects in OMERO. The constructor takes</span>
 <span class="sd">    the common string of the form `G:[gid]:[type]:[iid]` as an input and sets</span>
-<span class="sd">    the properties `group`, `obj_type` and `obj_id` accordingly.</span>
+<span class="sd">    the properties `group`, `obj_type` and `obj_id` accordingly after validating</span>
+<span class="sd">    their contents for having reasonable values.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    group : str</span>
+<span class="sd">        The OMERO group ID as an int-like `str`.</span>
+<span class="sd">    obj_type : str</span>
+<span class="sd">        The OMERO object type, e.g. `Experimenter`, `Image`, ...</span>
+<span class="sd">    obj_id : str</span>
+<span class="sd">        The OMERO object ID as an int-like `str`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_str</span><span class="p">):</span>
@@ -171,13 +178,6 @@
     <span class="n">log</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">level</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
-    <span class="sd">&quot;&quot;&quot;Legacy wrapper to `hrm_omero.misc.OmeroId`.&quot;&quot;&quot;</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DEPRECATED call to </span><span class="si">{</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
-    <span class="n">omero_id</span> <span class="o">=</span> <span class="n">OmeroId</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span>
-
-
 <span class="k">def</span> <span class="nf">changemodes</span><span class="p">(</span><span class="n">basepath</span><span class="p">,</span> <span class="n">elements</span><span class="p">,</span> <span class="n">dmode</span><span class="o">=</span><span class="mo">0o775</span><span class="p">,</span> <span class="n">fmode</span><span class="o">=</span><span class="mo">0o664</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Recursive `chmod` function in the spirit of `os.makedirs()`.</span>
 
@@ -232,7 +232,17 @@
 <span class="sd">    The purpose of this class is to facilitate parsing and access of the</span>
 <span class="sd">    ubiquitious target IDs denoting objects in OMERO. The constructor takes</span>
 <span class="sd">    the common string of the form `G:[gid]:[type]:[iid]` as an input and sets</span>
-<span class="sd">    the properties `group`, `obj_type` and `obj_id` accordingly.</span>
+<span class="sd">    the properties `group`, `obj_type` and `obj_id` accordingly after validating</span>
+<span class="sd">    their contents for having reasonable values.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    group : str</span>
+<span class="sd">        The OMERO group ID as an int-like `str`.</span>
+<span class="sd">    obj_type : str</span>
+<span class="sd">        The OMERO object type, e.g. `Experimenter`, `Image`, ...</span>
+<span class="sd">    obj_id : str</span>
+<span class="sd">        The OMERO object ID as an int-like `str`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_str</span><span class="p">):</span>
@@ -307,7 +317,19 @@
 <p>The purpose of this class is to facilitate parsing and access of the
 ubiquitious target IDs denoting objects in OMERO. The constructor takes
 the common string of the form <code>G:[gid]:[type]:[iid]</code> as an input and sets
-the properties <code>group</code>, <code>obj_type</code> and <code>obj_id</code> accordingly.</p>
+the properties <code>group</code>, <code>obj_type</code> and <code>obj_id</code> accordingly after validating
+their contents for having reasonable values.</p>
+
+<h6 id="attributes">Attributes</h6>
+
+<ul>
+<li><strong>group</strong> (str):
+The OMERO group ID as an int-like <code>str</code>.</li>
+<li><strong>obj_type</strong> (str):
+The OMERO object type, e.g. <code>Experimenter</code>, <code>Image</code>, ...</li>
+<li><strong>obj_id</strong> (str):
+The OMERO object ID as an int-like <code>str</code>.</li>
+</ul>
 </div>
 
 
@@ -471,30 +493,6 @@ The log level of the message as defined by loguru.</li>
 <li><strong>message</strong> (str):
 The message to be printed and logged.</li>
 </ul>
-</div>
-
-
-                </section>
-                <section id="parse_id_str">
-                            <div class="attr function"><a class="headerlink" href="#parse_id_str">#&nbsp;&nbsp</a>
-
-        
-            <span class="def">def</span>
-            <span class="name">parse_id_str</span><span class="signature">(id_str)</span>:
-    </div>
-
-                <details>
-            <summary>View Source</summary>
-            <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">parse_id_str</span><span class="p">(</span><span class="n">id_str</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
-    <span class="sd">&quot;&quot;&quot;Legacy wrapper to `hrm_omero.misc.OmeroId`.&quot;&quot;&quot;</span>
-    <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DEPRECATED call to </span><span class="si">{</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">!&quot;</span><span class="p">)</span>
-    <span class="n">omero_id</span> <span class="o">=</span> <span class="n">OmeroId</span><span class="p">(</span><span class="n">id_str</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">group</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_type</span><span class="p">,</span> <span class="n">omero_id</span><span class="o">.</span><span class="n">obj_id</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Legacy wrapper to <code><a href="#OmeroId">hrm_omero.misc.OmeroId</a></code>.</p>
 </div>
 
 
