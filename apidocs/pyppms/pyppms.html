@@ -25,7 +25,7 @@
         <ul>
   <li><a href="#pyppms">PyPPMS</a>
   <ul>
-    <li><a href="#pumapi-ppms-utility-management-api-python-interface">PUMAPI (PPMS Utility Management API) - Python Interface</a></li>
+    <li><a href="#pumapi-python-interface">PUMAPI - Python Interface</a></li>
     <li><a href="#usage-instructions">Usage Instructions</a></li>
     <li><a href="#testing">Testing</a></li>
     <li><a href="#note">Note</a></li>
@@ -33,8 +33,9 @@
   </ul></li>
   <li><a href="#testing-pyppms">Testing PyPPMS</a>
   <ul>
-    <li><a href="#requirements">Requirements</a></li>
+    <li><a href="#concept-of-pyppms-unit-tests">Concept of PyPPMS Unit Tests</a></li>
     <li><a href="#running-tests">Running Tests</a></li>
+    <li><a href="#running-online-tests">Running Online Tests</a></li>
   </ul></li>
 </ul>
 
@@ -66,12 +67,13 @@ pyppms    </h1>
 
 <h1 id="pyppms">PyPPMS</h1>
 
-<h2 id="pumapi-ppms-utility-management-api-python-interface">PUMAPI (PPMS Utility Management API) - Python Interface</h2>
+<h2 id="pumapi-python-interface">PUMAPI - Python Interface</h2>
 
-<p><a href="https://www.stratocore.com/">Stratocore</a>'s <em>PPMS</em> booking system offers an API for fetching information from
-the booking system as well as changing its state and properties.</p>
+<p><a href="https://www.stratocore.com/">Stratocore</a>'s <em>PPMS</em> booking system offers an API (the so-called <em>PUMAPI</em>, short for
+PPMS Utility Management API) for fetching information from the booking system as well as
+changing its state and properties.</p>
 
-<p>This is a Python 3 package for talking to the so-called <em>PUMAPI</em>.</p>
+<p>This is a Python 3 package for talking to the <em>PUMAPI</em>.</p>
 
 <h2 id="usage-instructions">Usage Instructions</h2>
 
@@ -126,62 +128,77 @@ supplied and similar situations.</li>
 <h1 id="testing-pyppms">Testing PyPPMS</h1>
 
 <p>Automated testing has been a core design goal for <code><a href="">pyppms</a></code>, aiming for a
-coverage of 100%.</p>
+coverage of 100%. Testing of the project is performed through <a href="https://pytest.org">pytest</a>.</p>
 
-<h2 id="requirements">Requirements</h2>
+<h2 id="concept-of-pyppms-unit-tests">Concept of PyPPMS Unit Tests</h2>
 
-<p>Testing is performed using <a href="https://pytest.org">pytest</a>. Almost all <em>request-response</em> tests
-(basically anything in the <a href="/src/pyppms/ppms.py">PpmsConnection</a> class) do <strong>NOT</strong>
-require a valid API-key or a connection to a PUMAPI instance but can be performed using
-the built-in response-caching mechanism combined with the mocks and cached responses
-provided with the tests. The only exception are those tests that do not make sense in
-such a scenario (i.e. that do test if interaction with an actual PUMAPI instance is
-effectively working). Those tests have to be requested explicitly by adding the
-"<code>--online</code>" flag to the pytest-call.</p>
+<p>As proper testing of an HTTP-based API will require interaction with a real instance of
+that given API the <em>complete</em> suite of tests will only be able to run if you're having
+access to PPMS somewhere. Obviously, this should not be done on a production instance
+but a separate test setup (contact Stratocore to get one).</p>
 
-<h3 id="configuration-and-api-key">Configuration and API Key</h3>
-
-<p>To run the tests, copy the example <a href="/resources/examples/pyppmsconf.py"><code>pyppmsconf.py</code></a>
-file to the <code>/tests/</code> directory. For the online tests, please edit it according to your
-instance and key - the offline tests work without config modifications.</p>
-
-<p>To generate an API key a so-called "Super-Admin" needs to log on to your PPMS instance,
-navigate to <code>My PPMS</code> using the drop-down menu on the top-right, then selecting <code>API</code>
-from the top bar and finally clicking the <code>Create PUMAPI key</code> button.</p>
-
-<h3 id="ppms-preparations">PPMS Preparations</h3>
-
-<p>The tests assume certain users and systems to exist in the PUMAPI instance used
-for testing. Currently there is not yet a mechanism to automatically create
-those items unfortunately - sorry, working on it...</p>
-
-<p>The details on how to set them up can be looked up in the corresponding test
-fixtures in <a href="/tests/conftest.py"><code>conftest.py</code></a>:</p>
+<p>To speed up testing, make it more convenient and provide a certain level of robustness
+against silent changes of the PPMS API, tests are split into more or less three
+categories:</p>
 
 <ul>
-<li><code>user_details_raw</code></li>
-<li><code>user_admin_details_raw</code></li>
-<li><code>group_details</code></li>
-<li><code>system_details_raw</code></li>
+<li><strong><em>local</em></strong> unit tests - they don't need a PPMS / PUMAPI instance</li>
+<li>tests using <strong><em>cached</em></strong> responses from a real PPMS / PUMAPI</li>
+<li>tests using <strong><em>mocked</em></strong> responses to simulate specific behavior of PPMS that cannot
+be triggered otherwise</li>
 </ul>
 
 <h3 id="development-installation-through-poetry">Development installation through poetry</h3>
 
 <p>The project is using <a href="https://python-poetry.org">poetry</a> for packaging and dependency management. To set up a
-development environment use this command, it will set up a fresh <em>virtual environment</em>
-with the correct dependencies and install the project in <strong><em>editable</em></strong> mode:</p>
+development environment and prepare for testing use the command below, it will set up a
+fresh <em>virtual environment</em> with the correct dependencies and install the project in
+<strong><em>editable</em></strong> mode:</p>
 
 <div class="pdoc-code codehilite"><pre><span></span><code>git clone https://github.com/imcf/pyppms
 <span class="nb">cd</span> pyppms
 poetry install
 </code></pre></div>
 
+<h3 id="cached-testing">Cached Testing</h3>
+
+<p>Almost all of the <em>request-response</em> tests, which is basically anything in the
+<a href="/src/pyppms/ppms.py">PpmsConnection</a> class, do <strong>NOT</strong> require a valid API-key or a
+connection to a PUMAPI instance. Instead, they can be performed using the built-in
+response-caching mechanism combined with the mocks and cached responses provided with
+the repository.</p>
+
+<h4 id="using-the-cache">Using the cache</h4>
+
+<p>Working with the provided cached responses is the default when running the tests. The
+only exception are those tests that do not make sense in such a scenario (i.e. that do
+test if interaction with an actual PUMAPI instance is effectively working). Those tests
+have to be requested explicitly by adding the "<code>--online</code>" flag to the pytest-call.</p>
+
+<h4 id="validating-the-cache">Validating the cache</h4>
+
+<p>Validating or re-building the cache requires access to an actual PUMAPI, see the section
+on <em>running online tests</em> below for details.</p>
+
+<h3 id="configuration-and-api-key">Configuration and API Key</h3>
+
+<p>To run the tests, copy the example <a href="/resources/examples/pyppmsconf.py"><code>pyppmsconf.py</code></a>
+file to the <code>/tests/</code> directory. For the online tests, please edit it according to your
+instance and key - the offline tests will work without modifying the config.</p>
+
+<div class="pdoc-code codehilite"><pre><span></span><code>cp -v resources/examples/pyppmsconf.py tests/
+</code></pre></div>
+
+<p>To generate an API key a so-called "Super-Admin" needs to log on to your PPMS instance,
+navigate to <code>My PPMS</code> using the drop-down menu on the top-right, select <code>API</code> from the
+top bar and finally hit the <code>Create PUMAPI key</code> button.</p>
+
 <h2 id="running-tests">Running Tests</h2>
 
-<p>Once everything is set up, you should be good to simply type <code>poetry run pytest</code>
-on the command line, the output should look something like this:</p>
+<p>Once everything is set up, you should be good to simply type <code>poetry run pytest</code> on the
+command line, the output should look something like this:</p>
 
-<div class="pdoc-code codehilite"><pre><span></span><code>pytest -rs
+<div class="pdoc-code codehilite"><pre><span></span><code>poetry run pytest
 ============================ test session starts =============================
 platform linux -- Python 3.8.10, pytest-7.1.1, pluggy-1.0.0
 cachedir: .pytest_cache
@@ -200,6 +217,205 @@ SKIPPED [1] tests/test_ppms.py:95: need --online option to run
 SKIPPED [1] tests/test_ppms.py:108: need --online option to run
 ======================= 41 passed, 2 skipped in 0.14s ========================
 </code></pre></div>
+
+<h2 id="running-online-tests">Running Online Tests</h2>
+
+<p>To run those tests requiring access to a real PUMAPI instance in addition to the default
+ones, simply add the <code>--online</code> flag to the <code>pytest</code> command above. Obviously you will
+need to have valid settings for <code>PUMAPI_URL</code> and <code>PPMS_API_KEY</code> in the config file used
+for testing.</p>
+
+<p>Please note that this will still run the majority of tests using the cached / mocked
+responses!</p>
+
+<p>However, having a cache of the <strong>expected</strong> responses from PUMAPI for a given query (or
+a series of queries) allows for checking if the behavior of the API has silently
+changed by simply deleting the cache and re-building it afterwards. To do so, the
+following steps are required:</p>
+
+<ul>
+<li>preparing your test instance of PPMS - unfortunately this is a manual operation, but
+it has to be done only once (unless Stratocore resets your test instance)</li>
+<li>removing the cache</li>
+<li>running the tests in online mode to re-populate the cache</li>
+<li>filtering / checking / validating the results</li>
+</ul>
+
+<p>Those steps are described in details in the following sections.</p>
+
+<h3 id="ppms-preparations">PPMS Preparations</h3>
+
+<p>As the tests assume certain users and systems to exist in the PUMAPI instance used for
+testing, your test instance needs to be prepared accordingly. Currently there is not yet
+a mechanism to automatically create those items unfortunately - sorry, might come at
+some point...</p>
+
+<p>For now, simply run the following command to see what needs to be configured in your
+PPMS, then log into the web interface with your browser and manually create the required
+items:</p>
+
+<div class="pdoc-code codehilite"><pre><span></span><code>poetry run python tests/show_required_ppms_values.py
+</code></pre></div>
+
+<p>Remarks / additional details:</p>
+
+<ul>
+<li>All created users should be members of the previously created group.</li>
+<li>After creating the <em>admin</em> user, go to the <strong>Admins</strong> page in PPMS, hit the
+<em>Create a new administrator</em> button, then select the correct facility and pick
+the user account. In options, simply check the <em>System management</em> box, then
+click <em>Create administrator</em>.</li>
+<li>After creating all users, navigate to the <strong>Rights</strong> page, select the newly
+created system and pick the <em>regular</em> user, then hit the <em>Create</em> button to
+assign booking permissions to the user account. Then repeat this for the admin
+user and the <em>inactive</em> user (account needs to be set to <em>active</em> for adding
+the permissions).</li>
+<li>In addition to the above, four bookings for the <em>regular</em> user on the created
+system need to be made on 2028-12-24:
+<ul>
+<li>from 09:00 to 10:00</li>
+<li>from 11:00 to 12:00</li>
+<li>from 13:00 to 14:00</li>
+<li>from 15:00 to 16:00</li>
+</ul></li>
+</ul>
+
+<h3 id="removing-the-cache">Removing the Cache</h3>
+
+<p>As easy as running:</p>
+
+<div class="pdoc-code codehilite"><pre><span></span><code>rm -r tests/cached_responses
+</code></pre></div>
+
+<h3 id="re-populating-and-validating-the-cache">Re-populating and validating the Cache</h3>
+
+<p>NOTE: As a test-instance of PPMS usually is a clone of a real one it will contain many
+more but the previously created objects. Therefore when re-populating the cache from a
+real PPMS instance a few filtering steps have to be done to validate the new cache files
+and ignore those "unpredictable" ("instance-specific") elements.</p>
+
+<p>First run the most time-consuming tests that will fetch all users from your PPMS (this
+can easily take several minutes, depending on your PPMS instance):</p>
+
+<div class="pdoc-code codehilite"><pre><span></span><code>poetry run pytest --online tests/test_ppms.py::test_get_users
+poetry run pytest --online tests/test_ppms.py::test_get_admins
+</code></pre></div>
+
+<p>As a result, the <code>tests/cached_responses/stage_0/getuser/</code> directory will be cluttered
+up with plenty of files from users in your PPMS instance that the cache doesn't know
+about (and also shouldn't). To clean this, simply remove all corresponding
+response-cache files untracked by git:</p>
+
+<div class="pdoc-code codehilite"><pre><span></span><code>git clean -f tests/cached_responses/stage_0/getuser/
+</code></pre></div>
+
+<p>Now the freshly re-created response files need to be checked if they contain all the
+expected values while discarding / ignoring the additional ones introduced by your
+specific PPMS instance. To simplify this task use this shortcut function (bash) to show
+the <code>git diff</code> of a file while discarding all lines that were added to it (as they are
+specific to your instance):</p>
+
+<div class="pdoc-code codehilite"><pre><span></span><code>filternew<span class="o">()</span> <span class="o">{</span>
+    git diff --no-color <span class="s2">&quot;</span><span class="nv">$1</span><span class="s2">&quot;</span> <span class="p">|</span> grep -v <span class="s1">&#39;^+&#39;</span> <span class="p">|</span> tail -n +5
+<span class="o">}</span>
+</code></pre></div>
+
+<p>First, this needs to be done for the files created by the two tests from above (active
+users and admins). Run the command and compare the output that is expected to look as
+shown here:</p>
+
+<div class="pdoc-code codehilite"><pre><span></span><code>filternew <span class="s2">&quot;tests/cached_responses/stage_0/getusers/active--true.txt&quot;</span>
+ pyppms
+ pyppms-adm
+
+filternew <span class="s2">&quot;tests/cached_responses/stage_0/getadmins/response.txt&quot;</span>
+ pyppms-adm
+</code></pre></div>
+
+<p>If the output matches, discard the changes to those files:</p>
+
+<div class="pdoc-code codehilite"><pre><span></span><code>git restore <span class="se">\</span>
+  <span class="s2">&quot;tests/cached_responses/stage_0/getusers/active--true.txt&quot;</span> <span class="se">\</span>
+  <span class="s2">&quot;tests/cached_responses/stage_0/getadmins/response.txt&quot;</span>
+</code></pre></div>
+
+<p>Now run all <code>--online</code> tests - with the just (re-)created cache files for the users and
+admins, this should only take a few seconds:</p>
+
+<div class="pdoc-code codehilite"><pre><span></span><code>poetry run pytest --online
+</code></pre></div>
+
+<p>Then, check the remaining re-created cache files for their content:</p>
+
+<div class="pdoc-code codehilite"><pre><span></span><code>filternew <span class="s2">&quot;tests/cached_responses/stage_0/getusers/response.txt&quot;</span>
+ pyppms
+ pyppms-adm
+ pyppms-deact
+
+filternew <span class="s2">&quot;tests/cached_responses/stage_0/getgroups/response.txt&quot;</span>
+ pyppms_group
+
+filternew <span class="s2">&quot;tests/cached_responses/stage_0/getsysrights/id--*&quot;</span>
+ A:pyppms
+ A:pyppms-adm
+ D:pyppms-deact
+ S:pyppms-adm
+
+filternew <span class="s2">&quot;tests/cached_responses/stage_1/getsysrights/id--*&quot;</span>
+ D:pyppms
+ A:pyppms-adm
+ D:pyppms-deact
+ S:pyppms-adm
+
+
+filternew <span class="s2">&quot;tests/cached_responses/stage_2/getsysrights/id--*&quot;</span>
+ D:pyppms
+ A:pyppms-adm
+ D:pyppms-deact
+ S:pyppms-adm
+</code></pre></div>
+
+<p>Do the same for the systems and user experience responses, taking into account that the
+system ID will differ in your case, those lines will then show as missing in the diff:</p>
+
+<div class="pdoc-code codehilite"><pre><span></span><code>filternew <span class="s2">&quot;tests/cached_responses/stage_0/getsystems/response.txt&quot;</span>
+ Core facility ref,System id,Type,Name,Localisation,Active,Schedules,Stats,Bookable,Autonomy Required,Autonomy Required After Hours
+ <span class="m">2</span>,69,<span class="s2">&quot;Virtualized Workstation&quot;</span>,<span class="s2">&quot;Python Development System&quot;</span>,<span class="s2">&quot;VDI (Development)&quot;</span>,True,True,True,True,True,False
+
+filternew <span class="s2">&quot;tests/cached_responses/stage_0/getuserexp/response.txt&quot;</span>
+ login,id,booked_hours,used_hours,last_res,last_train
+ <span class="s2">&quot;pyppms&quot;</span>,69,0,0,n/a,n/a
+ <span class="s2">&quot;pyppms-adm&quot;</span>,69,0,0,n/a,n/a
+ <span class="s2">&quot;pyppms-deact&quot;</span>,69,0,0,n/a,n/a
+</code></pre></div>
+
+<p>The last one to check is the response for the <code>nextbooking</code> query, which will differ in
+the two additional lines for the remaining time and the session, so the result should
+look something like this:</p>
+
+<div class="pdoc-code codehilite"><pre><span></span><code>filternew <span class="s2">&quot;tests/cached_responses/stage_0/nextbooking/id--*&quot;</span>
+ pyppms
+-303520
+-31432
+</code></pre></div>
+
+<p>If all output matches, discard the changes to those files:</p>
+
+<div class="pdoc-code codehilite"><pre><span></span><code>git restore <span class="se">\</span>
+  <span class="s2">&quot;tests/cached_responses/stage_0/getusers/response.txt&quot;</span> <span class="se">\</span>
+  <span class="s2">&quot;tests/cached_responses/stage_0/getgroups/response.txt&quot;</span> <span class="se">\</span>
+  <span class="s2">&quot;tests/cached_responses/stage_0/getsysrights/id--*&quot;</span> <span class="se">\</span>
+  <span class="s2">&quot;tests/cached_responses/stage_1/getsysrights/id--*&quot;</span> <span class="se">\</span>
+  <span class="s2">&quot;tests/cached_responses/stage_2/getsysrights/id--*&quot;</span> <span class="se">\</span>
+  <span class="s2">&quot;tests/cached_responses/stage_0/getsystems/response.txt&quot;</span> <span class="se">\</span>
+  <span class="s2">&quot;tests/cached_responses/stage_0/getuserexp/response.txt&quot;</span> <span class="se">\</span>
+  <span class="s2">&quot;tests/cached_responses/stage_0/nextbooking/id--*&quot;</span>
+</code></pre></div>
+
+<ul>
+<li><code>tests/cached_responses/stage_0/getusers/response.txt</code>: the <code><a href="">pyppms</a></code> user needs
+to be in there, but what are the numbers...?</li>
+</ul>
 </div>
 
                         <details>
