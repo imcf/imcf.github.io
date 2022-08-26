@@ -282,7 +282,7 @@
         <span class="c1"># text - however, it is unclear if PUMAPI ever returns this:</span>
         <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;auth_state&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;FAILED-ERROR&quot;</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Authentication failed with an error: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Authentication failed with an error: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -299,10 +299,9 @@
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;auth_state&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;FAILED-UNKNOWN&quot;</span>
 
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Authenticating against </span><span class="si">%s</span><span class="s2"> with key [</span><span class="si">%s</span><span class="s2">...</span><span class="si">%s</span><span class="s2">] FAILED!&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:],</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Authenticating against </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2"> with key &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">...</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span><span class="si">}</span><span class="s2">] FAILED!&quot;</span>
             <span class="p">)</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -340,10 +339,7 @@
 <span class="sd">        requests.exceptions.ConnectionError</span>
 <span class="sd">            Raised in case the request is not authorized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">req_data</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">action</span><span class="p">,</span>
-            <span class="s2">&quot;apikey&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
-        <span class="p">}</span>
+        <span class="n">req_data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">action</span><span class="p">,</span> <span class="s2">&quot;apikey&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">}</span>
         <span class="n">req_data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
         <span class="c1"># LOG.debug(&quot;Request parameters: %s&quot;, parameters)</span>
 
@@ -367,7 +363,7 @@
         <span class="c1"># to figure out if we have succeeded:</span>
         <span class="k">if</span> <span class="s2">&quot;request not authorized&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;auth_state&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;FAILED&quot;</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Not authorized to run action `</span><span class="si">%s</span><span class="s2">`&quot;</span> <span class="o">%</span> <span class="n">req_data</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">]</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Not authorized to run action `</span><span class="si">{</span><span class="n">req_data</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">`&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -405,7 +401,7 @@
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keylist</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">,</span> <span class="s2">&quot;apikey&quot;</span><span class="p">]:</span>
                 <span class="k">continue</span>
-            <span class="n">signature</span> <span class="o">+=</span> <span class="s2">&quot;__</span><span class="si">%s</span><span class="s2">--</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">req_data</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="n">signature</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;__</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">--</span><span class="si">{</span><span class="n">req_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">if</span> <span class="n">signature</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
             <span class="n">signature</span> <span class="o">=</span> <span class="s2">&quot;__response&quot;</span>
         <span class="n">signature</span> <span class="o">=</span> <span class="n">signature</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">+</span> <span class="s2">&quot;.txt&quot;</span>
@@ -447,16 +443,16 @@
 
         <span class="n">intercept_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__interception_path</span><span class="p">(</span><span class="n">req_data</span><span class="p">,</span> <span class="n">create_dir</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">intercept_file</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
-            <span class="k">raise</span> <span class="ne">LookupError</span><span class="p">(</span><span class="s2">&quot;No cache hit for [</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="n">intercept_file</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">LookupError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No cache hit for [</span><span class="si">{</span><span class="n">intercept_file</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
 
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">intercept_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">intercept_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">:</span>
             <span class="n">text</span> <span class="o">=</span> <span class="n">infile</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Read intercepted response text from [</span><span class="si">%s</span><span class="s2">]&quot;</span><span class="p">,</span> <span class="n">intercept_file</span><span class="p">)</span>
 
         <span class="n">status_code</span> <span class="o">=</span> <span class="mi">200</span>
         <span class="n">status_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">intercept_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;_status-code.txt&quot;</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">status_file</span><span class="p">):</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">status_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">status_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">:</span>
                 <span class="n">status_code</span> <span class="o">=</span> <span class="n">infile</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Read intercepted response status code from [</span><span class="si">%s</span><span class="s2">]&quot;</span><span class="p">,</span> <span class="n">status_file</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">PseudoResponse</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">status_code</span><span class="p">)</span>
@@ -481,7 +477,7 @@
         <span class="n">intercept_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__interception_path</span><span class="p">(</span><span class="n">req_data</span><span class="p">,</span> <span class="n">create_dir</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">intercept_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">intercept_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
                 <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="s2">&quot;Wrote response text to [</span><span class="si">%s</span><span class="s2">] (</span><span class="si">%s</span><span class="s2"> lines)&quot;</span><span class="p">,</span>
@@ -545,7 +541,7 @@
 
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;newuser&quot;</span><span class="p">,</span> <span class="n">req_data</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="s2">&quot;OK newuser&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Creating new user failed: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Creating new user failed: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -568,7 +564,7 @@
 <span class="sd">            A list of all (or active-only) user IDs in PPMS.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># TODO: describe format of returned list and / or give an example!</span>
-        <span class="n">parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">active</span><span class="p">:</span>
             <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span>
 
@@ -620,7 +616,7 @@
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">})</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;User [</span><span class="si">%s</span><span class="s2">] is unknown to PPMS&quot;</span> <span class="o">%</span> <span class="n">login_name</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;User [</span><span class="si">{</span><span class="n">login_name</span><span class="si">}</span><span class="s2">] is unknown to PPMS&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -660,11 +656,11 @@
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">})</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;User [</span><span class="si">%s</span><span class="s2">] is unknown to PPMS&quot;</span> <span class="o">%</span> <span class="n">login_name</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;User [</span><span class="si">{</span><span class="n">login_name</span><span class="si">}</span><span class="s2">] is unknown to PPMS&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="n">user</span> <span class="o">=</span> <span class="n">PpmsUser</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">PpmsUser</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span>  <span class="c1"># update / add to the cached user objs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fullname_mapping</span><span class="p">[</span><span class="n">user</span><span class="o">.</span><span class="n">fullname</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">username</span>
         <span class="k">return</span> <span class="n">user</span>
@@ -783,7 +779,7 @@
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Group details returned by PPMS (raw): </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Group [</span><span class="si">%s</span><span class="s2">] is unknown to PPMS&quot;</span> <span class="o">%</span> <span class="n">group_id</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Group [</span><span class="si">{</span><span class="n">group_id</span><span class="si">}</span><span class="s2">] is unknown to PPMS&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -837,7 +833,7 @@
 <span class="sd">        list(dict)</span>
 <span class="sd">            A list with dicts parsed from the user experience response.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">login</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">data</span><span class="p">[</span><span class="s2">&quot;login&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">login</span>
         <span class="k">if</span> <span class="n">system_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -870,7 +866,7 @@
 <span class="sd">        list(str)</span>
 <span class="sd">            Email addresses of the users requested.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">emails</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">emails</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">users</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">users</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_user_ids</span><span class="p">(</span><span class="n">active</span><span class="o">=</span><span class="n">active</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">users</span><span class="p">:</span>
@@ -910,13 +906,13 @@
 <span class="sd">        system is skipped entirely.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Updating list of bookable systems...&quot;</span><span class="p">)</span>
-        <span class="n">systems</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">systems</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">parse_fails</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getsystems&quot;</span><span class="p">)</span>
         <span class="n">details</span> <span class="o">=</span> <span class="n">parse_multiline_response</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">graceful</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">detail</span> <span class="ow">in</span> <span class="n">details</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">system</span> <span class="o">=</span> <span class="n">PpmsSystem</span><span class="o">.</span><span class="n">from_parsed_response</span><span class="p">(</span><span class="n">detail</span><span class="p">)</span>
+                <span class="n">system</span> <span class="o">=</span> <span class="n">PpmsSystem</span><span class="p">(</span><span class="n">detail</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
                 <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Error processing `getsystems` response: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
                 <span class="n">parse_fails</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -955,7 +951,7 @@
 <span class="sd">            A list with PPMS system IDs matching all of the given criteria.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">loc</span> <span class="o">=</span> <span class="n">localisation</span>
-        <span class="n">loc_desc</span> <span class="o">=</span> <span class="s2">&quot;with location matching [</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="n">localisation</span>
+        <span class="n">loc_desc</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;with location matching [</span><span class="si">{</span><span class="n">localisation</span><span class="si">}</span><span class="s2">]&quot;</span>
         <span class="k">if</span> <span class="n">localisation</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
             <span class="n">loc_desc</span> <span class="o">=</span> <span class="s2">&quot;(no location filter given)&quot;</span>
 
@@ -966,8 +962,7 @@
         <span class="p">)</span>
         <span class="n">system_ids</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">systems</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_systems</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">sys_id</span> <span class="ow">in</span> <span class="n">systems</span><span class="p">:</span>
-            <span class="n">system</span> <span class="o">=</span> <span class="n">systems</span><span class="p">[</span><span class="n">sys_id</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">sys_id</span><span class="p">,</span> <span class="n">system</span> <span class="ow">in</span> <span class="n">systems</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">loc</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">localisation</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
                 <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="s2">&quot;System [</span><span class="si">%s</span><span class="s2">] location (</span><span class="si">%s</span><span class="s2">) is NOT matching (</span><span class="si">%s</span><span class="s2">), ignoring&quot;</span><span class="p">,</span>
@@ -1015,7 +1010,7 @@
 <span class="sd">        ValueError</span>
 <span class="sd">            Raised in case parsing the response failes for any reason.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">users</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">users</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getsysrights&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">system_id</span><span class="p">})</span>
         <span class="c1"># this response has a unique format, so parse it directly here:</span>
@@ -1037,12 +1032,12 @@
                 <span class="n">users</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
 
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Unable to parse data returned by PUMAPI: </span><span class="si">%s</span><span class="s2"> - ERROR: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
-                <span class="n">err</span><span class="p">,</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unable to parse data returned by PUMAPI: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2"> - &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;ERROR: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span>
 
         <span class="k">return</span> <span class="n">users</span>
 
@@ -1096,8 +1091,8 @@
             <span class="p">}</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">mapping</span><span class="p">[</span><span class="n">shortname</span><span class="p">]</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Invalid permission [</span><span class="si">%s</span><span class="s2">] given&quot;</span> <span class="o">%</span> <span class="n">shortname</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid permission [</span><span class="si">{</span><span class="n">shortname</span><span class="si">}</span><span class="s2">] given&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span>
 
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;Setting permission level [</span><span class="si">%s</span><span class="s2">] for user [</span><span class="si">%s</span><span class="s2">] on system [</span><span class="si">%s</span><span class="s2">]&quot;</span><span class="p">,</span>
@@ -1106,11 +1101,7 @@
             <span class="n">system_id</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">system_id</span><span class="p">,</span>
-            <span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">permission</span><span class="p">,</span>
-        <span class="p">}</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">system_id</span><span class="p">,</span> <span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">permission</span><span class="p">}</span>
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;setright&quot;</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
 
         <span class="c1"># NOTE: the &#39;setright&#39; action will accept ANY permission type and return &#39;done&#39;</span>
@@ -1209,7 +1200,7 @@
         <span class="n">valid</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="s2">&quot;next&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">booking_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Value for &#39;booking_type&#39; (</span><span class="si">%s</span><span class="s2">) not in </span><span class="si">%s</span><span class="s2">!&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">booking_type</span><span class="p">,</span> <span class="n">valid</span><span class="p">)</span>
+                <span class="sa">f</span><span class="s2">&quot;Value for &#39;booking_type&#39; (</span><span class="si">{</span><span class="n">booking_type</span><span class="si">}</span><span class="s2">) not in </span><span class="si">{</span><span class="n">valid</span><span class="si">}</span><span class="s2">!&quot;</span>
             <span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
@@ -1225,7 +1216,7 @@
             <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;System [</span><span class="si">%s</span><span class="s2">] doesn&#39;t have </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">desc</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-        <span class="k">return</span> <span class="n">PpmsBooking</span><span class="o">.</span><span class="n">from_booking_request</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">booking_type</span><span class="p">,</span> <span class="n">system_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">PpmsBooking</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">booking_type</span><span class="p">,</span> <span class="n">system_id</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_current_booking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system_id</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Wrapper for `get_booking()` with &#39;booking_type&#39; set to &#39;get&#39;.&quot;&quot;&quot;</span>
@@ -1260,9 +1251,9 @@
 <span class="sd">            A list with `PpmsBooking` objects for the given day. Empty in case</span>
 <span class="sd">            there are no bookings or parsing the response failed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">bookings</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">bookings</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;plateformid&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">core_facility_ref</span><span class="p">,</span>
+            <span class="s2">&quot;plateformid&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">core_facility_ref</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="s2">&quot;day&quot;</span><span class="p">:</span> <span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">),</span>
         <span class="p">}</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Requesting runningsheet for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;day&quot;</span><span class="p">])</span>
@@ -1514,7 +1505,7 @@
         <span class="c1"># text - however, it is unclear if PUMAPI ever returns this:</span>
         <span class="k">if</span> <span class="s2">&quot;error&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;auth_state&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;FAILED-ERROR&quot;</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Authentication failed with an error: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Authentication failed with an error: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1531,10 +1522,9 @@
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;auth_state&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;FAILED-UNKNOWN&quot;</span>
 
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Authenticating against </span><span class="si">%s</span><span class="s2"> with key [</span><span class="si">%s</span><span class="s2">...</span><span class="si">%s</span><span class="s2">] FAILED!&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:],</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Authenticating against </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2"> with key &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span><span class="si">}</span><span class="s2">...</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span><span class="si">}</span><span class="s2">] FAILED!&quot;</span>
             <span class="p">)</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
@@ -1572,10 +1562,7 @@
 <span class="sd">        requests.exceptions.ConnectionError</span>
 <span class="sd">            Raised in case the request is not authorized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">req_data</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">action</span><span class="p">,</span>
-            <span class="s2">&quot;apikey&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
-        <span class="p">}</span>
+        <span class="n">req_data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">action</span><span class="p">,</span> <span class="s2">&quot;apikey&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">}</span>
         <span class="n">req_data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
         <span class="c1"># LOG.debug(&quot;Request parameters: %s&quot;, parameters)</span>
 
@@ -1599,7 +1586,7 @@
         <span class="c1"># to figure out if we have succeeded:</span>
         <span class="k">if</span> <span class="s2">&quot;request not authorized&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;auth_state&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;FAILED&quot;</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Not authorized to run action `</span><span class="si">%s</span><span class="s2">`&quot;</span> <span class="o">%</span> <span class="n">req_data</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">]</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Not authorized to run action `</span><span class="si">{</span><span class="n">req_data</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">`&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1637,7 +1624,7 @@
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keylist</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">,</span> <span class="s2">&quot;apikey&quot;</span><span class="p">]:</span>
                 <span class="k">continue</span>
-            <span class="n">signature</span> <span class="o">+=</span> <span class="s2">&quot;__</span><span class="si">%s</span><span class="s2">--</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">req_data</span><span class="p">[</span><span class="n">key</span><span class="p">])</span>
+            <span class="n">signature</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;__</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">--</span><span class="si">{</span><span class="n">req_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="k">if</span> <span class="n">signature</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
             <span class="n">signature</span> <span class="o">=</span> <span class="s2">&quot;__response&quot;</span>
         <span class="n">signature</span> <span class="o">=</span> <span class="n">signature</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span> <span class="o">+</span> <span class="s2">&quot;.txt&quot;</span>
@@ -1679,16 +1666,16 @@
 
         <span class="n">intercept_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__interception_path</span><span class="p">(</span><span class="n">req_data</span><span class="p">,</span> <span class="n">create_dir</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">intercept_file</span><span class="p">):</span>  <span class="c1"># pragma: no cover</span>
-            <span class="k">raise</span> <span class="ne">LookupError</span><span class="p">(</span><span class="s2">&quot;No cache hit for [</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="n">intercept_file</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">LookupError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No cache hit for [</span><span class="si">{</span><span class="n">intercept_file</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
 
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">intercept_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">intercept_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">:</span>
             <span class="n">text</span> <span class="o">=</span> <span class="n">infile</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Read intercepted response text from [</span><span class="si">%s</span><span class="s2">]&quot;</span><span class="p">,</span> <span class="n">intercept_file</span><span class="p">)</span>
 
         <span class="n">status_code</span> <span class="o">=</span> <span class="mi">200</span>
         <span class="n">status_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">intercept_file</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;_status-code.txt&quot;</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">status_file</span><span class="p">):</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">status_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">status_file</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">:</span>
                 <span class="n">status_code</span> <span class="o">=</span> <span class="n">infile</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Read intercepted response status code from [</span><span class="si">%s</span><span class="s2">]&quot;</span><span class="p">,</span> <span class="n">status_file</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">PseudoResponse</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">status_code</span><span class="p">)</span>
@@ -1713,7 +1700,7 @@
         <span class="n">intercept_file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__interception_path</span><span class="p">(</span><span class="n">req_data</span><span class="p">,</span> <span class="n">create_dir</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">intercept_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">intercept_file</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
                 <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="s2">&quot;Wrote response text to [</span><span class="si">%s</span><span class="s2">] (</span><span class="si">%s</span><span class="s2"> lines)&quot;</span><span class="p">,</span>
@@ -1777,7 +1764,7 @@
 
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;newuser&quot;</span><span class="p">,</span> <span class="n">req_data</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="s2">&quot;OK newuser&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Creating new user failed: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Creating new user failed: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1800,7 +1787,7 @@
 <span class="sd">            A list of all (or active-only) user IDs in PPMS.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># TODO: describe format of returned list and / or give an example!</span>
-        <span class="n">parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">active</span><span class="p">:</span>
             <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span>
 
@@ -1852,7 +1839,7 @@
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">})</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;User [</span><span class="si">%s</span><span class="s2">] is unknown to PPMS&quot;</span> <span class="o">%</span> <span class="n">login_name</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;User [</span><span class="si">{</span><span class="n">login_name</span><span class="si">}</span><span class="s2">] is unknown to PPMS&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -1892,11 +1879,11 @@
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">})</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;User [</span><span class="si">%s</span><span class="s2">] is unknown to PPMS&quot;</span> <span class="o">%</span> <span class="n">login_name</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;User [</span><span class="si">{</span><span class="n">login_name</span><span class="si">}</span><span class="s2">] is unknown to PPMS&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="n">user</span> <span class="o">=</span> <span class="n">PpmsUser</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">PpmsUser</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span>  <span class="c1"># update / add to the cached user objs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fullname_mapping</span><span class="p">[</span><span class="n">user</span><span class="o">.</span><span class="n">fullname</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">username</span>
         <span class="k">return</span> <span class="n">user</span>
@@ -2015,7 +2002,7 @@
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Group details returned by PPMS (raw): </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Group [</span><span class="si">%s</span><span class="s2">] is unknown to PPMS&quot;</span> <span class="o">%</span> <span class="n">group_id</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Group [</span><span class="si">{</span><span class="n">group_id</span><span class="si">}</span><span class="s2">] is unknown to PPMS&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -2069,7 +2056,7 @@
 <span class="sd">        list(dict)</span>
 <span class="sd">            A list with dicts parsed from the user experience response.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">login</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">data</span><span class="p">[</span><span class="s2">&quot;login&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">login</span>
         <span class="k">if</span> <span class="n">system_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -2102,7 +2089,7 @@
 <span class="sd">        list(str)</span>
 <span class="sd">            Email addresses of the users requested.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">emails</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">emails</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">users</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">users</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_user_ids</span><span class="p">(</span><span class="n">active</span><span class="o">=</span><span class="n">active</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">users</span><span class="p">:</span>
@@ -2142,13 +2129,13 @@
 <span class="sd">        system is skipped entirely.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Updating list of bookable systems...&quot;</span><span class="p">)</span>
-        <span class="n">systems</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">systems</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">parse_fails</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getsystems&quot;</span><span class="p">)</span>
         <span class="n">details</span> <span class="o">=</span> <span class="n">parse_multiline_response</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">graceful</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">detail</span> <span class="ow">in</span> <span class="n">details</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">system</span> <span class="o">=</span> <span class="n">PpmsSystem</span><span class="o">.</span><span class="n">from_parsed_response</span><span class="p">(</span><span class="n">detail</span><span class="p">)</span>
+                <span class="n">system</span> <span class="o">=</span> <span class="n">PpmsSystem</span><span class="p">(</span><span class="n">detail</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
                 <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Error processing `getsystems` response: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
                 <span class="n">parse_fails</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -2187,7 +2174,7 @@
 <span class="sd">            A list with PPMS system IDs matching all of the given criteria.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">loc</span> <span class="o">=</span> <span class="n">localisation</span>
-        <span class="n">loc_desc</span> <span class="o">=</span> <span class="s2">&quot;with location matching [</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="n">localisation</span>
+        <span class="n">loc_desc</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;with location matching [</span><span class="si">{</span><span class="n">localisation</span><span class="si">}</span><span class="s2">]&quot;</span>
         <span class="k">if</span> <span class="n">localisation</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
             <span class="n">loc_desc</span> <span class="o">=</span> <span class="s2">&quot;(no location filter given)&quot;</span>
 
@@ -2198,8 +2185,7 @@
         <span class="p">)</span>
         <span class="n">system_ids</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">systems</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_systems</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">sys_id</span> <span class="ow">in</span> <span class="n">systems</span><span class="p">:</span>
-            <span class="n">system</span> <span class="o">=</span> <span class="n">systems</span><span class="p">[</span><span class="n">sys_id</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">sys_id</span><span class="p">,</span> <span class="n">system</span> <span class="ow">in</span> <span class="n">systems</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">loc</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">localisation</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
                 <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="s2">&quot;System [</span><span class="si">%s</span><span class="s2">] location (</span><span class="si">%s</span><span class="s2">) is NOT matching (</span><span class="si">%s</span><span class="s2">), ignoring&quot;</span><span class="p">,</span>
@@ -2247,7 +2233,7 @@
 <span class="sd">        ValueError</span>
 <span class="sd">            Raised in case parsing the response failes for any reason.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">users</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">users</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getsysrights&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">system_id</span><span class="p">})</span>
         <span class="c1"># this response has a unique format, so parse it directly here:</span>
@@ -2269,12 +2255,12 @@
                 <span class="n">users</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
 
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Unable to parse data returned by PUMAPI: </span><span class="si">%s</span><span class="s2"> - ERROR: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
-                <span class="n">err</span><span class="p">,</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unable to parse data returned by PUMAPI: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2"> - &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;ERROR: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span>
 
         <span class="k">return</span> <span class="n">users</span>
 
@@ -2328,8 +2314,8 @@
             <span class="p">}</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">mapping</span><span class="p">[</span><span class="n">shortname</span><span class="p">]</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Invalid permission [</span><span class="si">%s</span><span class="s2">] given&quot;</span> <span class="o">%</span> <span class="n">shortname</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid permission [</span><span class="si">{</span><span class="n">shortname</span><span class="si">}</span><span class="s2">] given&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span>
 
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;Setting permission level [</span><span class="si">%s</span><span class="s2">] for user [</span><span class="si">%s</span><span class="s2">] on system [</span><span class="si">%s</span><span class="s2">]&quot;</span><span class="p">,</span>
@@ -2338,11 +2324,7 @@
             <span class="n">system_id</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">system_id</span><span class="p">,</span>
-            <span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">permission</span><span class="p">,</span>
-        <span class="p">}</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">system_id</span><span class="p">,</span> <span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">permission</span><span class="p">}</span>
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;setright&quot;</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
 
         <span class="c1"># NOTE: the &#39;setright&#39; action will accept ANY permission type and return &#39;done&#39;</span>
@@ -2441,7 +2423,7 @@
         <span class="n">valid</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="s2">&quot;next&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">booking_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Value for &#39;booking_type&#39; (</span><span class="si">%s</span><span class="s2">) not in </span><span class="si">%s</span><span class="s2">!&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">booking_type</span><span class="p">,</span> <span class="n">valid</span><span class="p">)</span>
+                <span class="sa">f</span><span class="s2">&quot;Value for &#39;booking_type&#39; (</span><span class="si">{</span><span class="n">booking_type</span><span class="si">}</span><span class="s2">) not in </span><span class="si">{</span><span class="n">valid</span><span class="si">}</span><span class="s2">!&quot;</span>
             <span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
@@ -2457,7 +2439,7 @@
             <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;System [</span><span class="si">%s</span><span class="s2">] doesn&#39;t have </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">desc</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-        <span class="k">return</span> <span class="n">PpmsBooking</span><span class="o">.</span><span class="n">from_booking_request</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">booking_type</span><span class="p">,</span> <span class="n">system_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">PpmsBooking</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">booking_type</span><span class="p">,</span> <span class="n">system_id</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_current_booking</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">system_id</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Wrapper for `get_booking()` with &#39;booking_type&#39; set to &#39;get&#39;.&quot;&quot;&quot;</span>
@@ -2492,9 +2474,9 @@
 <span class="sd">            A list with `PpmsBooking` objects for the given day. Empty in case</span>
 <span class="sd">            there are no bookings or parsing the response failed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">bookings</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">bookings</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;plateformid&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">core_facility_ref</span><span class="p">,</span>
+            <span class="s2">&quot;plateformid&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">core_facility_ref</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="s2">&quot;day&quot;</span><span class="p">:</span> <span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">),</span>
         <span class="p">}</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Requesting runningsheet for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;day&quot;</span><span class="p">])</span>
@@ -2793,10 +2775,7 @@ in no caching being done.</li>
 <span class="sd">        requests.exceptions.ConnectionError</span>
 <span class="sd">            Raised in case the request is not authorized.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">req_data</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">action</span><span class="p">,</span>
-            <span class="s2">&quot;apikey&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
-        <span class="p">}</span>
+        <span class="n">req_data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;action&quot;</span><span class="p">:</span> <span class="n">action</span><span class="p">,</span> <span class="s2">&quot;apikey&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">}</span>
         <span class="n">req_data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span>
         <span class="c1"># LOG.debug(&quot;Request parameters: %s&quot;, parameters)</span>
 
@@ -2820,7 +2799,7 @@ in no caching being done.</li>
         <span class="c1"># to figure out if we have succeeded:</span>
         <span class="k">if</span> <span class="s2">&quot;request not authorized&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">[</span><span class="s2">&quot;auth_state&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;FAILED&quot;</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Not authorized to run action `</span><span class="si">%s</span><span class="s2">`&quot;</span> <span class="o">%</span> <span class="n">req_data</span><span class="p">[</span><span class="s2">&quot;action&quot;</span><span class="p">]</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Not authorized to run action `</span><span class="si">{</span><span class="n">req_data</span><span class="p">[</span><span class="s1">&#39;action&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">`&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">requests</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ConnectionError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -2934,7 +2913,7 @@ default False.</li>
 
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;newuser&quot;</span><span class="p">,</span> <span class="n">req_data</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="s2">&quot;OK newuser&quot;</span> <span class="ow">in</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Creating new user failed: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Creating new user failed: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -3006,7 +2985,7 @@ to log on to PPMS.</li>
 <span class="sd">            A list of all (or active-only) user IDs in PPMS.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># TODO: describe format of returned list and / or give an example!</span>
-        <span class="n">parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">active</span><span class="p">:</span>
             <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span>
 
@@ -3091,7 +3070,7 @@ or empty!</li>
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">})</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;User [</span><span class="si">%s</span><span class="s2">] is unknown to PPMS&quot;</span> <span class="o">%</span> <span class="n">login_name</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;User [</span><span class="si">{</span><span class="n">login_name</span><span class="si">}</span><span class="s2">] is unknown to PPMS&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -3187,11 +3166,11 @@ The PPMS account / login name of the user to query.</li>
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">})</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;User [</span><span class="si">%s</span><span class="s2">] is unknown to PPMS&quot;</span> <span class="o">%</span> <span class="n">login_name</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;User [</span><span class="si">{</span><span class="n">login_name</span><span class="si">}</span><span class="s2">] is unknown to PPMS&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="n">user</span> <span class="o">=</span> <span class="n">PpmsUser</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">PpmsUser</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">[</span><span class="n">user</span><span class="o">.</span><span class="n">username</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span>  <span class="c1"># update / add to the cached user objs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fullname_mapping</span><span class="p">[</span><span class="n">user</span><span class="o">.</span><span class="n">fullname</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="n">username</span>
         <span class="k">return</span> <span class="n">user</span>
@@ -3492,7 +3471,7 @@ default [] which will result in all <em>active</em> users to be requested.</li>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Group details returned by PPMS (raw): </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Group [</span><span class="si">%s</span><span class="s2">] is unknown to PPMS&quot;</span> <span class="o">%</span> <span class="n">group_id</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Group [</span><span class="si">{</span><span class="n">group_id</span><span class="si">}</span><span class="s2">] is unknown to PPMS&quot;</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
@@ -3609,7 +3588,7 @@ The group's login ("unique login or id" in the PPMS web interface).</li>
 <span class="sd">        list(dict)</span>
 <span class="sd">            A list with dicts parsed from the user experience response.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="n">login</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">data</span><span class="p">[</span><span class="s2">&quot;login&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">login</span>
         <span class="k">if</span> <span class="n">system_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -3677,7 +3656,7 @@ by default None</li>
 <span class="sd">        list(str)</span>
 <span class="sd">            Email addresses of the users requested.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">emails</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">emails</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">users</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">users</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_user_ids</span><span class="p">(</span><span class="n">active</span><span class="o">=</span><span class="n">active</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">users</span><span class="p">:</span>
@@ -3776,13 +3755,13 @@ fails for any reason, the system is skipped entirely.</li>
 <span class="sd">        system is skipped entirely.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Updating list of bookable systems...&quot;</span><span class="p">)</span>
-        <span class="n">systems</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">systems</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="n">parse_fails</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getsystems&quot;</span><span class="p">)</span>
         <span class="n">details</span> <span class="o">=</span> <span class="n">parse_multiline_response</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">graceful</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">detail</span> <span class="ow">in</span> <span class="n">details</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">system</span> <span class="o">=</span> <span class="n">PpmsSystem</span><span class="o">.</span><span class="n">from_parsed_response</span><span class="p">(</span><span class="n">detail</span><span class="p">)</span>
+                <span class="n">system</span> <span class="o">=</span> <span class="n">PpmsSystem</span><span class="p">(</span><span class="n">detail</span><span class="p">)</span>
             <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
                 <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Error processing `getsystems` response: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
                 <span class="n">parse_fails</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -3843,7 +3822,7 @@ system is skipped entirely.</p>
 <span class="sd">            A list with PPMS system IDs matching all of the given criteria.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">loc</span> <span class="o">=</span> <span class="n">localisation</span>
-        <span class="n">loc_desc</span> <span class="o">=</span> <span class="s2">&quot;with location matching [</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="n">localisation</span>
+        <span class="n">loc_desc</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;with location matching [</span><span class="si">{</span><span class="n">localisation</span><span class="si">}</span><span class="s2">]&quot;</span>
         <span class="k">if</span> <span class="n">localisation</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
             <span class="n">loc_desc</span> <span class="o">=</span> <span class="s2">&quot;(no location filter given)&quot;</span>
 
@@ -3854,8 +3833,7 @@ system is skipped entirely.</p>
         <span class="p">)</span>
         <span class="n">system_ids</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">systems</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_systems</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">sys_id</span> <span class="ow">in</span> <span class="n">systems</span><span class="p">:</span>
-            <span class="n">system</span> <span class="o">=</span> <span class="n">systems</span><span class="p">[</span><span class="n">sys_id</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">sys_id</span><span class="p">,</span> <span class="n">system</span> <span class="ow">in</span> <span class="n">systems</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">loc</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">system</span><span class="o">.</span><span class="n">localisation</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">():</span>
                 <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                     <span class="s2">&quot;System [</span><span class="si">%s</span><span class="s2">] location (</span><span class="si">%s</span><span class="s2">) is NOT matching (</span><span class="si">%s</span><span class="s2">), ignoring&quot;</span><span class="p">,</span>
@@ -3941,7 +3919,7 @@ skipping this filter.</li>
 <span class="sd">        ValueError</span>
 <span class="sd">            Raised in case parsing the response failes for any reason.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">users</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">users</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getsysrights&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">system_id</span><span class="p">})</span>
         <span class="c1"># this response has a unique format, so parse it directly here:</span>
@@ -3963,12 +3941,12 @@ skipping this filter.</li>
                 <span class="n">users</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">username</span><span class="p">)</span>
 
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Unable to parse data returned by PUMAPI: </span><span class="si">%s</span><span class="s2"> - ERROR: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-                <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
-                <span class="n">err</span><span class="p">,</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Unable to parse data returned by PUMAPI: </span><span class="si">{</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="si">}</span><span class="s2"> - &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;ERROR: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span>
 
         <span class="k">return</span> <span class="n">users</span>
 </pre></div>
@@ -4060,8 +4038,8 @@ with the given ID in PPMS.</li>
             <span class="p">}</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">mapping</span><span class="p">[</span><span class="n">shortname</span><span class="p">]</span>
-            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Invalid permission [</span><span class="si">%s</span><span class="s2">] given&quot;</span> <span class="o">%</span> <span class="n">shortname</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid permission [</span><span class="si">{</span><span class="n">shortname</span><span class="si">}</span><span class="s2">] given&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">err</span>
 
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;Setting permission level [</span><span class="si">%s</span><span class="s2">] for user [</span><span class="si">%s</span><span class="s2">] on system [</span><span class="si">%s</span><span class="s2">]&quot;</span><span class="p">,</span>
@@ -4070,11 +4048,7 @@ with the given ID in PPMS.</li>
             <span class="n">system_id</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">system_id</span><span class="p">,</span>
-            <span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">permission</span><span class="p">,</span>
-        <span class="p">}</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="n">system_id</span><span class="p">,</span> <span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">permission</span><span class="p">}</span>
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;setright&quot;</span><span class="p">,</span> <span class="n">parameters</span><span class="p">)</span>
 
         <span class="c1"># NOTE: the &#39;setright&#39; action will accept ANY permission type and return &#39;done&#39;</span>
@@ -4284,7 +4258,7 @@ before), False otherwise.</li>
         <span class="n">valid</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="s2">&quot;next&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">booking_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Value for &#39;booking_type&#39; (</span><span class="si">%s</span><span class="s2">) not in </span><span class="si">%s</span><span class="s2">!&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">booking_type</span><span class="p">,</span> <span class="n">valid</span><span class="p">)</span>
+                <span class="sa">f</span><span class="s2">&quot;Value for &#39;booking_type&#39; (</span><span class="si">{</span><span class="n">booking_type</span><span class="si">}</span><span class="s2">) not in </span><span class="si">{</span><span class="n">valid</span><span class="si">}</span><span class="s2">!&quot;</span>
             <span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
@@ -4300,7 +4274,7 @@ before), False otherwise.</li>
             <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;System [</span><span class="si">%s</span><span class="s2">] doesn&#39;t have </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">desc</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-        <span class="k">return</span> <span class="n">PpmsBooking</span><span class="o">.</span><span class="n">from_booking_request</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">booking_type</span><span class="p">,</span> <span class="n">system_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">PpmsBooking</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">booking_type</span><span class="p">,</span> <span class="n">system_id</span><span class="p">)</span>
 </pre></div>
 
         </details>
@@ -4419,9 +4393,9 @@ request is refused by PUMAPI (e.g. "not authorized").</li>
 <span class="sd">            A list with `PpmsBooking` objects for the given day. Empty in case</span>
 <span class="sd">            there are no bookings or parsing the response failed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">bookings</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">bookings</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">parameters</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;plateformid&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">core_facility_ref</span><span class="p">,</span>
+            <span class="s2">&quot;plateformid&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">core_facility_ref</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
             <span class="s2">&quot;day&quot;</span><span class="p">:</span> <span class="n">date</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">),</span>
         <span class="p">}</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Requesting runningsheet for </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">parameters</span><span class="p">[</span><span class="s2">&quot;day&quot;</span><span class="p">])</span>

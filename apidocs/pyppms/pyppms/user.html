@@ -37,9 +37,6 @@
                                 <a class="function" href="#PpmsUser.__init__">PpmsUser</a>
                         </li>
                         <li>
-                                <a class="function" href="#PpmsUser.from_response">from_response</a>
-                        </li>
-                        <li>
                                 <a class="variable" href="#PpmsUser.fullname">fullname</a>
                         </li>
                         <li>
@@ -97,30 +94,21 @@
 <span class="sd">        The ``active`` state of the user account in PPMS, by default True.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># TODO: merge the alternative constructor(s) into __init__() (where applicable)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">fullname</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">ppms_group</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">active</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response_text</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the user object.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        username : str</span>
-<span class="sd">            The user&#39;s account / login name for PPMS.</span>
-<span class="sd">        email : str</span>
-<span class="sd">            The user&#39;s email address.</span>
-<span class="sd">        fullname : str, optional</span>
-<span class="sd">            The full name (&quot;&lt;LASTNAME&gt; &lt;GIVENNAME&gt;&quot;) of the user in PPMS, by</span>
-<span class="sd">            default empty (&quot;&quot;).</span>
-<span class="sd">        ppms_group : str, optional</span>
-<span class="sd">            The user&#39;s PPMS group, by default empty (&quot;&quot;).</span>
-<span class="sd">        active : bool, optional</span>
-<span class="sd">            The state of the user account in PPMS, by default True.</span>
+<span class="sd">        response_text : str</span>
+<span class="sd">            The text returned by a PUMAP `getuser` call.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">username</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="n">active</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ppms_group</span> <span class="o">=</span> <span class="n">ppms_group</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fullname</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">fullname</span>
+        <span class="n">details</span> <span class="o">=</span> <span class="n">dict_from_single_response</span><span class="p">(</span><span class="n">response_text</span><span class="p">,</span> <span class="n">graceful</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;login&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ppms_group</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;unitlogin&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fullname</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;lname&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;fname&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span>
 
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;PpmsUser initialized: username=[</span><span class="si">%s</span><span class="s2">], email=[</span><span class="si">%s</span><span class="s2">], ppms_group=[</span><span class="si">%s</span><span class="s2">], &quot;</span>
@@ -131,37 +119,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_fullname</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="p">,</span>
         <span class="p">)</span>
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_response</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">response_text</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Alternative constructor using the text from the PUMAPI response.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        response_text : str</span>
-<span class="sd">            The text returned by a PUMAP `getuser` call.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        PpmsUser</span>
-<span class="sd">            The object constructed with the details contained in the PUMAPI</span>
-<span class="sd">            response text.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            Raised in case parsing the PUMAPI response data fails.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">details</span> <span class="o">=</span> <span class="n">dict_from_single_response</span><span class="p">(</span><span class="n">response_text</span><span class="p">,</span> <span class="n">graceful</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="n">user</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-            <span class="n">username</span><span class="o">=</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;login&quot;</span><span class="p">],</span>
-            <span class="n">email</span><span class="o">=</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">],</span>
-            <span class="n">fullname</span><span class="o">=</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;lname&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;fname&quot;</span><span class="p">],</span>
-            <span class="n">ppms_group</span><span class="o">=</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;unitlogin&quot;</span><span class="p">],</span>
-            <span class="n">active</span><span class="o">=</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">],</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">user</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">fullname</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -180,12 +137,12 @@
 
     <span class="k">def</span> <span class="nf">details</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Generate a string with details on the user object.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;username: </span><span class="si">%s</span><span class="s2">, email: </span><span class="si">%s</span><span class="s2">, fullname: </span><span class="si">%s</span><span class="s2">, ppms_group: </span><span class="si">%s</span><span class="s2">, active: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fullname</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ppms_group</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="p">,</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;username: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;email: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;fullname: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fullname</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;ppms_group: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ppms_group</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;active: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -225,30 +182,21 @@
 <span class="sd">        The ``active`` state of the user account in PPMS, by default True.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># TODO: merge the alternative constructor(s) into __init__() (where applicable)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">fullname</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">ppms_group</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">active</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response_text</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the user object.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        username : str</span>
-<span class="sd">            The user&#39;s account / login name for PPMS.</span>
-<span class="sd">        email : str</span>
-<span class="sd">            The user&#39;s email address.</span>
-<span class="sd">        fullname : str, optional</span>
-<span class="sd">            The full name (&quot;&lt;LASTNAME&gt; &lt;GIVENNAME&gt;&quot;) of the user in PPMS, by</span>
-<span class="sd">            default empty (&quot;&quot;).</span>
-<span class="sd">        ppms_group : str, optional</span>
-<span class="sd">            The user&#39;s PPMS group, by default empty (&quot;&quot;).</span>
-<span class="sd">        active : bool, optional</span>
-<span class="sd">            The state of the user account in PPMS, by default True.</span>
+<span class="sd">        response_text : str</span>
+<span class="sd">            The text returned by a PUMAP `getuser` call.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">username</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="n">active</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ppms_group</span> <span class="o">=</span> <span class="n">ppms_group</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fullname</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">fullname</span>
+        <span class="n">details</span> <span class="o">=</span> <span class="n">dict_from_single_response</span><span class="p">(</span><span class="n">response_text</span><span class="p">,</span> <span class="n">graceful</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;login&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ppms_group</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;unitlogin&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fullname</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;lname&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;fname&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span>
 
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;PpmsUser initialized: username=[</span><span class="si">%s</span><span class="s2">], email=[</span><span class="si">%s</span><span class="s2">], ppms_group=[</span><span class="si">%s</span><span class="s2">], &quot;</span>
@@ -259,37 +207,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_fullname</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="p">,</span>
         <span class="p">)</span>
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_response</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">response_text</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Alternative constructor using the text from the PUMAPI response.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        response_text : str</span>
-<span class="sd">            The text returned by a PUMAP `getuser` call.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        PpmsUser</span>
-<span class="sd">            The object constructed with the details contained in the PUMAPI</span>
-<span class="sd">            response text.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            Raised in case parsing the PUMAPI response data fails.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">details</span> <span class="o">=</span> <span class="n">dict_from_single_response</span><span class="p">(</span><span class="n">response_text</span><span class="p">,</span> <span class="n">graceful</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="n">user</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-            <span class="n">username</span><span class="o">=</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;login&quot;</span><span class="p">],</span>
-            <span class="n">email</span><span class="o">=</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">],</span>
-            <span class="n">fullname</span><span class="o">=</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;lname&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;fname&quot;</span><span class="p">],</span>
-            <span class="n">ppms_group</span><span class="o">=</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;unitlogin&quot;</span><span class="p">],</span>
-            <span class="n">active</span><span class="o">=</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">],</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">user</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">fullname</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -308,12 +225,12 @@
 
     <span class="k">def</span> <span class="nf">details</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Generate a string with details on the user object.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;username: </span><span class="si">%s</span><span class="s2">, email: </span><span class="si">%s</span><span class="s2">, fullname: </span><span class="si">%s</span><span class="s2">, ppms_group: </span><span class="si">%s</span><span class="s2">, active: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fullname</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ppms_group</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="p">,</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;username: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;email: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;fullname: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fullname</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;ppms_group: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ppms_group</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;active: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -346,33 +263,26 @@ The <code>active</code> state of the user account in PPMS, by default True.</li>
                                         <div class="attr function"><a class="headerlink" href="#PpmsUser.__init__">#&nbsp;&nbsp</a>
 
         
-            <span class="name">PpmsUser</span><span class="signature">(username, email, fullname=&#39;&#39;, ppms_group=&#39;&#39;, active=True)</span>
+            <span class="name">PpmsUser</span><span class="signature">(response_text)</span>
     </div>
 
             <details>
             <summary>View Source</summary>
-            <div class="pdoc-code codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">email</span><span class="p">,</span> <span class="n">fullname</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">ppms_group</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">active</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">response_text</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the user object.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        username : str</span>
-<span class="sd">            The user&#39;s account / login name for PPMS.</span>
-<span class="sd">        email : str</span>
-<span class="sd">            The user&#39;s email address.</span>
-<span class="sd">        fullname : str, optional</span>
-<span class="sd">            The full name (&quot;&lt;LASTNAME&gt; &lt;GIVENNAME&gt;&quot;) of the user in PPMS, by</span>
-<span class="sd">            default empty (&quot;&quot;).</span>
-<span class="sd">        ppms_group : str, optional</span>
-<span class="sd">            The user&#39;s PPMS group, by default empty (&quot;&quot;).</span>
-<span class="sd">        active : bool, optional</span>
-<span class="sd">            The state of the user account in PPMS, by default True.</span>
+<span class="sd">        response_text : str</span>
+<span class="sd">            The text returned by a PUMAP `getuser` call.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">username</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">email</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="n">active</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ppms_group</span> <span class="o">=</span> <span class="n">ppms_group</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fullname</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">fullname</span>
+        <span class="n">details</span> <span class="o">=</span> <span class="n">dict_from_single_response</span><span class="p">(</span><span class="n">response_text</span><span class="p">,</span> <span class="n">graceful</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;login&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">email</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ppms_group</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;unitlogin&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fullname</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;lname&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;fname&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&#39;</span>
 
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;PpmsUser initialized: username=[</span><span class="si">%s</span><span class="s2">], email=[</span><span class="si">%s</span><span class="s2">], ppms_group=[</span><span class="si">%s</span><span class="s2">], &quot;</span>
@@ -392,87 +302,8 @@ The <code>active</code> state of the user account in PPMS, by default True.</li>
 <h6 id="parameters">Parameters</h6>
 
 <ul>
-<li><strong>username</strong> (str):
-The user's account / login name for PPMS.</li>
-<li><strong>email</strong> (str):
-The user's email address.</li>
-<li><strong>fullname</strong> (str, optional):
-The full name ("<LASTNAME> <GIVENNAME>") of the user in PPMS, by
-default empty ("").</li>
-<li><strong>ppms_group</strong> (str, optional):
-The user's PPMS group, by default empty ("").</li>
-<li><strong>active</strong> (bool, optional):
-The state of the user account in PPMS, by default True.</li>
-</ul>
-</div>
-
-
-                            </div>
-                            <div id="PpmsUser.from_response" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#PpmsUser.from_response">#&nbsp;&nbsp</a>
-
-                <div class="decorator">@classmethod</div>
-
-            <span class="def">def</span>
-            <span class="name">from_response</span><span class="signature">(cls, response_text)</span>:
-    </div>
-
-            <details>
-            <summary>View Source</summary>
-            <div class="pdoc-code codehilite"><pre><span></span>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_response</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">response_text</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Alternative constructor using the text from the PUMAPI response.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        response_text : str</span>
-<span class="sd">            The text returned by a PUMAP `getuser` call.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        PpmsUser</span>
-<span class="sd">            The object constructed with the details contained in the PUMAPI</span>
-<span class="sd">            response text.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        ValueError</span>
-<span class="sd">            Raised in case parsing the PUMAPI response data fails.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">details</span> <span class="o">=</span> <span class="n">dict_from_single_response</span><span class="p">(</span><span class="n">response_text</span><span class="p">,</span> <span class="n">graceful</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="n">user</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-            <span class="n">username</span><span class="o">=</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;login&quot;</span><span class="p">],</span>
-            <span class="n">email</span><span class="o">=</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;email&quot;</span><span class="p">],</span>
-            <span class="n">fullname</span><span class="o">=</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;lname&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;fname&quot;</span><span class="p">],</span>
-            <span class="n">ppms_group</span><span class="o">=</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;unitlogin&quot;</span><span class="p">],</span>
-            <span class="n">active</span><span class="o">=</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;active&quot;</span><span class="p">],</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">user</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Alternative constructor using the text from the PUMAPI response.</p>
-
-<h6 id="parameters">Parameters</h6>
-
-<ul>
 <li><strong>response_text</strong> (str):
 The text returned by a PUMAP <code>getuser</code> call.</li>
-</ul>
-
-<h6 id="returns">Returns</h6>
-
-<ul>
-<li><strong>PpmsUser</strong>: The object constructed with the details contained in the PUMAPI
-response text.</li>
-</ul>
-
-<h6 id="raises">Raises</h6>
-
-<ul>
-<li><strong>ValueError</strong>: Raised in case parsing the PUMAPI response data fails.</li>
 </ul>
 </div>
 
@@ -509,12 +340,12 @@ user accocunt name if the former one is empty.</li>
             <summary>View Source</summary>
             <div class="pdoc-code codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">details</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Generate a string with details on the user object.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;username: </span><span class="si">%s</span><span class="s2">, email: </span><span class="si">%s</span><span class="s2">, fullname: </span><span class="si">%s</span><span class="s2">, ppms_group: </span><span class="si">%s</span><span class="s2">, active: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fullname</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">ppms_group</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="p">,</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;username: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;email: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;fullname: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fullname</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;ppms_group: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ppms_group</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;active: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 </pre></div>
 

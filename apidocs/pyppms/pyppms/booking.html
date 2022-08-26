@@ -37,9 +37,6 @@
                                 <a class="function" href="#PpmsBooking.__init__">PpmsBooking</a>
                         </li>
                         <li>
-                                <a class="function" href="#PpmsBooking.from_booking_request">from_booking_request</a>
-                        </li>
-                        <li>
                                 <a class="function" href="#PpmsBooking.from_runningsheet">from_runningsheet</a>
                         </li>
                         <li>
@@ -100,40 +97,8 @@
 <span class="sd">        A string referring to a session ID in PPMS, can be empty.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># TODO: merge the alternative constructor(s) into __init__() (where applicable)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">starttime</span><span class="p">,</span> <span class="n">endtime</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize the booking object.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        username : str</span>
-<span class="sd">            The user&#39;s account / login name for PPMS.</span>
-<span class="sd">        system_id : int or int-like</span>
-<span class="sd">            The PPMS system ID to which this booking refers to.</span>
-<span class="sd">        starttime : datetime.date</span>
-<span class="sd">            The booking&#39;s starting time.</span>
-<span class="sd">        endtime : datetime.date</span>
-<span class="sd">            The booking&#39;s ending time.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">username</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">system_id</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">starttime</span> <span class="o">=</span> <span class="n">starttime</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">endtime</span> <span class="o">=</span> <span class="n">endtime</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-
-        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;PpmsBooking initialized: username=[</span><span class="si">%s</span><span class="s2">], system=[</span><span class="si">%s</span><span class="s2">], &quot;</span>
-            <span class="s2">&quot;reservation start=[</span><span class="si">%s</span><span class="s2">] end=[</span><span class="si">%s</span><span class="s2">]&quot;</span><span class="p">,</span>
-            <span class="n">username</span><span class="p">,</span>
-            <span class="n">system_id</span><span class="p">,</span>
-            <span class="n">starttime</span><span class="p">,</span>
-            <span class="n">endtime</span><span class="p">,</span>
-        <span class="p">)</span>
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_booking_request</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">booking_type</span><span class="p">,</span> <span class="n">system_id</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Alternative constructor using a getbooking / nextbooking response.</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">booking_type</span><span class="p">,</span> <span class="n">system_id</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Initialize the booking object.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -146,16 +111,11 @@
 <span class="sd">            the next upcoming booking).</span>
 <span class="sd">        system_id : int or int-like</span>
 <span class="sd">            The ID of the system the booking refers to.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        PpmsBooking</span>
-<span class="sd">            The object constructed with the parsed response.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">valid</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="s2">&quot;next&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">booking_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Value for &#39;booking_type&#39; (</span><span class="si">%s</span><span class="s2">) not in </span><span class="si">%s</span><span class="s2">!&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">booking_type</span><span class="p">,</span> <span class="n">valid</span><span class="p">)</span>
+                <span class="sa">f</span><span class="s2">&quot;Value for &#39;booking_type&#39; (</span><span class="si">{</span><span class="n">booking_type</span><span class="si">}</span><span class="s2">) not in </span><span class="si">{</span><span class="n">valid</span><span class="si">}</span><span class="s2">!&quot;</span>
             <span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
@@ -167,18 +127,23 @@
                 <span class="n">endtime</span> <span class="o">=</span> <span class="n">starttime</span>
                 <span class="n">starttime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-            <span class="n">booking</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-                <span class="n">username</span><span class="o">=</span><span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                <span class="n">system_id</span><span class="o">=</span><span class="n">system_id</span><span class="p">,</span>
-                <span class="n">starttime</span><span class="o">=</span><span class="n">starttime</span><span class="p">,</span>
-                <span class="n">endtime</span><span class="o">=</span><span class="n">endtime</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">booking</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">system_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">starttime</span> <span class="o">=</span> <span class="n">starttime</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">endtime</span> <span class="o">=</span> <span class="n">endtime</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Parsing booking response failed (</span><span class="si">%s</span><span class="s2">), text was:</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
             <span class="k">raise</span>
 
-        <span class="k">return</span> <span class="n">booking</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;PpmsBooking initialized: username=[</span><span class="si">%s</span><span class="s2">], system=[</span><span class="si">%s</span><span class="s2">], &quot;</span>
+            <span class="s2">&quot;reservation start=[</span><span class="si">%s</span><span class="s2">] end=[</span><span class="si">%s</span><span class="s2">]&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+            <span class="n">system_id</span><span class="p">,</span>
+            <span class="n">starttime</span><span class="p">,</span>
+            <span class="n">endtime</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_runningsheet</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">entry</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
@@ -204,9 +169,8 @@
 <span class="sd">            The object constructed with the parsed response.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">booking</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-                <span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">,</span> <span class="n">system_id</span><span class="o">=</span><span class="n">system_id</span><span class="p">,</span> <span class="n">starttime</span><span class="o">=</span><span class="n">date</span><span class="p">,</span> <span class="n">endtime</span><span class="o">=</span><span class="n">date</span>
-            <span class="p">)</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">username</span><span class="si">}</span><span class="se">\n</span><span class="s2">0</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="n">booking</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="n">system_id</span><span class="p">)</span>
             <span class="n">booking</span><span class="o">.</span><span class="n">starttime_fromstr</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;Start time&quot;</span><span class="p">],</span> <span class="n">date</span><span class="p">)</span>
             <span class="n">booking</span><span class="o">.</span><span class="n">endtime_fromstr</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;End time&quot;</span><span class="p">],</span> <span class="n">date</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
@@ -262,14 +226,12 @@
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Updated booking endtime: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;username: </span><span class="si">%s</span><span class="s2"> - system: </span><span class="si">%s</span><span class="s2"> - reservation start / end: [ </span><span class="si">%s</span><span class="s2"> / </span><span class="si">%s</span><span class="s2"> ]&quot;</span> <span class="o">%</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">starttime</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">endtime</span><span class="p">,</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;username: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2"> - system: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="si">}</span><span class="s2"> - &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;reservation start / end: [ </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">starttime</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">endtime</span><span class="si">}</span><span class="s2"> ]&quot;</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; - session: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; - session: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="si">}</span><span class="s2">&quot;</span>
 
         <span class="k">return</span> <span class="n">msg</span>
 </pre></div>
@@ -306,40 +268,8 @@
 <span class="sd">        A string referring to a session ID in PPMS, can be empty.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># TODO: merge the alternative constructor(s) into __init__() (where applicable)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">starttime</span><span class="p">,</span> <span class="n">endtime</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize the booking object.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        username : str</span>
-<span class="sd">            The user&#39;s account / login name for PPMS.</span>
-<span class="sd">        system_id : int or int-like</span>
-<span class="sd">            The PPMS system ID to which this booking refers to.</span>
-<span class="sd">        starttime : datetime.date</span>
-<span class="sd">            The booking&#39;s starting time.</span>
-<span class="sd">        endtime : datetime.date</span>
-<span class="sd">            The booking&#39;s ending time.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">username</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">system_id</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">starttime</span> <span class="o">=</span> <span class="n">starttime</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">endtime</span> <span class="o">=</span> <span class="n">endtime</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-
-        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="s2">&quot;PpmsBooking initialized: username=[</span><span class="si">%s</span><span class="s2">], system=[</span><span class="si">%s</span><span class="s2">], &quot;</span>
-            <span class="s2">&quot;reservation start=[</span><span class="si">%s</span><span class="s2">] end=[</span><span class="si">%s</span><span class="s2">]&quot;</span><span class="p">,</span>
-            <span class="n">username</span><span class="p">,</span>
-            <span class="n">system_id</span><span class="p">,</span>
-            <span class="n">starttime</span><span class="p">,</span>
-            <span class="n">endtime</span><span class="p">,</span>
-        <span class="p">)</span>
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_booking_request</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">booking_type</span><span class="p">,</span> <span class="n">system_id</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Alternative constructor using a getbooking / nextbooking response.</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">booking_type</span><span class="p">,</span> <span class="n">system_id</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Initialize the booking object.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -352,16 +282,11 @@
 <span class="sd">            the next upcoming booking).</span>
 <span class="sd">        system_id : int or int-like</span>
 <span class="sd">            The ID of the system the booking refers to.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        PpmsBooking</span>
-<span class="sd">            The object constructed with the parsed response.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">valid</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="s2">&quot;next&quot;</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">booking_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Value for &#39;booking_type&#39; (</span><span class="si">%s</span><span class="s2">) not in </span><span class="si">%s</span><span class="s2">!&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">booking_type</span><span class="p">,</span> <span class="n">valid</span><span class="p">)</span>
+                <span class="sa">f</span><span class="s2">&quot;Value for &#39;booking_type&#39; (</span><span class="si">{</span><span class="n">booking_type</span><span class="si">}</span><span class="s2">) not in </span><span class="si">{</span><span class="n">valid</span><span class="si">}</span><span class="s2">!&quot;</span>
             <span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
@@ -373,18 +298,23 @@
                 <span class="n">endtime</span> <span class="o">=</span> <span class="n">starttime</span>
                 <span class="n">starttime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
-            <span class="n">booking</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-                <span class="n">username</span><span class="o">=</span><span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                <span class="n">system_id</span><span class="o">=</span><span class="n">system_id</span><span class="p">,</span>
-                <span class="n">starttime</span><span class="o">=</span><span class="n">starttime</span><span class="p">,</span>
-                <span class="n">endtime</span><span class="o">=</span><span class="n">endtime</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">booking</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">system_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">starttime</span> <span class="o">=</span> <span class="n">starttime</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">endtime</span> <span class="o">=</span> <span class="n">endtime</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Parsing booking response failed (</span><span class="si">%s</span><span class="s2">), text was:</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
             <span class="k">raise</span>
 
-        <span class="k">return</span> <span class="n">booking</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;PpmsBooking initialized: username=[</span><span class="si">%s</span><span class="s2">], system=[</span><span class="si">%s</span><span class="s2">], &quot;</span>
+            <span class="s2">&quot;reservation start=[</span><span class="si">%s</span><span class="s2">] end=[</span><span class="si">%s</span><span class="s2">]&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
+            <span class="n">system_id</span><span class="p">,</span>
+            <span class="n">starttime</span><span class="p">,</span>
+            <span class="n">endtime</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_runningsheet</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">entry</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">date</span><span class="p">):</span>
@@ -410,9 +340,8 @@
 <span class="sd">            The object constructed with the parsed response.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">booking</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-                <span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">,</span> <span class="n">system_id</span><span class="o">=</span><span class="n">system_id</span><span class="p">,</span> <span class="n">starttime</span><span class="o">=</span><span class="n">date</span><span class="p">,</span> <span class="n">endtime</span><span class="o">=</span><span class="n">date</span>
-            <span class="p">)</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">username</span><span class="si">}</span><span class="se">\n</span><span class="s2">0</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="n">booking</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="n">system_id</span><span class="p">)</span>
             <span class="n">booking</span><span class="o">.</span><span class="n">starttime_fromstr</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;Start time&quot;</span><span class="p">],</span> <span class="n">date</span><span class="p">)</span>
             <span class="n">booking</span><span class="o">.</span><span class="n">endtime_fromstr</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;End time&quot;</span><span class="p">],</span> <span class="n">date</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
@@ -468,14 +397,12 @@
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Updated booking endtime: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;username: </span><span class="si">%s</span><span class="s2"> - system: </span><span class="si">%s</span><span class="s2"> - reservation start / end: [ </span><span class="si">%s</span><span class="s2"> / </span><span class="si">%s</span><span class="s2"> ]&quot;</span> <span class="o">%</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">starttime</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">endtime</span><span class="p">,</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;username: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="si">}</span><span class="s2"> - system: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="si">}</span><span class="s2"> - &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;reservation start / end: [ </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">starttime</span><span class="si">}</span><span class="s2"> / </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">endtime</span><span class="si">}</span><span class="s2"> ]&quot;</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">+=</span> <span class="s2">&quot; - session: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span>
+            <span class="n">msg</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; - session: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="si">}</span><span class="s2">&quot;</span>
 
         <span class="k">return</span> <span class="n">msg</span>
 </pre></div>
@@ -505,35 +432,54 @@ A string referring to a session ID in PPMS, can be empty.</li>
                                         <div class="attr function"><a class="headerlink" href="#PpmsBooking.__init__">#&nbsp;&nbsp</a>
 
         
-            <span class="name">PpmsBooking</span><span class="signature">(username, system_id, starttime, endtime)</span>
+            <span class="name">PpmsBooking</span><span class="signature">(text, booking_type, system_id)</span>
     </div>
 
             <details>
             <summary>View Source</summary>
-            <div class="pdoc-code codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">starttime</span><span class="p">,</span> <span class="n">endtime</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Initialize the booking object.</span>
+            <div class="pdoc-code codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">booking_type</span><span class="p">,</span> <span class="n">system_id</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Initialize the booking object.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        username : str</span>
-<span class="sd">            The user&#39;s account / login name for PPMS.</span>
+<span class="sd">        text : str</span>
+<span class="sd">            The response text of a PUMAPI `getbooking` or `nextbooking` request,</span>
+<span class="sd">            should consist of three lines: username, time_delta, session.</span>
+<span class="sd">            Example: ``pyppms\n42\n12345\n``</span>
+<span class="sd">        booking_type : str</span>
+<span class="sd">            Either ``get`` (for a currently running booking) or ``next`` (for</span>
+<span class="sd">            the next upcoming booking).</span>
 <span class="sd">        system_id : int or int-like</span>
-<span class="sd">            The PPMS system ID to which this booking refers to.</span>
-<span class="sd">        starttime : datetime.date</span>
-<span class="sd">            The booking&#39;s starting time.</span>
-<span class="sd">        endtime : datetime.date</span>
-<span class="sd">            The booking&#39;s ending time.</span>
+<span class="sd">            The ID of the system the booking refers to.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">username</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">system_id</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">starttime</span> <span class="o">=</span> <span class="n">starttime</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">endtime</span> <span class="o">=</span> <span class="n">endtime</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="s2">&quot;next&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">booking_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Value for &#39;booking_type&#39; (</span><span class="si">{</span><span class="n">booking_type</span><span class="si">}</span><span class="s2">) not in </span><span class="si">{</span><span class="n">valid</span><span class="si">}</span><span class="s2">!&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">lines</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+            <span class="n">starttime</span> <span class="o">=</span> <span class="n">time_rel_to_abs</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">endtime</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="k">if</span> <span class="n">booking_type</span> <span class="o">==</span> <span class="s2">&quot;get&quot;</span><span class="p">:</span>
+                <span class="n">endtime</span> <span class="o">=</span> <span class="n">starttime</span>
+                <span class="n">starttime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">system_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">starttime</span> <span class="o">=</span> <span class="n">starttime</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">endtime</span> <span class="o">=</span> <span class="n">endtime</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Parsing booking response failed (</span><span class="si">%s</span><span class="s2">), text was:</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
+            <span class="k">raise</span>
 
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;PpmsBooking initialized: username=[</span><span class="si">%s</span><span class="s2">], system=[</span><span class="si">%s</span><span class="s2">], &quot;</span>
             <span class="s2">&quot;reservation start=[</span><span class="si">%s</span><span class="s2">] end=[</span><span class="si">%s</span><span class="s2">]&quot;</span><span class="p">,</span>
-            <span class="n">username</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span>
             <span class="n">system_id</span><span class="p">,</span>
             <span class="n">starttime</span><span class="p">,</span>
             <span class="n">endtime</span><span class="p">,</span>
@@ -547,87 +493,6 @@ A string referring to a session ID in PPMS, can be empty.</li>
 <h6 id="parameters">Parameters</h6>
 
 <ul>
-<li><strong>username</strong> (str):
-The user's account / login name for PPMS.</li>
-<li><strong>system_id</strong> (int or int-like):
-The PPMS system ID to which this booking refers to.</li>
-<li><strong>starttime</strong> (datetime.date):
-The booking's starting time.</li>
-<li><strong>endtime</strong> (datetime.date):
-The booking's ending time.</li>
-</ul>
-</div>
-
-
-                            </div>
-                            <div id="PpmsBooking.from_booking_request" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#PpmsBooking.from_booking_request">#&nbsp;&nbsp</a>
-
-                <div class="decorator">@classmethod</div>
-
-            <span class="def">def</span>
-            <span class="name">from_booking_request</span><span class="signature">(cls, text, booking_type, system_id)</span>:
-    </div>
-
-            <details>
-            <summary>View Source</summary>
-            <div class="pdoc-code codehilite"><pre><span></span>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_booking_request</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">booking_type</span><span class="p">,</span> <span class="n">system_id</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Alternative constructor using a getbooking / nextbooking response.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        text : str</span>
-<span class="sd">            The response text of a PUMAPI `getbooking` or `nextbooking` request,</span>
-<span class="sd">            should consist of three lines: username, time_delta, session.</span>
-<span class="sd">            Example: ``pyppms\n42\n12345\n``</span>
-<span class="sd">        booking_type : str</span>
-<span class="sd">            Either ``get`` (for a currently running booking) or ``next`` (for</span>
-<span class="sd">            the next upcoming booking).</span>
-<span class="sd">        system_id : int or int-like</span>
-<span class="sd">            The ID of the system the booking refers to.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        PpmsBooking</span>
-<span class="sd">            The object constructed with the parsed response.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">valid</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="s2">&quot;next&quot;</span><span class="p">]</span>
-        <span class="k">if</span> <span class="n">booking_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Value for &#39;booking_type&#39; (</span><span class="si">%s</span><span class="s2">) not in </span><span class="si">%s</span><span class="s2">!&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">booking_type</span><span class="p">,</span> <span class="n">valid</span><span class="p">)</span>
-            <span class="p">)</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">lines</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
-            <span class="n">starttime</span> <span class="o">=</span> <span class="n">time_rel_to_abs</span><span class="p">(</span><span class="n">lines</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-            <span class="n">endtime</span> <span class="o">=</span> <span class="kc">None</span>
-
-            <span class="k">if</span> <span class="n">booking_type</span> <span class="o">==</span> <span class="s2">&quot;get&quot;</span><span class="p">:</span>
-                <span class="n">endtime</span> <span class="o">=</span> <span class="n">starttime</span>
-                <span class="n">starttime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-            <span class="n">booking</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-                <span class="n">username</span><span class="o">=</span><span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-                <span class="n">system_id</span><span class="o">=</span><span class="n">system_id</span><span class="p">,</span>
-                <span class="n">starttime</span><span class="o">=</span><span class="n">starttime</span><span class="p">,</span>
-                <span class="n">endtime</span><span class="o">=</span><span class="n">endtime</span><span class="p">,</span>
-            <span class="p">)</span>
-            <span class="n">booking</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="n">lines</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Parsing booking response failed (</span><span class="si">%s</span><span class="s2">), text was:</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">err</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span>
-            <span class="k">raise</span>
-
-        <span class="k">return</span> <span class="n">booking</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Alternative constructor using a getbooking / nextbooking response.</p>
-
-<h6 id="parameters">Parameters</h6>
-
-<ul>
 <li><strong>text</strong> (str):
 The response text of a PUMAPI <code>getbooking</code> or <code>nextbooking</code> request,
 should consist of three lines: username, time_delta, session.
@@ -637,12 +502,6 @@ Either <code>get</code> (for a currently running booking) or <code>next</code> (
 the next upcoming booking).</li>
 <li><strong>system_id</strong> (int or int-like):
 The ID of the system the booking refers to.</li>
-</ul>
-
-<h6 id="returns">Returns</h6>
-
-<ul>
-<li><strong>PpmsBooking</strong>: The object constructed with the parsed response.</li>
 </ul>
 </div>
 
@@ -683,9 +542,8 @@ The ID of the system the booking refers to.</li>
 <span class="sd">            The object constructed with the parsed response.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">booking</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-                <span class="n">username</span><span class="o">=</span><span class="n">username</span><span class="p">,</span> <span class="n">system_id</span><span class="o">=</span><span class="n">system_id</span><span class="p">,</span> <span class="n">starttime</span><span class="o">=</span><span class="n">date</span><span class="p">,</span> <span class="n">endtime</span><span class="o">=</span><span class="n">date</span>
-            <span class="p">)</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">username</span><span class="si">}</span><span class="se">\n</span><span class="s2">0</span><span class="se">\n\n</span><span class="s2">&quot;</span>
+            <span class="n">booking</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">response</span><span class="p">,</span> <span class="s2">&quot;get&quot;</span><span class="p">,</span> <span class="n">system_id</span><span class="p">)</span>
             <span class="n">booking</span><span class="o">.</span><span class="n">starttime_fromstr</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;Start time&quot;</span><span class="p">],</span> <span class="n">date</span><span class="p">)</span>
             <span class="n">booking</span><span class="o">.</span><span class="n">endtime_fromstr</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="s2">&quot;End time&quot;</span><span class="p">],</span> <span class="n">date</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>

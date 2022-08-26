@@ -36,9 +36,6 @@
                         <li>
                                 <a class="function" href="#PpmsSystem.__init__">PpmsSystem</a>
                         </li>
-                        <li>
-                                <a class="function" href="#PpmsSystem.from_parsed_response">from_parsed_response</a>
-                        </li>
                 </ul>
 
             </li>
@@ -110,80 +107,36 @@
 <span class="sd">        actually means - probably it refers to the &quot;after hours&quot; / &quot;non-peak hours&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># TODO: merge the alternative constructor(s) into __init__() (where applicable)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">system_id</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">,</span>
-        <span class="n">localisation</span><span class="p">,</span>
-        <span class="n">system_type</span><span class="p">,</span>
-        <span class="n">core_facility_ref</span><span class="p">,</span>
-        <span class="n">schedules</span><span class="p">,</span>
-        <span class="n">active</span><span class="p">,</span>
-        <span class="n">stats</span><span class="p">,</span>
-        <span class="n">bookable</span><span class="p">,</span>
-        <span class="n">autonomy_required</span><span class="p">,</span>
-        <span class="n">autonomy_required_after_hours</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">details</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the system object.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        system_id : int or int-like</span>
-<span class="sd">            The ID of the system in PPMS (the system&#39;s unique identifier).</span>
-<span class="sd">        name : str</span>
-<span class="sd">            The system&#39;s (human friendly) name.</span>
-<span class="sd">        localisation : str</span>
-<span class="sd">            The location of the system, corresponds to ``Room`` in the web interface.</span>
-<span class="sd">        system_type : str</span>
-<span class="sd">            The ``System Type`` field in PPMS, e.g. &quot;`Confocal Microscopes`&quot; or</span>
-<span class="sd">            &quot;`Virtual Machine class PowerWorkstations`&quot;.</span>
-<span class="sd">        core_facility_ref : str</span>
-<span class="sd">            The core facility reference of the system, for example ``2``.</span>
-<span class="sd">        schedules : bool</span>
-<span class="sd">            Flag indicating whether to list this system in the (read-only) resources and</span>
-<span class="sd">            schedules pages of PPMS.</span>
-<span class="sd">        active : bool</span>
-<span class="sd">            Flag indicating whether the system is active in PPMS.</span>
-<span class="sd">        stats : bool</span>
-<span class="sd">            Flag indicating whether to integrate this system in the PPMS global usage</span>
-<span class="sd">            statistics.</span>
-<span class="sd">        bookable : bool</span>
-<span class="sd">            Flag indicating whether the system is actually bookable in PPMS. A system</span>
-<span class="sd">            that&#39;s not bookable can still be used in incident management.</span>
-<span class="sd">        autonomy_required : bool</span>
-<span class="sd">            Flag indiciating whether explicit permissions are required for a user for</span>
-<span class="sd">            being allowed to book the system. Corresponds to the field ``User</span>
-<span class="sd">            right/training required`` in the PPMS web interface.</span>
-<span class="sd">        autonomy_required_after_hours : bool</span>
-<span class="sd">            Corresponds to the field ``User right/training required only after hours``</span>
-<span class="sd">            in the PPMS web interface. Unfortunately there is no description given what</span>
-<span class="sd">            that actually means - probably it refers to the &quot;after hours&quot; / &quot;non-peak</span>
-<span class="sd">            hours&quot;.</span>
+<span class="sd">        details : dict</span>
+<span class="sd">            A dict with the parsed response from a `getsystems` request.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">system_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;System id&quot;</span><span class="p">])</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Unable to parse system ID: </span><span class="si">%s</span><span class="s2"> - </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Unable to parse system ID: </span><span class="si">%s</span><span class="s2"> - </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;System id&quot;</span><span class="p">],</span> <span class="n">err</span><span class="p">)</span>
             <span class="k">raise</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">localisation</span> <span class="o">=</span> <span class="n">localisation</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">system_type</span> <span class="o">=</span> <span class="n">system_type</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">core_facility_ref</span> <span class="o">=</span> <span class="n">core_facility_ref</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">schedules</span> <span class="o">=</span> <span class="n">schedules</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="n">active</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">stats</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bookable</span> <span class="o">=</span> <span class="n">bookable</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required</span> <span class="o">=</span> <span class="n">autonomy_required</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required_after_hours</span> <span class="o">=</span> <span class="n">autonomy_required_after_hours</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Name&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">localisation</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Localisation&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">system_type</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Type&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">core_facility_ref</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Core facility ref&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schedules</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Schedules&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Active&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Stats&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bookable</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Bookable&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Autonomy Required&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required_after_hours</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Autonomy Required After Hours&quot;</span><span class="p">]</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;PpmsSystem created: id=</span><span class="si">%s</span><span class="s2">, name=[</span><span class="si">%s</span><span class="s2">], localisation=[</span><span class="si">%s</span><span class="s2">], system_type=[</span><span class="si">%s</span><span class="s2">]&quot;</span><span class="p">,</span>
-            <span class="n">system_id</span><span class="p">,</span>
-            <span class="n">name</span><span class="p">,</span>
-            <span class="n">localisation</span><span class="p">,</span>
-            <span class="n">system_type</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">localisation</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system_type</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="c1"># LOG.debug(&#39;PpmsSystem details: core_facility_ref=%s, schedules=%s, &#39;</span>
         <span class="c1">#           &#39;active=%s, stats=%s, bookable=%s, autonomy_required=%s, &#39;</span>
@@ -191,53 +144,19 @@
         <span class="c1">#           schedules, active, stats, bookable, autonomy_required,</span>
         <span class="c1">#           autonomy_required_after_hours)</span>
 
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_parsed_response</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">details</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Alternative constructor using a parsed dict with system details.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        details : dict</span>
-<span class="sd">            A dict with the parsed response from a `getsystems` request.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        PpmsSystem</span>
-<span class="sd">            The object constructed with the given details.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">system</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;System id&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Name&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Localisation&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Type&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Core facility ref&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Schedules&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Active&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Stats&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Bookable&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Autonomy Required&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Autonomy Required After Hours&quot;</span><span class="p">],</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">system</span>
-
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span>
-            <span class="s2">&quot;system_id: </span><span class="si">%s</span><span class="s2">, name: </span><span class="si">%s</span><span class="s2">, localisation: </span><span class="si">%s</span><span class="s2">, system_type: </span><span class="si">%s</span><span class="s2">, &quot;</span>
-            <span class="s2">&quot;core_facility_ref: </span><span class="si">%s</span><span class="s2">, schedules: </span><span class="si">%s</span><span class="s2">, active: </span><span class="si">%s</span><span class="s2">, stats: </span><span class="si">%s</span><span class="s2">, &quot;</span>
-            <span class="s2">&quot;bookable: </span><span class="si">%s</span><span class="s2">, autonomy_required: </span><span class="si">%s</span><span class="s2">, autonomy_required_after_hours: </span><span class="si">%s</span><span class="s2">&quot;</span>
-            <span class="o">%</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">localisation</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">system_type</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">core_facility_ref</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">schedules</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">bookable</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required_after_hours</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="sa">f</span><span class="s2">&quot;system_id: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;name: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;localisation: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">localisation</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;system_type: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">system_type</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;core_facility_ref: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">core_facility_ref</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;schedules: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schedules</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;active: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;stats: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;bookable: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bookable</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;autonomy_required: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;autonomy_required_after_hours: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required_after_hours</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 </pre></div>
 
@@ -292,80 +211,36 @@
 <span class="sd">        actually means - probably it refers to the &quot;after hours&quot; / &quot;non-peak hours&quot;.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="c1"># TODO: merge the alternative constructor(s) into __init__() (where applicable)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">system_id</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">,</span>
-        <span class="n">localisation</span><span class="p">,</span>
-        <span class="n">system_type</span><span class="p">,</span>
-        <span class="n">core_facility_ref</span><span class="p">,</span>
-        <span class="n">schedules</span><span class="p">,</span>
-        <span class="n">active</span><span class="p">,</span>
-        <span class="n">stats</span><span class="p">,</span>
-        <span class="n">bookable</span><span class="p">,</span>
-        <span class="n">autonomy_required</span><span class="p">,</span>
-        <span class="n">autonomy_required_after_hours</span><span class="p">,</span>
-    <span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">details</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the system object.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        system_id : int or int-like</span>
-<span class="sd">            The ID of the system in PPMS (the system&#39;s unique identifier).</span>
-<span class="sd">        name : str</span>
-<span class="sd">            The system&#39;s (human friendly) name.</span>
-<span class="sd">        localisation : str</span>
-<span class="sd">            The location of the system, corresponds to ``Room`` in the web interface.</span>
-<span class="sd">        system_type : str</span>
-<span class="sd">            The ``System Type`` field in PPMS, e.g. &quot;`Confocal Microscopes`&quot; or</span>
-<span class="sd">            &quot;`Virtual Machine class PowerWorkstations`&quot;.</span>
-<span class="sd">        core_facility_ref : str</span>
-<span class="sd">            The core facility reference of the system, for example ``2``.</span>
-<span class="sd">        schedules : bool</span>
-<span class="sd">            Flag indicating whether to list this system in the (read-only) resources and</span>
-<span class="sd">            schedules pages of PPMS.</span>
-<span class="sd">        active : bool</span>
-<span class="sd">            Flag indicating whether the system is active in PPMS.</span>
-<span class="sd">        stats : bool</span>
-<span class="sd">            Flag indicating whether to integrate this system in the PPMS global usage</span>
-<span class="sd">            statistics.</span>
-<span class="sd">        bookable : bool</span>
-<span class="sd">            Flag indicating whether the system is actually bookable in PPMS. A system</span>
-<span class="sd">            that&#39;s not bookable can still be used in incident management.</span>
-<span class="sd">        autonomy_required : bool</span>
-<span class="sd">            Flag indiciating whether explicit permissions are required for a user for</span>
-<span class="sd">            being allowed to book the system. Corresponds to the field ``User</span>
-<span class="sd">            right/training required`` in the PPMS web interface.</span>
-<span class="sd">        autonomy_required_after_hours : bool</span>
-<span class="sd">            Corresponds to the field ``User right/training required only after hours``</span>
-<span class="sd">            in the PPMS web interface. Unfortunately there is no description given what</span>
-<span class="sd">            that actually means - probably it refers to the &quot;after hours&quot; / &quot;non-peak</span>
-<span class="sd">            hours&quot;.</span>
+<span class="sd">        details : dict</span>
+<span class="sd">            A dict with the parsed response from a `getsystems` request.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">system_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;System id&quot;</span><span class="p">])</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Unable to parse system ID: </span><span class="si">%s</span><span class="s2"> - </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Unable to parse system ID: </span><span class="si">%s</span><span class="s2"> - </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;System id&quot;</span><span class="p">],</span> <span class="n">err</span><span class="p">)</span>
             <span class="k">raise</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">localisation</span> <span class="o">=</span> <span class="n">localisation</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">system_type</span> <span class="o">=</span> <span class="n">system_type</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">core_facility_ref</span> <span class="o">=</span> <span class="n">core_facility_ref</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">schedules</span> <span class="o">=</span> <span class="n">schedules</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="n">active</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">stats</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bookable</span> <span class="o">=</span> <span class="n">bookable</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required</span> <span class="o">=</span> <span class="n">autonomy_required</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required_after_hours</span> <span class="o">=</span> <span class="n">autonomy_required_after_hours</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Name&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">localisation</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Localisation&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">system_type</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Type&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">core_facility_ref</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Core facility ref&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schedules</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Schedules&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Active&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Stats&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bookable</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Bookable&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Autonomy Required&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required_after_hours</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Autonomy Required After Hours&quot;</span><span class="p">]</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;PpmsSystem created: id=</span><span class="si">%s</span><span class="s2">, name=[</span><span class="si">%s</span><span class="s2">], localisation=[</span><span class="si">%s</span><span class="s2">], system_type=[</span><span class="si">%s</span><span class="s2">]&quot;</span><span class="p">,</span>
-            <span class="n">system_id</span><span class="p">,</span>
-            <span class="n">name</span><span class="p">,</span>
-            <span class="n">localisation</span><span class="p">,</span>
-            <span class="n">system_type</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">localisation</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system_type</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="c1"># LOG.debug(&#39;PpmsSystem details: core_facility_ref=%s, schedules=%s, &#39;</span>
         <span class="c1">#           &#39;active=%s, stats=%s, bookable=%s, autonomy_required=%s, &#39;</span>
@@ -373,53 +248,19 @@
         <span class="c1">#           schedules, active, stats, bookable, autonomy_required,</span>
         <span class="c1">#           autonomy_required_after_hours)</span>
 
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_parsed_response</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">details</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Alternative constructor using a parsed dict with system details.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        details : dict</span>
-<span class="sd">            A dict with the parsed response from a `getsystems` request.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        PpmsSystem</span>
-<span class="sd">            The object constructed with the given details.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">system</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;System id&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Name&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Localisation&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Type&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Core facility ref&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Schedules&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Active&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Stats&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Bookable&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Autonomy Required&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Autonomy Required After Hours&quot;</span><span class="p">],</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">system</span>
-
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span>
-            <span class="s2">&quot;system_id: </span><span class="si">%s</span><span class="s2">, name: </span><span class="si">%s</span><span class="s2">, localisation: </span><span class="si">%s</span><span class="s2">, system_type: </span><span class="si">%s</span><span class="s2">, &quot;</span>
-            <span class="s2">&quot;core_facility_ref: </span><span class="si">%s</span><span class="s2">, schedules: </span><span class="si">%s</span><span class="s2">, active: </span><span class="si">%s</span><span class="s2">, stats: </span><span class="si">%s</span><span class="s2">, &quot;</span>
-            <span class="s2">&quot;bookable: </span><span class="si">%s</span><span class="s2">, autonomy_required: </span><span class="si">%s</span><span class="s2">, autonomy_required_after_hours: </span><span class="si">%s</span><span class="s2">&quot;</span>
-            <span class="o">%</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">localisation</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">system_type</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">core_facility_ref</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">schedules</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">bookable</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required_after_hours</span><span class="p">,</span>
-            <span class="p">)</span>
+            <span class="sa">f</span><span class="s2">&quot;system_id: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;name: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;localisation: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">localisation</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;system_type: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">system_type</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;core_facility_ref: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">core_facility_ref</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;schedules: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">schedules</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;active: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">active</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;stats: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;bookable: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">bookable</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;autonomy_required: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required</span><span class="si">}</span><span class="s2">, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;autonomy_required_after_hours: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required_after_hours</span><span class="si">}</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 </pre></div>
 
@@ -467,95 +308,41 @@ actually means - probably it refers to the "after hours" / "non-peak hours".</li
                                         <div class="attr function"><a class="headerlink" href="#PpmsSystem.__init__">#&nbsp;&nbsp</a>
 
         
-            <span class="name">PpmsSystem</span><span class="signature">(
-    system_id,
-    name,
-    localisation,
-    system_type,
-    core_facility_ref,
-    schedules,
-    active,
-    stats,
-    bookable,
-    autonomy_required,
-    autonomy_required_after_hours
-)</span>
+            <span class="name">PpmsSystem</span><span class="signature">(details)</span>
     </div>
 
             <details>
             <summary>View Source</summary>
-            <div class="pdoc-code codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">system_id</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">,</span>
-        <span class="n">localisation</span><span class="p">,</span>
-        <span class="n">system_type</span><span class="p">,</span>
-        <span class="n">core_facility_ref</span><span class="p">,</span>
-        <span class="n">schedules</span><span class="p">,</span>
-        <span class="n">active</span><span class="p">,</span>
-        <span class="n">stats</span><span class="p">,</span>
-        <span class="n">bookable</span><span class="p">,</span>
-        <span class="n">autonomy_required</span><span class="p">,</span>
-        <span class="n">autonomy_required_after_hours</span><span class="p">,</span>
-    <span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">details</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Initialize the system object.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        system_id : int or int-like</span>
-<span class="sd">            The ID of the system in PPMS (the system&#39;s unique identifier).</span>
-<span class="sd">        name : str</span>
-<span class="sd">            The system&#39;s (human friendly) name.</span>
-<span class="sd">        localisation : str</span>
-<span class="sd">            The location of the system, corresponds to ``Room`` in the web interface.</span>
-<span class="sd">        system_type : str</span>
-<span class="sd">            The ``System Type`` field in PPMS, e.g. &quot;`Confocal Microscopes`&quot; or</span>
-<span class="sd">            &quot;`Virtual Machine class PowerWorkstations`&quot;.</span>
-<span class="sd">        core_facility_ref : str</span>
-<span class="sd">            The core facility reference of the system, for example ``2``.</span>
-<span class="sd">        schedules : bool</span>
-<span class="sd">            Flag indicating whether to list this system in the (read-only) resources and</span>
-<span class="sd">            schedules pages of PPMS.</span>
-<span class="sd">        active : bool</span>
-<span class="sd">            Flag indicating whether the system is active in PPMS.</span>
-<span class="sd">        stats : bool</span>
-<span class="sd">            Flag indicating whether to integrate this system in the PPMS global usage</span>
-<span class="sd">            statistics.</span>
-<span class="sd">        bookable : bool</span>
-<span class="sd">            Flag indicating whether the system is actually bookable in PPMS. A system</span>
-<span class="sd">            that&#39;s not bookable can still be used in incident management.</span>
-<span class="sd">        autonomy_required : bool</span>
-<span class="sd">            Flag indiciating whether explicit permissions are required for a user for</span>
-<span class="sd">            being allowed to book the system. Corresponds to the field ``User</span>
-<span class="sd">            right/training required`` in the PPMS web interface.</span>
-<span class="sd">        autonomy_required_after_hours : bool</span>
-<span class="sd">            Corresponds to the field ``User right/training required only after hours``</span>
-<span class="sd">            in the PPMS web interface. Unfortunately there is no description given what</span>
-<span class="sd">            that actually means - probably it refers to the &quot;after hours&quot; / &quot;non-peak</span>
-<span class="sd">            hours&quot;.</span>
+<span class="sd">        details : dict</span>
+<span class="sd">            A dict with the parsed response from a `getsystems` request.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">system_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">details</span><span class="p">[</span><span class="s2">&quot;System id&quot;</span><span class="p">])</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Unable to parse system ID: </span><span class="si">%s</span><span class="s2"> - </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">system_id</span><span class="p">,</span> <span class="n">err</span><span class="p">)</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Unable to parse system ID: </span><span class="si">%s</span><span class="s2"> - </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;System id&quot;</span><span class="p">],</span> <span class="n">err</span><span class="p">)</span>
             <span class="k">raise</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">localisation</span> <span class="o">=</span> <span class="n">localisation</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">system_type</span> <span class="o">=</span> <span class="n">system_type</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">core_facility_ref</span> <span class="o">=</span> <span class="n">core_facility_ref</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">schedules</span> <span class="o">=</span> <span class="n">schedules</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="n">active</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">stats</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">bookable</span> <span class="o">=</span> <span class="n">bookable</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required</span> <span class="o">=</span> <span class="n">autonomy_required</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required_after_hours</span> <span class="o">=</span> <span class="n">autonomy_required_after_hours</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Name&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">localisation</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Localisation&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">system_type</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Type&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">core_facility_ref</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Core facility ref&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">schedules</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Schedules&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Active&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Stats&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bookable</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Bookable&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Autonomy Required&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">autonomy_required_after_hours</span> <span class="o">=</span> <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Autonomy Required After Hours&quot;</span><span class="p">]</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
             <span class="s2">&quot;PpmsSystem created: id=</span><span class="si">%s</span><span class="s2">, name=[</span><span class="si">%s</span><span class="s2">], localisation=[</span><span class="si">%s</span><span class="s2">], system_type=[</span><span class="si">%s</span><span class="s2">]&quot;</span><span class="p">,</span>
-            <span class="n">system_id</span><span class="p">,</span>
-            <span class="n">name</span><span class="p">,</span>
-            <span class="n">localisation</span><span class="p">,</span>
-            <span class="n">system_type</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system_id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">localisation</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">system_type</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="c1"># LOG.debug(&#39;PpmsSystem details: core_facility_ref=%s, schedules=%s, &#39;</span>
         <span class="c1">#           &#39;active=%s, stats=%s, bookable=%s, autonomy_required=%s, &#39;</span>
@@ -571,98 +358,8 @@ actually means - probably it refers to the "after hours" / "non-peak hours".</li
 <h6 id="parameters">Parameters</h6>
 
 <ul>
-<li><strong>system_id</strong> (int or int-like):
-The ID of the system in PPMS (the system's unique identifier).</li>
-<li><strong>name</strong> (str):
-The system's (human friendly) name.</li>
-<li><strong>localisation</strong> (str):
-The location of the system, corresponds to <code>Room</code> in the web interface.</li>
-<li><strong>system_type</strong> (str):
-The <code>System Type</code> field in PPMS, e.g. "<code>Confocal Microscopes</code>" or
-"<code>Virtual Machine class PowerWorkstations</code>".</li>
-<li><strong>core_facility_ref</strong> (str):
-The core facility reference of the system, for example <code>2</code>.</li>
-<li><strong>schedules</strong> (bool):
-Flag indicating whether to list this system in the (read-only) resources and
-schedules pages of PPMS.</li>
-<li><strong>active</strong> (bool):
-Flag indicating whether the system is active in PPMS.</li>
-<li><strong>stats</strong> (bool):
-Flag indicating whether to integrate this system in the PPMS global usage
-statistics.</li>
-<li><strong>bookable</strong> (bool):
-Flag indicating whether the system is actually bookable in PPMS. A system
-that's not bookable can still be used in incident management.</li>
-<li><strong>autonomy_required</strong> (bool):
-Flag indiciating whether explicit permissions are required for a user for
-being allowed to book the system. Corresponds to the field <code>User
-right/training required</code> in the PPMS web interface.</li>
-<li><strong>autonomy_required_after_hours</strong> (bool):
-Corresponds to the field <code>User right/training required only after hours</code>
-in the PPMS web interface. Unfortunately there is no description given what
-that actually means - probably it refers to the "after hours" / "non-peak
-hours".</li>
-</ul>
-</div>
-
-
-                            </div>
-                            <div id="PpmsSystem.from_parsed_response" class="classattr">
-                                        <div class="attr function"><a class="headerlink" href="#PpmsSystem.from_parsed_response">#&nbsp;&nbsp</a>
-
-                <div class="decorator">@classmethod</div>
-
-            <span class="def">def</span>
-            <span class="name">from_parsed_response</span><span class="signature">(cls, details)</span>:
-    </div>
-
-            <details>
-            <summary>View Source</summary>
-            <div class="pdoc-code codehilite"><pre><span></span>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_parsed_response</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">details</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Alternative constructor using a parsed dict with system details.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        details : dict</span>
-<span class="sd">            A dict with the parsed response from a `getsystems` request.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        PpmsSystem</span>
-<span class="sd">            The object constructed with the given details.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">system</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;System id&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Name&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Localisation&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Type&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Core facility ref&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Schedules&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Active&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Stats&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Bookable&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Autonomy Required&quot;</span><span class="p">],</span>
-            <span class="n">details</span><span class="p">[</span><span class="s2">&quot;Autonomy Required After Hours&quot;</span><span class="p">],</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">system</span>
-</pre></div>
-
-        </details>
-
-            <div class="docstring"><p>Alternative constructor using a parsed dict with system details.</p>
-
-<h6 id="parameters">Parameters</h6>
-
-<ul>
 <li><strong>details</strong> (dict):
 A dict with the parsed response from a <code>getsystems</code> request.</li>
-</ul>
-
-<h6 id="returns">Returns</h6>
-
-<ul>
-<li><strong>PpmsSystem</strong>: The object constructed with the given details.</li>
 </ul>
 </div>
 

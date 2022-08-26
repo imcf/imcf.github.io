@@ -26,7 +26,7 @@
   <li><a href="#pyppms">PyPPMS</a>
   <ul>
     <li><a href="#pumapi-python-interface">PUMAPI - Python Interface</a></li>
-    <li><a href="#usage-instructions">Usage Instructions</a></li>
+    <li><a href="#usage-example">Usage Example</a></li>
     <li><a href="#testing">Testing</a></li>
     <li><a href="#note">Note</a></li>
     <li><a href="#references">References</a></li>
@@ -75,9 +75,20 @@ changing its state and properties.</p>
 
 <p>This is a Python 3 package for talking to the <em>PUMAPI</em>.</p>
 
-<h2 id="usage-instructions">Usage Instructions</h2>
+<h2 id="usage-example">Usage Example</h2>
 
-<p>TODO! Until then you may have a look at the testing instructions.</p>
+<p>Fetch email addresses of all active users:</p>
+
+<div class="pdoc-code codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pyppms</span> <span class="kn">import</span> <span class="n">ppms</span>
+<span class="kn">from</span> <span class="nn">credentials_ppms</span> <span class="kn">import</span> <span class="n">PPMS_URL</span><span class="p">,</span> <span class="n">PPMS_API_KEY</span>
+
+<span class="n">conn</span> <span class="o">=</span> <span class="n">ppms</span><span class="o">.</span><span class="n">PpmsConnection</span><span class="p">(</span><span class="n">PPMS_URL</span><span class="p">,</span> <span class="n">PPMS_API_KEY</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Querying PPMS for emails of active users, can take minutes...&quot;</span><span class="p">)</span>
+<span class="n">emails</span> <span class="o">=</span> <span class="n">ppms</span><span class="o">.</span><span class="n">get_users_emails</span><span class="p">(</span><span class="n">active</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">emails</span><span class="p">)</span><span class="si">}</span><span class="s2"> email addresses from PPMS:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">emails</span><span class="p">))</span>
+</code></pre></div>
 
 <h2 id="testing">Testing</h2>
 
@@ -85,7 +96,7 @@ changing its state and properties.</p>
 
 <h2 id="note">Note</h2>
 
-<p>The PPMS API is not super clean and sometimes quite inconsistent. During
+<p>The PPMS API sometimes exposes a bit of a surprising behavior. During
 development of the package, we came across several issues (this list is
 certainly incomplete):</p>
 
@@ -422,7 +433,7 @@ look something like this:</p>
 <span class="sd">.. include:: ../../TESTING.md</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.1.0-dev0&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;2.0.0&quot;</span>
 
 <span class="kn">from</span> <span class="nn">.ppms</span> <span class="kn">import</span> <span class="n">PpmsConnection</span>
 </pre></div>
