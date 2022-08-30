@@ -576,13 +576,15 @@
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">users</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">users</span>
 
-    <span class="k">def</span> <span class="nf">get_user_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">login_name</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_user_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">login_name</span><span class="p">,</span> <span class="n">skip_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get details on a given user from PPMS.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        login_name : str</span>
 <span class="sd">            The PPMS account / login name of the user to query.</span>
+<span class="sd">        skip_cache : bool, optional</span>
+<span class="sd">            Passed as-is to the :py:meth:`request()` method</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -613,7 +615,7 @@
 <span class="sd">        ValueError</span>
 <span class="sd">            Raised if the user details can&#39;t be parsed from the PUMAPI response.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">})</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">},</span> <span class="n">skip_cache</span><span class="o">=</span><span class="n">skip_cache</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;User [</span><span class="si">{</span><span class="n">login_name</span><span class="si">}</span><span class="s2">] is unknown to PPMS&quot;</span>
@@ -633,13 +635,15 @@
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Details for user [</span><span class="si">%s</span><span class="s2">]: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">login_name</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">details</span>
 
-    <span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">login_name</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">login_name</span><span class="p">,</span> <span class="n">skip_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Fetch user details from PPMS and create a PpmsUser object from it.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        login_name : str</span>
 <span class="sd">            The user&#39;s PPMS login name.</span>
+<span class="sd">        skip_cache : bool, optional</span>
+<span class="sd">            Passed as-is to the :py:meth:`request()` method</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -653,7 +657,7 @@
 <span class="sd">        KeyError</span>
 <span class="sd">            Raised if the user doesn&#39;t exist in PPMS.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">})</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">},</span> <span class="n">skip_cache</span><span class="o">=</span><span class="n">skip_cache</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;User [</span><span class="si">{</span><span class="n">login_name</span><span class="si">}</span><span class="s2">] is unknown to PPMS&quot;</span>
@@ -725,7 +729,7 @@
 
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Updating details on </span><span class="si">%s</span><span class="s2"> users&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">user_ids</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="n">user_ids</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">skip_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Collected details on </span><span class="si">%s</span><span class="s2"> users&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">))</span>
 
@@ -1799,13 +1803,15 @@
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">users</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">users</span>
 
-    <span class="k">def</span> <span class="nf">get_user_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">login_name</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_user_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">login_name</span><span class="p">,</span> <span class="n">skip_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get details on a given user from PPMS.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        login_name : str</span>
 <span class="sd">            The PPMS account / login name of the user to query.</span>
+<span class="sd">        skip_cache : bool, optional</span>
+<span class="sd">            Passed as-is to the :py:meth:`request()` method</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1836,7 +1842,7 @@
 <span class="sd">        ValueError</span>
 <span class="sd">            Raised if the user details can&#39;t be parsed from the PUMAPI response.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">})</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">},</span> <span class="n">skip_cache</span><span class="o">=</span><span class="n">skip_cache</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;User [</span><span class="si">{</span><span class="n">login_name</span><span class="si">}</span><span class="s2">] is unknown to PPMS&quot;</span>
@@ -1856,13 +1862,15 @@
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Details for user [</span><span class="si">%s</span><span class="s2">]: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">login_name</span><span class="p">,</span> <span class="n">details</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">details</span>
 
-    <span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">login_name</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">login_name</span><span class="p">,</span> <span class="n">skip_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Fetch user details from PPMS and create a PpmsUser object from it.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        login_name : str</span>
 <span class="sd">            The user&#39;s PPMS login name.</span>
+<span class="sd">        skip_cache : bool, optional</span>
+<span class="sd">            Passed as-is to the :py:meth:`request()` method</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -1876,7 +1884,7 @@
 <span class="sd">        KeyError</span>
 <span class="sd">            Raised if the user doesn&#39;t exist in PPMS.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">})</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">},</span> <span class="n">skip_cache</span><span class="o">=</span><span class="n">skip_cache</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;User [</span><span class="si">{</span><span class="n">login_name</span><span class="si">}</span><span class="s2">] is unknown to PPMS&quot;</span>
@@ -1948,7 +1956,7 @@
 
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Updating details on </span><span class="si">%s</span><span class="s2"> users&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">user_ids</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="n">user_ids</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">skip_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Collected details on </span><span class="si">%s</span><span class="s2"> users&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">))</span>
 
@@ -3025,18 +3033,20 @@ or empty!</li>
 
         
             <span class="def">def</span>
-            <span class="name">get_user_dict</span><span class="signature">(self, login_name)</span>:
+            <span class="name">get_user_dict</span><span class="signature">(self, login_name, skip_cache=False)</span>:
     </div>
 
             <details>
             <summary>View Source</summary>
-            <div class="pdoc-code codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_user_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">login_name</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_user_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">login_name</span><span class="p">,</span> <span class="n">skip_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get details on a given user from PPMS.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        login_name : str</span>
 <span class="sd">            The PPMS account / login name of the user to query.</span>
+<span class="sd">        skip_cache : bool, optional</span>
+<span class="sd">            Passed as-is to the :py:meth:`request()` method</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -3067,7 +3077,7 @@ or empty!</li>
 <span class="sd">        ValueError</span>
 <span class="sd">            Raised if the user details can&#39;t be parsed from the PUMAPI response.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">})</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">},</span> <span class="n">skip_cache</span><span class="o">=</span><span class="n">skip_cache</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;User [</span><span class="si">{</span><span class="n">login_name</span><span class="si">}</span><span class="s2">] is unknown to PPMS&quot;</span>
@@ -3097,6 +3107,8 @@ or empty!</li>
 <ul>
 <li><strong>login_name</strong> (str):
 The PPMS account / login name of the user to query.</li>
+<li><strong>skip_cache</strong> (bool, optional):
+Passed as-is to the <code><a href="#PpmsConnection.request">request()</a></code> method</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -3138,18 +3150,20 @@ The PPMS account / login name of the user to query.</li>
 
         
             <span class="def">def</span>
-            <span class="name">get_user</span><span class="signature">(self, login_name)</span>:
+            <span class="name">get_user</span><span class="signature">(self, login_name, skip_cache=False)</span>:
     </div>
 
             <details>
             <summary>View Source</summary>
-            <div class="pdoc-code codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">login_name</span><span class="p">):</span>
+            <div class="pdoc-code codehilite"><pre><span></span>    <span class="k">def</span> <span class="nf">get_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">login_name</span><span class="p">,</span> <span class="n">skip_cache</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Fetch user details from PPMS and create a PpmsUser object from it.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        login_name : str</span>
 <span class="sd">            The user&#39;s PPMS login name.</span>
+<span class="sd">        skip_cache : bool, optional</span>
+<span class="sd">            Passed as-is to the :py:meth:`request()` method</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -3163,7 +3177,7 @@ The PPMS account / login name of the user to query.</li>
 <span class="sd">        KeyError</span>
 <span class="sd">            Raised if the user doesn&#39;t exist in PPMS.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">})</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getuser&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;login&quot;</span><span class="p">:</span> <span class="n">login_name</span><span class="p">},</span> <span class="n">skip_cache</span><span class="o">=</span><span class="n">skip_cache</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">response</span><span class="o">.</span><span class="n">text</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;User [</span><span class="si">{</span><span class="n">login_name</span><span class="si">}</span><span class="s2">] is unknown to PPMS&quot;</span>
@@ -3185,6 +3199,8 @@ The PPMS account / login name of the user to query.</li>
 <ul>
 <li><strong>login_name</strong> (str):
 The user's PPMS login name.</li>
+<li><strong>skip_cache</strong> (bool, optional):
+Passed as-is to the <code><a href="#PpmsConnection.request">request()</a></code> method</li>
 </ul>
 
 <h6 id="returns">Returns</h6>
@@ -3337,7 +3353,7 @@ cached locally before, by default False.</li>
 
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Updating details on </span><span class="si">%s</span><span class="s2"> users&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">user_ids</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">user_id</span> <span class="ow">in</span> <span class="n">user_ids</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">,</span> <span class="n">skip_cache</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Collected details on </span><span class="si">%s</span><span class="s2"> users&quot;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">))</span>
 </pre></div>
