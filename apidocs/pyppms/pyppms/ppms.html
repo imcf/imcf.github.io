@@ -647,7 +647,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        PpmsUser</span>
+<span class="sd">        pyppms.user.PpmsUser</span>
 <span class="sd">            The user object created from the PUMAPI response. The object will be</span>
 <span class="sd">            additionally stored in the self.users dict using the login_name as</span>
 <span class="sd">            the dict&#39;s key.</span>
@@ -699,7 +699,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        dict(PpmsUser)</span>
+<span class="sd">        dict(pyppms.user.PpmsUser)</span>
 <span class="sd">            A dict of PpmsUser objects with the username (login) as key.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_refresh</span><span class="p">:</span>
@@ -738,7 +738,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        list(PpmsUser)</span>
+<span class="sd">        list(pyppms.user.PpmsUser)</span>
 <span class="sd">            A list with PpmsUser objects that are PPMS administrators.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getadmins&quot;</span><span class="p">)</span>
@@ -802,7 +802,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        list(PpmsUser)</span>
+<span class="sd">        list(pyppms.user.PpmsUser)</span>
 <span class="sd">            A list with PpmsUser objects that are members of this PPMS group.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getgroupusers&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;unitlogin&quot;</span><span class="p">:</span> <span class="n">unitlogin</span><span class="p">})</span>
@@ -1192,7 +1192,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        PpmsBooking or None</span>
+<span class="sd">        pyppms.booking.PpmsBooking or None</span>
 <span class="sd">            The booking object, or None if there is no booking for the system or the</span>
 <span class="sd">            request is refused by PUMAPI (e.g. &quot;not authorized&quot;).</span>
 
@@ -1874,7 +1874,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        PpmsUser</span>
+<span class="sd">        pyppms.user.PpmsUser</span>
 <span class="sd">            The user object created from the PUMAPI response. The object will be</span>
 <span class="sd">            additionally stored in the self.users dict using the login_name as</span>
 <span class="sd">            the dict&#39;s key.</span>
@@ -1926,7 +1926,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        dict(PpmsUser)</span>
+<span class="sd">        dict(pyppms.user.PpmsUser)</span>
 <span class="sd">            A dict of PpmsUser objects with the username (login) as key.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_refresh</span><span class="p">:</span>
@@ -1965,7 +1965,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        list(PpmsUser)</span>
+<span class="sd">        list(pyppms.user.PpmsUser)</span>
 <span class="sd">            A list with PpmsUser objects that are PPMS administrators.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getadmins&quot;</span><span class="p">)</span>
@@ -2029,7 +2029,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        list(PpmsUser)</span>
+<span class="sd">        list(pyppms.user.PpmsUser)</span>
 <span class="sd">            A list with PpmsUser objects that are members of this PPMS group.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getgroupusers&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;unitlogin&quot;</span><span class="p">:</span> <span class="n">unitlogin</span><span class="p">})</span>
@@ -2419,7 +2419,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        PpmsBooking or None</span>
+<span class="sd">        pyppms.booking.PpmsBooking or None</span>
 <span class="sd">            The booking object, or None if there is no booking for the system or the</span>
 <span class="sd">            request is refused by PUMAPI (e.g. &quot;not authorized&quot;).</span>
 
@@ -3167,7 +3167,7 @@ Passed as-is to the <code><a href="#PpmsConnection.request">request()</a></code>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        PpmsUser</span>
+<span class="sd">        pyppms.user.PpmsUser</span>
 <span class="sd">            The user object created from the PUMAPI response. The object will be</span>
 <span class="sd">            additionally stored in the self.users dict using the login_name as</span>
 <span class="sd">            the dict&#39;s key.</span>
@@ -3206,7 +3206,7 @@ Passed as-is to the <code><a href="#PpmsConnection.request">request()</a></code>
 <h6 id="returns">Returns</h6>
 
 <ul>
-<li><strong>PpmsUser</strong>: The user object created from the PUMAPI response. The object will be
+<li><strong><a href="user.html#PpmsUser">pyppms.user.PpmsUser</a></strong>: The user object created from the PUMAPI response. The object will be
 additionally stored in the self.users dict using the login_name as
 the dict's key.</li>
 </ul>
@@ -3291,7 +3291,7 @@ The login name to check for.</li>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        dict(PpmsUser)</span>
+<span class="sd">        dict(pyppms.user.PpmsUser)</span>
 <span class="sd">            A dict of PpmsUser objects with the username (login) as key.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">force_refresh</span><span class="p">:</span>
@@ -3317,7 +3317,7 @@ cached locally before, by default False.</li>
 <h6 id="returns">Returns</h6>
 
 <ul>
-<li><strong>dict(PpmsUser)</strong>: A dict of PpmsUser objects with the username (login) as key.</li>
+<li><strong>dict(<a href="user.html#PpmsUser">pyppms.user.PpmsUser</a>)</strong>: A dict of PpmsUser objects with the username (login) as key.</li>
 </ul>
 </div>
 
@@ -3394,7 +3394,7 @@ default [] which will result in all <em>active</em> users to be requested.</li>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        list(PpmsUser)</span>
+<span class="sd">        list(pyppms.user.PpmsUser)</span>
 <span class="sd">            A list with PpmsUser objects that are PPMS administrators.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getadmins&quot;</span><span class="p">)</span>
@@ -3415,7 +3415,7 @@ default [] which will result in all <em>active</em> users to be requested.</li>
 <h6 id="returns">Returns</h6>
 
 <ul>
-<li><strong>list(PpmsUser)</strong>: A list with PpmsUser objects that are PPMS administrators.</li>
+<li><strong>list(<a href="user.html#PpmsUser">pyppms.user.PpmsUser</a>)</strong>: A list with PpmsUser objects that are PPMS administrators.</li>
 </ul>
 </div>
 
@@ -3538,7 +3538,7 @@ line of the PUMAPI response, values from the data line.</li>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        list(PpmsUser)</span>
+<span class="sd">        list(pyppms.user.PpmsUser)</span>
 <span class="sd">            A list with PpmsUser objects that are members of this PPMS group.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s2">&quot;getgroupusers&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;unitlogin&quot;</span><span class="p">:</span> <span class="n">unitlogin</span><span class="p">})</span>
@@ -3571,7 +3571,7 @@ The group's login ("unique login or id" in the PPMS web interface).</li>
 <h6 id="returns">Returns</h6>
 
 <ul>
-<li><strong>list(PpmsUser)</strong>: A list with PpmsUser objects that are members of this PPMS group.</li>
+<li><strong>list(<a href="user.html#PpmsUser">pyppms.user.PpmsUser</a>)</strong>: A list with PpmsUser objects that are members of this PPMS group.</li>
 </ul>
 </div>
 
@@ -4262,7 +4262,7 @@ before), False otherwise.</li>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        PpmsBooking or None</span>
+<span class="sd">        pyppms.booking.PpmsBooking or None</span>
 <span class="sd">            The booking object, or None if there is no booking for the system or the</span>
 <span class="sd">            request is refused by PUMAPI (e.g. &quot;not authorized&quot;).</span>
 
@@ -4317,7 +4317,7 @@ booking), by default <code>get</code>.</li>
 <h6 id="returns">Returns</h6>
 
 <ul>
-<li><strong>PpmsBooking or None</strong>: The booking object, or None if there is no booking for the system or the
+<li><strong><a href="booking.html#PpmsBooking">pyppms.booking.PpmsBooking</a> or None</strong>: The booking object, or None if there is no booking for the system or the
 request is refused by PUMAPI (e.g. "not authorized").</li>
 </ul>
 
