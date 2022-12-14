@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Imaging Core Facility - IMCF</title>
+    <link>https://imcf.one/hugo/</link>
+    <description>Recent content on Imaging Core Facility - IMCF</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language>
+    <copyright>Imaging Core Facility, University of Basel, Switzerland</copyright><atom:link href="https://imcf.one/hugo/index.xml" rel="self" type="application/rss+xml" />
+  </channel>
+</rss>
