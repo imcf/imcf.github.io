@@ -25,8 +25,12 @@
 
         <h2>Contents</h2>
         <ul>
-  <li><a href="#contents">Contents</a></li>
-  <li><a href="#example-usage">Example usage</a></li>
+  <li><a href="#imcflibs">IMCFlibs 🐍 ☕ 🔩 🔧 🪛</a>
+  <ul>
+    <li><a href="#python-convenience-helpers">Python convenience helpers</a></li>
+    <li><a href="#contents">Contents</a></li>
+    <li><a href="#example-usage">Example usage</a></li>
+  </ul></li>
 </ul>
 
 
@@ -57,66 +61,89 @@
                     <h1 class="modulename">
 imcflibs    </h1>
 
-                        <div class="docstring"><p>A collection of Python helper functions.</p>
+                        <div class="docstring"><p>Python convenience from and for the IMCF (Imaging Core Facility).</p>
+
+<h1 id="imcflibs">IMCFlibs 🐍 ☕ 🔩 🔧 🪛</h1>
+
+<p><a href="https://zenodo.org/badge/latestdoi/156891364"><img src="https://zenodo.org/badge/156891364.svg" alt="DOI" /></a></p>
+
+<h2 id="python-convenience-helpers">Python convenience helpers</h2>
 
 <p>This package contains a diverse collection of Python functions dealing with
-paths, I/O (file handles, ...), strings etc.</p>
+paths, I/O (file handles, ...), strings etc. and tons of <a href="https://fiji.sc">Fiji</a> /
+<a href="https://imagej.net">ImageJ2</a> convenience wrappers to simplify scripting and reduce
+cross-script redundanciees.</p>
 
-<p>In addition (to the regular packaging) it is set up to be packaged by Maven to
-be ready for being used in <a href="https://imagej.net">ImageJ2</a>.</p>
+<p>Initially this has been a multi-purpose package where a substantial part had
+been useful in <strong>CPython</strong> as well. However, since the latest Jython
+release is still based on Python 2.7 (see the <a href="https://www.jython.org/jython-3-roadmap">Jython 3 roadmap</a> for
+more info), <em>imcflibs</em> is now basically limited to the <strong>Fiji/ImageJ2
+ecosystem</strong> (which is also the reason there is no <code>pip install</code>able package
+provided).</p>
+
+<p>Releases are made through Maven and published to the <a href="https://maven.scijava.org/#nexus-search;gav~ch.unibas.biozentrum.imcf~~~~">SciJava Maven
+repository</a>. The easiest way to use the lib is by adding the <strong><code>IMCF
+Uni Basel</code></strong> <a href="https://imagej.net/list-of-update-sites/">update site</a> to your ImageJ installation.</p>
 
 <p>Developed and provided by the <a href="https://www.biozentrum.unibas.ch/imcf">Imaging Core Facility (IMCF)</a> of the
 Biozentrum, University of Basel, Switzerland.</p>
 
-<h1 id="contents">Contents</h1>
+<h2 id="contents">Contents</h2>
 
-<p>:note: TODO!</p>
+<p>See the <a href="https://imcf.one/apidocs/imcflibs/">API documentation</a> for the package contents.</p>
 
-<h1 id="example-usage">Example usage</h1>
+<h2 id="example-usage">Example usage</h2>
 
-<p>:note: TODO!</p>
+<h3 id="shading-correction-projection">Shading correction / projection</h3>
+
+<p>Apply a shading correction model and create a maximum-intensity projection:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="kn">from</span> <span class="nn"><a href="imcflibs/imagej/shading.html">imcflibs.imagej.shading</a></span> <span class="kn">import</span> <span class="n">correct_and_project</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="s2">&quot;/path/to/shading_model.tif&quot;</span>
+<span class="n">raw_image</span> <span class="o">=</span> <span class="s2">&quot;/path/to/raw_data/image.ome.tif&quot;</span>
+<span class="n">out_path</span> <span class="o">=</span> <span class="s2">&quot;/path/to/processed_data/&quot;</span>
+
+<span class="n">correct_and_project</span><span class="p">(</span><span class="n">raw_image</span><span class="p">,</span> <span class="n">out_path</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="s2">&quot;Maximum&quot;</span><span class="p">,</span> <span class="s2">&quot;.ics&quot;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<h3 id="split-tiffs-by-channels-and-slices">Split TIFFs by channels and slices</h3>
+
+<ul>
+<li>See the <a href="https://github.com/imcf/imcf-fiji-scripts/blob/master/src/main/resources/scripts/Plugins/IMCF_Utilities/Convert/Split_TIFFs_By_Channels_And_Slices.py">Split_TIFFs_By_Channels_And_Slices.py</a> script.</li>
+</ul>
+
+<h3 id="use-status-and-progress-bar-updates">Use status and progress bar updates</h3>
+
+<ul>
+<li>See the <a href="https://github.com/imcf/imcf-fiji-scripts/blob/master/src/main/resources/scripts/Plugins/IMCF_Utilities/Stitching_Registration/FluoView_OIF_OIB_OIR_Simple_Stitcher.py">FluoView_OIF_OIB_OIR_Simple_Stitcher.py</a> script.</li>
+</ul>
 </div>
 
                         <input id="mod-imcflibs-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 
                         <label class="view-source-button" for="mod-imcflibs-view-source"><span>View Source</span></label>
 
-                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="sd">&quot;&quot;&quot;A collection of Python helper functions.</span>
+                        <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="sd">&quot;&quot;&quot;Python convenience from and for the IMCF (Imaging Core Facility).</span>
 </span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a>
-</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="sd">This package contains a diverse collection of Python functions dealing with</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="sd">paths, I/O (file handles, ...), strings etc.</span>
+</span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="sd">.. include:: ../../README.md</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="sd">&quot;&quot;&quot;</span>
 </span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a>
-</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="sd">In addition (to the regular packaging) it is set up to be packaged by Maven to</span>
-</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="sd">be ready for being used in [ImageJ2][imagej].</span>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="sd">Developed and provided by the [Imaging Core Facility (IMCF)][imcf] of the</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="sd">Biozentrum, University of Basel, Switzerland.</span>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a>
-</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="sd"># Contents</span>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="sd">:note: TODO!</span>
+</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;$</span><span class="si">{project.version}</span><span class="s2">&quot;</span>
+</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a>
+</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">iotools</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">log</span>
+</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">pathtools</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">strtools</span>
+</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a>
+</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="c1"># check if we&#39;re running in Jython, then also import the &#39;imagej&#39; submodule:</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="kn">import</span> <span class="nn">platform</span> <span class="k">as</span> <span class="nn">_python_platform</span>
 </span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="sd"># Example usage</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="sd">:note: TODO!</span>
-</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>
-</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="sd">[imcf]: https://www.biozentrum.unibas.ch/imcf</span>
-</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a><span class="sd">[imagej]: https://imagej.net</span>
-</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-23"><a href="#L-23"><span class="linenos">23</span></a>
-</span><span id="L-24"><a href="#L-24"><span class="linenos">24</span></a><span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;$</span><span class="si">{project.version}</span><span class="s2">&quot;</span>
-</span><span id="L-25"><a href="#L-25"><span class="linenos">25</span></a>
-</span><span id="L-26"><a href="#L-26"><span class="linenos">26</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">iotools</span>
-</span><span id="L-27"><a href="#L-27"><span class="linenos">27</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">log</span>
-</span><span id="L-28"><a href="#L-28"><span class="linenos">28</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">pathtools</span>
-</span><span id="L-29"><a href="#L-29"><span class="linenos">29</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">strtools</span>
-</span><span id="L-30"><a href="#L-30"><span class="linenos">30</span></a>
-</span><span id="L-31"><a href="#L-31"><span class="linenos">31</span></a><span class="c1"># check if we&#39;re running in Jython, then also import the &#39;imagej&#39; submodule:</span>
-</span><span id="L-32"><a href="#L-32"><span class="linenos">32</span></a><span class="kn">import</span> <span class="nn">platform</span> <span class="k">as</span> <span class="nn">_python_platform</span>
-</span><span id="L-33"><a href="#L-33"><span class="linenos">33</span></a>
-</span><span id="L-34"><a href="#L-34"><span class="linenos">34</span></a><span class="k">if</span> <span class="n">_python_platform</span><span class="o">.</span><span class="n">python_implementation</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Jython&quot;</span><span class="p">:</span>
-</span><span id="L-35"><a href="#L-35"><span class="linenos">35</span></a>    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">imagej</span>
-</span><span id="L-36"><a href="#L-36"><span class="linenos">36</span></a><span class="k">del</span> <span class="n">_python_platform</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="k">if</span> <span class="n">_python_platform</span><span class="o">.</span><span class="n">python_implementation</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Jython&quot;</span><span class="p">:</span>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">imagej</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="k">del</span> <span class="n">_python_platform</span>
 </span></pre></div>
 
 
