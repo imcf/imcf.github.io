@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="pdoc 13.0.0"/>
+    <meta name="generator" content="pdoc 13.1.0"/>
     <title>imcflibs.iotools API documentation</title>
             <link rel="icon" href="https://imcf.one/images/raeppli-code.png"/>
 
@@ -30,22 +30,13 @@
 
 
 
-        <h2>API Documentation</h2>
-            <ul class="memberlist">
+            <h2>API Documentation</h2>
+                <ul class="memberlist">
             <li>
                     <a class="function" href="#filehandle">filehandle</a>
             </li>
             <li>
                     <a class="function" href="#readtxt">readtxt</a>
-            </li>
-            <li>
-                    <a class="function" href="#list_dirs_containing_filetype">list_dirs_containing_filetype</a>
-            </li>
-            <li>
-                    <a class="function" href="#list_all_filenames">list_all_filenames</a>
-            </li>
-            <li>
-                    <a class="function" href="#get_folder_size">get_folder_size</a>
             </li>
     </ul>
 
@@ -179,82 +170,6 @@
 </span><span id="L-107"><a href="#L-107"><span class="linenos">107</span></a>    <span class="k">if</span> <span class="n">zipread</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span id="L-108"><a href="#L-108"><span class="linenos">108</span></a>        <span class="n">zipread</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </span><span id="L-109"><a href="#L-109"><span class="linenos">109</span></a>    <span class="k">return</span> <span class="n">txt</span>
-</span><span id="L-110"><a href="#L-110"><span class="linenos">110</span></a>
-</span><span id="L-111"><a href="#L-111"><span class="linenos">111</span></a>
-</span><span id="L-112"><a href="#L-112"><span class="linenos">112</span></a><span class="k">def</span> <span class="nf">list_dirs_containing_filetype</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">filetype</span><span class="p">):</span>
-</span><span id="L-113"><a href="#L-113"><span class="linenos">113</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;List all directories (recursive) that contain files with the given suffix.</span>
-</span><span id="L-114"><a href="#L-114"><span class="linenos">114</span></a>
-</span><span id="L-115"><a href="#L-115"><span class="linenos">115</span></a><span class="sd">    Parameters</span>
-</span><span id="L-116"><a href="#L-116"><span class="linenos">116</span></a><span class="sd">    ----------</span>
-</span><span id="L-117"><a href="#L-117"><span class="linenos">117</span></a><span class="sd">    source : str</span>
-</span><span id="L-118"><a href="#L-118"><span class="linenos">118</span></a><span class="sd">        Path to source dir.</span>
-</span><span id="L-119"><a href="#L-119"><span class="linenos">119</span></a><span class="sd">    filetype : str</span>
-</span><span id="L-120"><a href="#L-120"><span class="linenos">120</span></a><span class="sd">        Filetype (string pattern) that should be matched against filenames in</span>
-</span><span id="L-121"><a href="#L-121"><span class="linenos">121</span></a><span class="sd">        the directories.</span>
-</span><span id="L-122"><a href="#L-122"><span class="linenos">122</span></a>
-</span><span id="L-123"><a href="#L-123"><span class="linenos">123</span></a><span class="sd">    Returns</span>
-</span><span id="L-124"><a href="#L-124"><span class="linenos">124</span></a><span class="sd">    -------</span>
-</span><span id="L-125"><a href="#L-125"><span class="linenos">125</span></a><span class="sd">    list(str)</span>
-</span><span id="L-126"><a href="#L-126"><span class="linenos">126</span></a><span class="sd">        List of all dirs that contain files of the given filetype.</span>
-</span><span id="L-127"><a href="#L-127"><span class="linenos">127</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-128"><a href="#L-128"><span class="linenos">128</span></a>    <span class="n">dirs_containing_filetype</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="L-129"><a href="#L-129"><span class="linenos">129</span></a>
-</span><span id="L-130"><a href="#L-130"><span class="linenos">130</span></a>    <span class="c1"># walk recursively through all directories</span>
-</span><span id="L-131"><a href="#L-131"><span class="linenos">131</span></a>    <span class="c1"># list their paths and all files inside (=os.walk)</span>
-</span><span id="L-132"><a href="#L-132"><span class="linenos">132</span></a>    <span class="k">for</span> <span class="n">dirname</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">filenames</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
-</span><span id="L-133"><a href="#L-133"><span class="linenos">133</span></a>        <span class="c1"># stop when encountering a directory that contains &quot;filetype&quot;</span>
-</span><span id="L-134"><a href="#L-134"><span class="linenos">134</span></a>        <span class="c1"># and store the directory path</span>
-</span><span id="L-135"><a href="#L-135"><span class="linenos">135</span></a>        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
-</span><span id="L-136"><a href="#L-136"><span class="linenos">136</span></a>            <span class="k">if</span> <span class="n">filetype</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">:</span>
-</span><span id="L-137"><a href="#L-137"><span class="linenos">137</span></a>                <span class="n">dirs_containing_filetype</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dirname</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
-</span><span id="L-138"><a href="#L-138"><span class="linenos">138</span></a>                <span class="k">break</span>
-</span><span id="L-139"><a href="#L-139"><span class="linenos">139</span></a>
-</span><span id="L-140"><a href="#L-140"><span class="linenos">140</span></a>    <span class="k">return</span> <span class="n">dirs_containing_filetype</span>
-</span><span id="L-141"><a href="#L-141"><span class="linenos">141</span></a>
-</span><span id="L-142"><a href="#L-142"><span class="linenos">142</span></a>
-</span><span id="L-143"><a href="#L-143"><span class="linenos">143</span></a><span class="k">def</span> <span class="nf">list_all_filenames</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">filetype</span><span class="p">):</span>
-</span><span id="L-144"><a href="#L-144"><span class="linenos">144</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a sorted list of all files of specified filetype in a given directory.</span>
-</span><span id="L-145"><a href="#L-145"><span class="linenos">145</span></a>
-</span><span id="L-146"><a href="#L-146"><span class="linenos">146</span></a><span class="sd">    Parameters</span>
-</span><span id="L-147"><a href="#L-147"><span class="linenos">147</span></a><span class="sd">    ----------</span>
-</span><span id="L-148"><a href="#L-148"><span class="linenos">148</span></a><span class="sd">    source : str</span>
-</span><span id="L-149"><a href="#L-149"><span class="linenos">149</span></a><span class="sd">        Path to the directory to scan for desired files.</span>
-</span><span id="L-150"><a href="#L-150"><span class="linenos">150</span></a><span class="sd">    filetype : str</span>
-</span><span id="L-151"><a href="#L-151"><span class="linenos">151</span></a><span class="sd">        The file extension to look for.</span>
-</span><span id="L-152"><a href="#L-152"><span class="linenos">152</span></a>
-</span><span id="L-153"><a href="#L-153"><span class="linenos">153</span></a><span class="sd">    Returns</span>
-</span><span id="L-154"><a href="#L-154"><span class="linenos">154</span></a><span class="sd">    -------</span>
-</span><span id="L-155"><a href="#L-155"><span class="linenos">155</span></a><span class="sd">    list(str)</span>
-</span><span id="L-156"><a href="#L-156"><span class="linenos">156</span></a><span class="sd">        List of all files with the given suffix in the source directory.</span>
-</span><span id="L-157"><a href="#L-157"><span class="linenos">157</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-158"><a href="#L-158"><span class="linenos">158</span></a>    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">))</span>
-</span><span id="L-159"><a href="#L-159"><span class="linenos">159</span></a>    <span class="n">allimages</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*&quot;</span> <span class="o">+</span> <span class="n">filetype</span><span class="p">))</span>  <span class="c1"># sorted by name</span>
-</span><span id="L-160"><a href="#L-160"><span class="linenos">160</span></a>
-</span><span id="L-161"><a href="#L-161"><span class="linenos">161</span></a>    <span class="k">return</span> <span class="n">allimages</span>
-</span><span id="L-162"><a href="#L-162"><span class="linenos">162</span></a>
-</span><span id="L-163"><a href="#L-163"><span class="linenos">163</span></a>
-</span><span id="L-164"><a href="#L-164"><span class="linenos">164</span></a><span class="k">def</span> <span class="nf">get_folder_size</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
-</span><span id="L-165"><a href="#L-165"><span class="linenos">165</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the total size of a given directory and its subdirectories.</span>
-</span><span id="L-166"><a href="#L-166"><span class="linenos">166</span></a>
-</span><span id="L-167"><a href="#L-167"><span class="linenos">167</span></a><span class="sd">    Parameters</span>
-</span><span id="L-168"><a href="#L-168"><span class="linenos">168</span></a><span class="sd">    ----------</span>
-</span><span id="L-169"><a href="#L-169"><span class="linenos">169</span></a><span class="sd">    source : str</span>
-</span><span id="L-170"><a href="#L-170"><span class="linenos">170</span></a><span class="sd">        Directory for which the size should be determined.</span>
-</span><span id="L-171"><a href="#L-171"><span class="linenos">171</span></a>
-</span><span id="L-172"><a href="#L-172"><span class="linenos">172</span></a><span class="sd">    Returns</span>
-</span><span id="L-173"><a href="#L-173"><span class="linenos">173</span></a><span class="sd">    -------</span>
-</span><span id="L-174"><a href="#L-174"><span class="linenos">174</span></a><span class="sd">    int</span>
-</span><span id="L-175"><a href="#L-175"><span class="linenos">175</span></a><span class="sd">        The total size of all files in the source dir and subdirs in bytes.</span>
-</span><span id="L-176"><a href="#L-176"><span class="linenos">176</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="L-177"><a href="#L-177"><span class="linenos">177</span></a>    <span class="n">total_size</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span id="L-178"><a href="#L-178"><span class="linenos">178</span></a>    <span class="k">for</span> <span class="n">dirpath</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">filenames</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
-</span><span id="L-179"><a href="#L-179"><span class="linenos">179</span></a>        <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
-</span><span id="L-180"><a href="#L-180"><span class="linenos">180</span></a>            <span class="n">fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
-</span><span id="L-181"><a href="#L-181"><span class="linenos">181</span></a>            <span class="c1"># skip if it is symbolic link</span>
-</span><span id="L-182"><a href="#L-182"><span class="linenos">182</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">islink</span><span class="p">(</span><span class="n">fpath</span><span class="p">):</span>
-</span><span id="L-183"><a href="#L-183"><span class="linenos">183</span></a>                <span class="n">total_size</span> <span class="o">+=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
-</span><span id="L-184"><a href="#L-184"><span class="linenos">184</span></a>
-</span><span id="L-185"><a href="#L-185"><span class="linenos">185</span></a>    <span class="k">return</span> <span class="n">total_size</span>
 </span></pre></div>
 
 
@@ -460,177 +375,6 @@ Used to request a flattened string instead of a list of strings.</li>
 <span class="gp">... </span><span class="c1"># doctest: +SKIP</span>
 </code></pre>
 </div>
-</div>
-
-
-                </section>
-                <section id="list_dirs_containing_filetype">
-                            <input id="list_dirs_containing_filetype-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-<div class="attr function">
-            
-        <span class="def">def</span>
-        <span class="name">list_dirs_containing_filetype</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">source</span>, </span><span class="param"><span class="n">filetype</span></span><span class="return-annotation">):</span></span>
-
-                <label class="view-source-button" for="list_dirs_containing_filetype-view-source"><span>View Source</span></label>
-
-    </div>
-    <a class="headerlink" href="#list_dirs_containing_filetype"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="list_dirs_containing_filetype-113"><a href="#list_dirs_containing_filetype-113"><span class="linenos">113</span></a><span class="k">def</span> <span class="nf">list_dirs_containing_filetype</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">filetype</span><span class="p">):</span>
-</span><span id="list_dirs_containing_filetype-114"><a href="#list_dirs_containing_filetype-114"><span class="linenos">114</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;List all directories (recursive) that contain files with the given suffix.</span>
-</span><span id="list_dirs_containing_filetype-115"><a href="#list_dirs_containing_filetype-115"><span class="linenos">115</span></a>
-</span><span id="list_dirs_containing_filetype-116"><a href="#list_dirs_containing_filetype-116"><span class="linenos">116</span></a><span class="sd">    Parameters</span>
-</span><span id="list_dirs_containing_filetype-117"><a href="#list_dirs_containing_filetype-117"><span class="linenos">117</span></a><span class="sd">    ----------</span>
-</span><span id="list_dirs_containing_filetype-118"><a href="#list_dirs_containing_filetype-118"><span class="linenos">118</span></a><span class="sd">    source : str</span>
-</span><span id="list_dirs_containing_filetype-119"><a href="#list_dirs_containing_filetype-119"><span class="linenos">119</span></a><span class="sd">        Path to source dir.</span>
-</span><span id="list_dirs_containing_filetype-120"><a href="#list_dirs_containing_filetype-120"><span class="linenos">120</span></a><span class="sd">    filetype : str</span>
-</span><span id="list_dirs_containing_filetype-121"><a href="#list_dirs_containing_filetype-121"><span class="linenos">121</span></a><span class="sd">        Filetype (string pattern) that should be matched against filenames in</span>
-</span><span id="list_dirs_containing_filetype-122"><a href="#list_dirs_containing_filetype-122"><span class="linenos">122</span></a><span class="sd">        the directories.</span>
-</span><span id="list_dirs_containing_filetype-123"><a href="#list_dirs_containing_filetype-123"><span class="linenos">123</span></a>
-</span><span id="list_dirs_containing_filetype-124"><a href="#list_dirs_containing_filetype-124"><span class="linenos">124</span></a><span class="sd">    Returns</span>
-</span><span id="list_dirs_containing_filetype-125"><a href="#list_dirs_containing_filetype-125"><span class="linenos">125</span></a><span class="sd">    -------</span>
-</span><span id="list_dirs_containing_filetype-126"><a href="#list_dirs_containing_filetype-126"><span class="linenos">126</span></a><span class="sd">    list(str)</span>
-</span><span id="list_dirs_containing_filetype-127"><a href="#list_dirs_containing_filetype-127"><span class="linenos">127</span></a><span class="sd">        List of all dirs that contain files of the given filetype.</span>
-</span><span id="list_dirs_containing_filetype-128"><a href="#list_dirs_containing_filetype-128"><span class="linenos">128</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="list_dirs_containing_filetype-129"><a href="#list_dirs_containing_filetype-129"><span class="linenos">129</span></a>    <span class="n">dirs_containing_filetype</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="list_dirs_containing_filetype-130"><a href="#list_dirs_containing_filetype-130"><span class="linenos">130</span></a>
-</span><span id="list_dirs_containing_filetype-131"><a href="#list_dirs_containing_filetype-131"><span class="linenos">131</span></a>    <span class="c1"># walk recursively through all directories</span>
-</span><span id="list_dirs_containing_filetype-132"><a href="#list_dirs_containing_filetype-132"><span class="linenos">132</span></a>    <span class="c1"># list their paths and all files inside (=os.walk)</span>
-</span><span id="list_dirs_containing_filetype-133"><a href="#list_dirs_containing_filetype-133"><span class="linenos">133</span></a>    <span class="k">for</span> <span class="n">dirname</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">filenames</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
-</span><span id="list_dirs_containing_filetype-134"><a href="#list_dirs_containing_filetype-134"><span class="linenos">134</span></a>        <span class="c1"># stop when encountering a directory that contains &quot;filetype&quot;</span>
-</span><span id="list_dirs_containing_filetype-135"><a href="#list_dirs_containing_filetype-135"><span class="linenos">135</span></a>        <span class="c1"># and store the directory path</span>
-</span><span id="list_dirs_containing_filetype-136"><a href="#list_dirs_containing_filetype-136"><span class="linenos">136</span></a>        <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
-</span><span id="list_dirs_containing_filetype-137"><a href="#list_dirs_containing_filetype-137"><span class="linenos">137</span></a>            <span class="k">if</span> <span class="n">filetype</span> <span class="ow">in</span> <span class="n">filename</span><span class="p">:</span>
-</span><span id="list_dirs_containing_filetype-138"><a href="#list_dirs_containing_filetype-138"><span class="linenos">138</span></a>                <span class="n">dirs_containing_filetype</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dirname</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span><span class="p">)</span>
-</span><span id="list_dirs_containing_filetype-139"><a href="#list_dirs_containing_filetype-139"><span class="linenos">139</span></a>                <span class="k">break</span>
-</span><span id="list_dirs_containing_filetype-140"><a href="#list_dirs_containing_filetype-140"><span class="linenos">140</span></a>
-</span><span id="list_dirs_containing_filetype-141"><a href="#list_dirs_containing_filetype-141"><span class="linenos">141</span></a>    <span class="k">return</span> <span class="n">dirs_containing_filetype</span>
-</span></pre></div>
-
-
-            <div class="docstring"><p>List all directories (recursive) that contain files with the given suffix.</p>
-
-<h6 id="parameters">Parameters</h6>
-
-<ul>
-<li><strong>source</strong> (str):
-Path to source dir.</li>
-<li><strong>filetype</strong> (str):
-Filetype (string pattern) that should be matched against filenames in
-the directories.</li>
-</ul>
-
-<h6 id="returns">Returns</h6>
-
-<ul>
-<li><strong>list(str)</strong>: List of all dirs that contain files of the given filetype.</li>
-</ul>
-</div>
-
-
-                </section>
-                <section id="list_all_filenames">
-                            <input id="list_all_filenames-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-<div class="attr function">
-            
-        <span class="def">def</span>
-        <span class="name">list_all_filenames</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">source</span>, </span><span class="param"><span class="n">filetype</span></span><span class="return-annotation">):</span></span>
-
-                <label class="view-source-button" for="list_all_filenames-view-source"><span>View Source</span></label>
-
-    </div>
-    <a class="headerlink" href="#list_all_filenames"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="list_all_filenames-144"><a href="#list_all_filenames-144"><span class="linenos">144</span></a><span class="k">def</span> <span class="nf">list_all_filenames</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">filetype</span><span class="p">):</span>
-</span><span id="list_all_filenames-145"><a href="#list_all_filenames-145"><span class="linenos">145</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a sorted list of all files of specified filetype in a given directory.</span>
-</span><span id="list_all_filenames-146"><a href="#list_all_filenames-146"><span class="linenos">146</span></a>
-</span><span id="list_all_filenames-147"><a href="#list_all_filenames-147"><span class="linenos">147</span></a><span class="sd">    Parameters</span>
-</span><span id="list_all_filenames-148"><a href="#list_all_filenames-148"><span class="linenos">148</span></a><span class="sd">    ----------</span>
-</span><span id="list_all_filenames-149"><a href="#list_all_filenames-149"><span class="linenos">149</span></a><span class="sd">    source : str</span>
-</span><span id="list_all_filenames-150"><a href="#list_all_filenames-150"><span class="linenos">150</span></a><span class="sd">        Path to the directory to scan for desired files.</span>
-</span><span id="list_all_filenames-151"><a href="#list_all_filenames-151"><span class="linenos">151</span></a><span class="sd">    filetype : str</span>
-</span><span id="list_all_filenames-152"><a href="#list_all_filenames-152"><span class="linenos">152</span></a><span class="sd">        The file extension to look for.</span>
-</span><span id="list_all_filenames-153"><a href="#list_all_filenames-153"><span class="linenos">153</span></a>
-</span><span id="list_all_filenames-154"><a href="#list_all_filenames-154"><span class="linenos">154</span></a><span class="sd">    Returns</span>
-</span><span id="list_all_filenames-155"><a href="#list_all_filenames-155"><span class="linenos">155</span></a><span class="sd">    -------</span>
-</span><span id="list_all_filenames-156"><a href="#list_all_filenames-156"><span class="linenos">156</span></a><span class="sd">    list(str)</span>
-</span><span id="list_all_filenames-157"><a href="#list_all_filenames-157"><span class="linenos">157</span></a><span class="sd">        List of all files with the given suffix in the source directory.</span>
-</span><span id="list_all_filenames-158"><a href="#list_all_filenames-158"><span class="linenos">158</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="list_all_filenames-159"><a href="#list_all_filenames-159"><span class="linenos">159</span></a>    <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">source</span><span class="p">))</span>
-</span><span id="list_all_filenames-160"><a href="#list_all_filenames-160"><span class="linenos">160</span></a>    <span class="n">allimages</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s2">&quot;*&quot;</span> <span class="o">+</span> <span class="n">filetype</span><span class="p">))</span>  <span class="c1"># sorted by name</span>
-</span><span id="list_all_filenames-161"><a href="#list_all_filenames-161"><span class="linenos">161</span></a>
-</span><span id="list_all_filenames-162"><a href="#list_all_filenames-162"><span class="linenos">162</span></a>    <span class="k">return</span> <span class="n">allimages</span>
-</span></pre></div>
-
-
-            <div class="docstring"><p>Get a sorted list of all files of specified filetype in a given directory.</p>
-
-<h6 id="parameters">Parameters</h6>
-
-<ul>
-<li><strong>source</strong> (str):
-Path to the directory to scan for desired files.</li>
-<li><strong>filetype</strong> (str):
-The file extension to look for.</li>
-</ul>
-
-<h6 id="returns">Returns</h6>
-
-<ul>
-<li><strong>list(str)</strong>: List of all files with the given suffix in the source directory.</li>
-</ul>
-</div>
-
-
-                </section>
-                <section id="get_folder_size">
-                            <input id="get_folder_size-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
-<div class="attr function">
-            
-        <span class="def">def</span>
-        <span class="name">get_folder_size</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">source</span></span><span class="return-annotation">):</span></span>
-
-                <label class="view-source-button" for="get_folder_size-view-source"><span>View Source</span></label>
-
-    </div>
-    <a class="headerlink" href="#get_folder_size"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="get_folder_size-165"><a href="#get_folder_size-165"><span class="linenos">165</span></a><span class="k">def</span> <span class="nf">get_folder_size</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
-</span><span id="get_folder_size-166"><a href="#get_folder_size-166"><span class="linenos">166</span></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the total size of a given directory and its subdirectories.</span>
-</span><span id="get_folder_size-167"><a href="#get_folder_size-167"><span class="linenos">167</span></a>
-</span><span id="get_folder_size-168"><a href="#get_folder_size-168"><span class="linenos">168</span></a><span class="sd">    Parameters</span>
-</span><span id="get_folder_size-169"><a href="#get_folder_size-169"><span class="linenos">169</span></a><span class="sd">    ----------</span>
-</span><span id="get_folder_size-170"><a href="#get_folder_size-170"><span class="linenos">170</span></a><span class="sd">    source : str</span>
-</span><span id="get_folder_size-171"><a href="#get_folder_size-171"><span class="linenos">171</span></a><span class="sd">        Directory for which the size should be determined.</span>
-</span><span id="get_folder_size-172"><a href="#get_folder_size-172"><span class="linenos">172</span></a>
-</span><span id="get_folder_size-173"><a href="#get_folder_size-173"><span class="linenos">173</span></a><span class="sd">    Returns</span>
-</span><span id="get_folder_size-174"><a href="#get_folder_size-174"><span class="linenos">174</span></a><span class="sd">    -------</span>
-</span><span id="get_folder_size-175"><a href="#get_folder_size-175"><span class="linenos">175</span></a><span class="sd">    int</span>
-</span><span id="get_folder_size-176"><a href="#get_folder_size-176"><span class="linenos">176</span></a><span class="sd">        The total size of all files in the source dir and subdirs in bytes.</span>
-</span><span id="get_folder_size-177"><a href="#get_folder_size-177"><span class="linenos">177</span></a><span class="sd">    &quot;&quot;&quot;</span>
-</span><span id="get_folder_size-178"><a href="#get_folder_size-178"><span class="linenos">178</span></a>    <span class="n">total_size</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span id="get_folder_size-179"><a href="#get_folder_size-179"><span class="linenos">179</span></a>    <span class="k">for</span> <span class="n">dirpath</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">filenames</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">source</span><span class="p">):</span>
-</span><span id="get_folder_size-180"><a href="#get_folder_size-180"><span class="linenos">180</span></a>        <span class="k">for</span> <span class="n">fname</span> <span class="ow">in</span> <span class="n">filenames</span><span class="p">:</span>
-</span><span id="get_folder_size-181"><a href="#get_folder_size-181"><span class="linenos">181</span></a>            <span class="n">fpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dirpath</span><span class="p">,</span> <span class="n">fname</span><span class="p">)</span>
-</span><span id="get_folder_size-182"><a href="#get_folder_size-182"><span class="linenos">182</span></a>            <span class="c1"># skip if it is symbolic link</span>
-</span><span id="get_folder_size-183"><a href="#get_folder_size-183"><span class="linenos">183</span></a>            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">islink</span><span class="p">(</span><span class="n">fpath</span><span class="p">):</span>
-</span><span id="get_folder_size-184"><a href="#get_folder_size-184"><span class="linenos">184</span></a>                <span class="n">total_size</span> <span class="o">+=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">getsize</span><span class="p">(</span><span class="n">fpath</span><span class="p">)</span>
-</span><span id="get_folder_size-185"><a href="#get_folder_size-185"><span class="linenos">185</span></a>
-</span><span id="get_folder_size-186"><a href="#get_folder_size-186"><span class="linenos">186</span></a>    <span class="k">return</span> <span class="n">total_size</span>
-</span></pre></div>
-
-
-            <div class="docstring"><p>Get the total size of a given directory and its subdirectories.</p>
-
-<h6 id="parameters">Parameters</h6>
-
-<ul>
-<li><strong>source</strong> (str):
-Directory for which the size should be determined.</li>
-</ul>
-
-<h6 id="returns">Returns</h6>
-
-<ul>
-<li><strong>int</strong>: The total size of all files in the source dir and subdirs in bytes.</li>
-</ul>
 </div>
 
 

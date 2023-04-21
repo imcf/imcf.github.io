@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="generator" content="pdoc 13.0.0"/>
+    <meta name="generator" content="pdoc 13.1.0"/>
     <title>imcflibs API documentation</title>
             <link rel="icon" href="https://imcf.one/images/raeppli-code.png"/>
 
@@ -23,28 +23,34 @@
             <input type="search" placeholder="Search..." role="searchbox" aria-label="search"
                    pattern=".+" required>
 
-        <h2>Contents</h2>
-        <ul>
+            <h2>Contents</h2>
+            <ul>
   <li><a href="#imcflibs">IMCFlibs 🐍 ☕ 🔩 🔧 🪛</a>
   <ul>
-    <li><a href="#python-convenience-helpers">Python convenience helpers</a></li>
-    <li><a href="#contents">Contents</a></li>
     <li><a href="#example-usage">Example usage</a></li>
+  </ul></li>
+  <li><a href="#testing-in-fiji-imagej2">Testing 🧪 in Fiji / ImageJ2</a>
+  <ul>
+    <li><a href="#test-script-template">Test Script Template 🏗</a></li>
+  </ul></li>
+  <li><a href="#changelog">Changelog 🧾</a>
+  <ul>
+    <li><a href="#130">1.3.0</a></li>
   </ul></li>
 </ul>
 
 
-        <h2>Submodules</h2>
-        <ul>
-                <li><a href="imcflibs/imagej.html">imagej</a></li>
-                <li><a href="imcflibs/iotools.html">iotools</a></li>
-                <li><a href="imcflibs/log.html">log</a></li>
-                <li><a href="imcflibs/pathtools.html">pathtools</a></li>
-                <li><a href="imcflibs/strtools.html">strtools</a></li>
-        </ul>
+            <h2>Submodules</h2>
+            <ul>
+                    <li><a href="imcflibs/imagej.html">imagej</a></li>
+                    <li><a href="imcflibs/iotools.html">iotools</a></li>
+                    <li><a href="imcflibs/log.html">log</a></li>
+                    <li><a href="imcflibs/pathtools.html">pathtools</a></li>
+                    <li><a href="imcflibs/strtools.html">strtools</a></li>
+            </ul>
 
-        <h2>API Documentation</h2>
-            <ul class="memberlist">
+            <h2>API Documentation</h2>
+                <ul class="memberlist">
     </ul>
 
 
@@ -65,9 +71,8 @@ imcflibs    </h1>
 
 <h1 id="imcflibs">IMCFlibs 🐍 ☕ 🔩 🔧 🪛</h1>
 
-<p><a href="https://zenodo.org/badge/latestdoi/156891364"><img src="https://zenodo.org/badge/156891364.svg" alt="DOI" /></a></p>
-
-<h2 id="python-convenience-helpers">Python convenience helpers</h2>
+<p><a href="https://github.com/imcf/python-imcflibs/actions/workflows/build.yml"><img src="https://github.com/imcf/python-imcflibs/actions/workflows/build.yml/badge.svg" alt="Build Status" /></a>
+<a href="https://zenodo.org/badge/latestdoi/156891364"><img src="https://zenodo.org/badge/156891364.svg" alt="DOI" /></a></p>
 
 <p>This package contains a diverse collection of Python functions dealing with
 paths, I/O (file handles, ...), strings etc. and tons of <a href="https://fiji.sc">Fiji</a> /
@@ -77,8 +82,8 @@ cross-script redundanciees.</p>
 <p>Initially this has been a multi-purpose package where a substantial part had
 been useful in <strong>CPython</strong> as well. However, since the latest Jython
 release is still based on Python 2.7 (see the <a href="https://www.jython.org/jython-3-roadmap">Jython 3 roadmap</a> for
-more info), <em>imcflibs</em> is now basically limited to the <strong>Fiji/ImageJ2
-ecosystem</strong> (which is also the reason there is no <code>pip install</code>able package
+more info), <em>imcflibs</em> is now basically limited to the <strong>Fiji / ImageJ2
+ecosystem</strong> (which is also the reason why no <code>pip install</code>able package is
 provided).</p>
 
 <p>Releases are made through Maven and published to the <a href="https://maven.scijava.org/#nexus-search;gav~ch.unibas.biozentrum.imcf~~~~">SciJava Maven
@@ -87,10 +92,6 @@ Uni Basel</code></strong> <a href="https://imagej.net/list-of-update-sites/">upd
 
 <p>Developed and provided by the <a href="https://www.biozentrum.unibas.ch/imcf">Imaging Core Facility (IMCF)</a> of the
 Biozentrum, University of Basel, Switzerland.</p>
-
-<h2 id="contents">Contents</h2>
-
-<p>See the <a href="https://imcf.one/apidocs/imcflibs/">API documentation</a> for the package contents.</p>
 
 <h2 id="example-usage">Example usage</h2>
 
@@ -120,6 +121,169 @@ Biozentrum, University of Basel, Switzerland.</p>
 <ul>
 <li>See the <a href="https://github.com/imcf/imcf-fiji-scripts/blob/master/src/main/resources/scripts/Plugins/IMCF_Utilities/Stitching_Registration/FluoView_OIF_OIB_OIR_Simple_Stitcher.py">FluoView_OIF_OIB_OIR_Simple_Stitcher.py</a> script.</li>
 </ul>
+
+<h1 id="testing-in-fiji-imagej2">Testing 🧪 in Fiji / ImageJ2</h1>
+
+<p>Unfortunately there is nothing like <code>pytest</code> available for the parts that are
+running exclusively in a ImageJ2 / Fiji context. So in order to provide at least
+some basic, semi-interactive tests the following conventions are being used:</p>
+
+<ul>
+<li>Each <strong><em>function</em></strong> in any of the <code><a href="imcflibs/imagej.html">imcflibs.imagej</a></code> submodules should have its
+own directory underneath <code>/tests/imagej/</code>, using their fully qualified name
+as the path (only skipping the <code>imcflibs.</code> prefix). For example test scripts
+for <code><a href="imcflibs/imagej/bioformats.html#import_image">imcflibs.imagej.bioformats.import_image()</a></code> will be placed in the
+directory <code>/tests/imagej/bioformats/import_image/</code>.</li>
+<li>The scripts inside those directories are intended to be run interactively /
+manually in a (freshly started) Fiji instance. Yes, really. Any other
+suggestions are highly welcome!</li>
+<li>To facilitate this, a collection of <em>test images</em> (and possibly other input
+data) should be cloned to the local file system. Currently this <code>sample_data</code>
+repository is <em>NOT</em> publicly available due to legal ⚖ uncertainties. A repo
+containing test data 🗞 that can be published should be assembled over time
+though!</li>
+<li>Any <em>interactive</em> test script should start with a header similar to the one
+described below. Paths to input data <em>inside</em> the test scripts <strong>has</strong> to be
+relative to the location of the <code>sample_data</code> repository mentioned above. This
+will allow for a fairly okayish testing workflow like this:
+<ul>
+<li>Make your changes in VS Code, then trigger a build by pressing <code>Shift</code> +
+<code>Ctrl</code> + <code>B</code>. If things are configured as described in the <em>DEVELOPMENT</em>
+document, the resulting <code>.jar</code> file will be automatically placed in Fiji's
+<code>jars/</code> folder.</li>
+<li>Next, start a fresh instance of the Fiji that received the newly built JAR.</li>
+<li>After Fiji has started, simply drag and drop the desired test script onto
+the main window. This will open the <em>Script Editor</em>, then press <code>Ctrl</code> + <code>R</code>
+to launch the script.</li>
+<li>Only on the first run on the machine being used you will have to select the
+base location of the <code>sample_data</code> repository.</li>
+<li>All subsequent runs of <strong><em>any</em></strong> test script using the defined <em>Script
+Parameter</em> <code>IMCF_TESTDATA</code> will remember this selection, so it will be
+sufficient to just confirm the dialog by pressing <code>Enter</code>.</li>
+</ul></li>
+</ul>
+
+<h2 id="test-script-template">Test Script Template 🏗</h2>
+
+<p>As described above, each test script should use the <code>IMCF_TESTDATA</code> parameter to
+facilitate the manual testing approach. Simply use this template header for
+creating new scripts (or look into existing ones):</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="c1"># @ File (label=&quot;IMCF testdata location&quot;, style=&quot;directory&quot;) IMCF_TESTDATA</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn"><a href="imcflibs/pathtools.html">imcflibs.pathtools</a></span> <span class="kn">import</span> <span class="n">join2</span>
+
+<span class="n">testfile</span> <span class="o">=</span> <span class="n">join2</span><span class="p">(</span><span class="n">IMCF_TESTDATA</span><span class="p">,</span> <span class="s2">&quot;systems/lsm700/beads/10x_phmax.czi&quot;</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">testfile</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<p>In case the test requires the components of the testfile's path to be used, this
+snippet will do the job:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="c1"># @ File (label=&quot;IMCF testdata location&quot;, style=&quot;directory&quot;) IMCF_TESTDATA</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn"><a href="imcflibs/pathtools.html">imcflibs.pathtools</a></span> <span class="kn">import</span> <span class="n">parse_path</span>
+
+<span class="n">components</span> <span class="o">=</span> <span class="n">parse_path</span><span class="p">(</span><span class="s2">&quot;systems/lsm700/beads/10x_phmax.czi&quot;</span><span class="p">,</span> <span class="n">IMCF_TESTDATA</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">components</span><span class="p">[</span><span class="s2">&quot;full&quot;</span><span class="p">])</span>
+</code></pre>
+</div>
+
+<h1 id="changelog">Changelog 🧾</h1>
+
+<!-- markdownlint-disable MD024 (no-duplicate-header) -->
+
+<h2 id="130">1.3.0</h2>
+
+<h3 id="added">Added</h3>
+
+<ul>
+<li>New functions in <code><a href="imcflibs/pathtools.html">imcflibs.pathtools</a></code>:
+<ul>
+<li><code><a href="imcflibs/pathtools.html#join2">imcflibs.pathtools.join2</a></code> can be used to join paths, much like
+<code>os.path.join</code> except that it will work with <code>java.io.File</code> objects as well
+(but doesn't support more than two path components / parameters).</li>
+<li><code><a href="imcflibs/pathtools.html#find_dirs_containing_filetype">imcflibs.pathtools.find_dirs_containing_filetype</a></code></li>
+<li><code><a href="imcflibs/pathtools.html#folder_size">imcflibs.pathtools.folder_size</a></code></li>
+</ul></li>
+<li>New functions in <code><a href="imcflibs/imagej/misc.html">imcflibs.imagej.misc</a></code>:
+<ul>
+<li><code><a href="imcflibs/imagej/misc.html#calculate_mean_and_stdv">imcflibs.imagej.misc.calculate_mean_and_stdv</a></code></li>
+<li><code><a href="imcflibs/imagej/misc.html#elapsed_time_since">imcflibs.imagej.misc.elapsed_time_since</a></code></li>
+<li><code><a href="imcflibs/imagej/misc.html#find_focus">imcflibs.imagej.misc.find_focus</a></code></li>
+<li><code><a href="imcflibs/imagej/misc.html#get_free_memory">imcflibs.imagej.misc.get_free_memory</a></code></li>
+<li><code><a href="imcflibs/imagej/misc.html#percentage">imcflibs.imagej.misc.percentage</a></code></li>
+<li><code><a href="imcflibs/imagej/misc.html#progressbar">imcflibs.imagej.misc.progressbar</a></code></li>
+<li><code><a href="imcflibs/imagej/misc.html#setup_clean_ij_environment">imcflibs.imagej.misc.setup_clean_ij_environment</a></code></li>
+<li><code><a href="imcflibs/imagej/misc.html#timed_log">imcflibs.imagej.misc.timed_log</a></code></li>
+</ul></li>
+<li>New <code><a href="imcflibs/imagej/labelimage.html">imcflibs.imagej.labelimage</a></code> submodule, providing:
+<ul>
+<li><code><a href="imcflibs/imagej/labelimage.html#filter_objects">imcflibs.imagej.labelimage.filter_objects</a></code></li>
+<li><code><a href="imcflibs/imagej/labelimage.html#label_image_to_roi_list">imcflibs.imagej.labelimage.label_image_to_roi_list</a></code></li>
+<li><code><a href="imcflibs/imagej/labelimage.html#measure_objects_size_shape_2d">imcflibs.imagej.labelimage.measure_objects_size_shape_2d</a></code></li>
+<li><code><a href="imcflibs/imagej/labelimage.html#relate_label_images">imcflibs.imagej.labelimage.relate_label_images</a></code></li>
+</ul></li>
+<li>New <code><a href="imcflibs/imagej/gpu.html">imcflibs.imagej.gpu</a></code> submodule, providing:
+<ul>
+<li><code><a href="imcflibs/imagej/gpu.html#erode_labels">imcflibs.imagej.gpu.erode_labels</a></code></li>
+<li><code><a href="imcflibs/imagej/gpu.html#dilate_labels">imcflibs.imagej.gpu.dilate_labels</a></code></li>
+<li><code><a href="imcflibs/imagej/gpu.html#merge_labels">imcflibs.imagej.gpu.merge_labels</a></code></li>
+</ul></li>
+<li>New <code><a href="imcflibs/imagej/resultstable.html">imcflibs.imagej.resultstable</a></code> submodule, providing:
+<ul>
+<li><code><a href="imcflibs/imagej/resultstable.html#add_results_to_resultstable">imcflibs.imagej.resultstable.add_results_to_resultstable</a></code></li>
+<li><code><a href="imcflibs/imagej/resultstable.html#get_resultstable">imcflibs.imagej.resultstable.get_resultstable</a></code></li>
+<li><code><a href="imcflibs/imagej/resultstable.html#preset_results_column">imcflibs.imagej.resultstable.preset_results_column</a></code></li>
+</ul></li>
+<li>New <code><a href="imcflibs/imagej/roimanager.html">imcflibs.imagej.roimanager</a></code> submodule, providing:
+<ul>
+<li><code><a href="imcflibs/imagej/roimanager.html#add_rois_to_roimanager">imcflibs.imagej.roimanager.add_rois_to_roimanager</a></code></li>
+<li><code><a href="imcflibs/imagej/roimanager.html#change_roi_color">imcflibs.imagej.roimanager.change_roi_color</a></code></li>
+<li><code><a href="imcflibs/imagej/roimanager.html#clear_ij_roi_manager">imcflibs.imagej.roimanager.clear_ij_roi_manager</a></code></li>
+<li><code><a href="imcflibs/imagej/roimanager.html#count_all_rois">imcflibs.imagej.roimanager.count_all_rois</a></code></li>
+<li><code><a href="imcflibs/imagej/roimanager.html#enlarge_all_rois">imcflibs.imagej.roimanager.enlarge_all_rois</a></code></li>
+<li><code><a href="imcflibs/imagej/roimanager.html#extract_color_of_all_rois">imcflibs.imagej.roimanager.extract_color_of_all_rois</a></code></li>
+<li><code><a href="imcflibs/imagej/roimanager.html#get_roimanager">imcflibs.imagej.roimanager.get_roimanager</a></code></li>
+<li><code><a href="imcflibs/imagej/roimanager.html#load_rois_from_zip">imcflibs.imagej.roimanager.load_rois_from_zip</a></code></li>
+<li><code><a href="imcflibs/imagej/roimanager.html#measure_in_all_rois">imcflibs.imagej.roimanager.measure_in_all_rois</a></code></li>
+<li><code><a href="imcflibs/imagej/roimanager.html#rename_rois_by_number">imcflibs.imagej.roimanager.rename_rois_by_number</a></code></li>
+<li><code><a href="imcflibs/imagej/roimanager.html#rename_rois">imcflibs.imagej.roimanager.rename_rois</a></code></li>
+<li><code><a href="imcflibs/imagej/roimanager.html#save_rois_to_zip">imcflibs.imagej.roimanager.save_rois_to_zip</a></code></li>
+<li><code><a href="imcflibs/imagej/roimanager.html#scale_all_rois">imcflibs.imagej.roimanager.scale_all_rois</a></code></li>
+<li><code><a href="imcflibs/imagej/roimanager.html#select_rois_above_min_intensity">imcflibs.imagej.roimanager.select_rois_above_min_intensity</a></code></li>
+<li><code><a href="imcflibs/imagej/roimanager.html#shift_roi_by_bounding_box">imcflibs.imagej.roimanager.shift_roi_by_bounding_box</a></code></li>
+<li><code><a href="imcflibs/imagej/roimanager.html#show_all_rois_on_image">imcflibs.imagej.roimanager.show_all_rois_on_image</a></code></li>
+</ul></li>
+</ul>
+
+<h3 id="changed">Changed</h3>
+
+<ul>
+<li>The functions below now also accept parameters of type <code>java.io.File</code> (instead
+of <code>str</code>), making them safe for being used directly with variables retrieved
+via ImageJ2's <em>Script Parameter</em> <code>@# File</code>:
+<ul>
+<li><code><a href="imcflibs/pathtools.html#parse_path">imcflibs.pathtools.parse_path</a></code></li>
+<li><code><a href="imcflibs/strtools.html#filename">imcflibs.strtools.filename</a></code></li>
+</ul></li>
+<li>Several changes in <code><a href="imcflibs/pathtools.html#parse_path">imcflibs.pathtools.parse_path</a></code>:
+<ul>
+<li>The returned dict now contains an additional key <code>basename</code> that provides
+the filename without extension.</li>
+<li>OME-TIFF filenames are now treated as special cases in the sense that the
+<code>.ome</code> part is stripped from the <code>basename</code> key and added to the <code>ext</code> key
+instead (as it is part of the suffix).</li>
+</ul></li>
+<li><code><a href="imcflibs/pathtools.html#listdir_matching">imcflibs.pathtools.listdir_matching</a></code> now has an additional optional argument
+<code>sort</code> (defaulting to <code>False</code>) to request the resulting list to be sorted.</li>
+<li>Many improvements / clarifications in function docstrings.</li>
+</ul>
 </div>
 
                         <input id="mod-imcflibs-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
@@ -129,21 +293,25 @@ Biozentrum, University of Basel, Switzerland.</p>
                         <div class="pdoc-code codehilite"><pre><span></span><span id="L-1"><a href="#L-1"><span class="linenos"> 1</span></a><span class="sd">&quot;&quot;&quot;Python convenience from and for the IMCF (Imaging Core Facility).</span>
 </span><span id="L-2"><a href="#L-2"><span class="linenos"> 2</span></a>
 </span><span id="L-3"><a href="#L-3"><span class="linenos"> 3</span></a><span class="sd">.. include:: ../../README.md</span>
-</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a><span class="sd">&quot;&quot;&quot;</span>
-</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a>
-</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a><span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;$</span><span class="si">{project.version}</span><span class="s2">&quot;</span>
-</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a>
-</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">iotools</span>
-</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">log</span>
-</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">pathtools</span>
-</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">strtools</span>
-</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a>
-</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="c1"># check if we&#39;re running in Jython, then also import the &#39;imagej&#39; submodule:</span>
-</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="kn">import</span> <span class="nn">platform</span> <span class="k">as</span> <span class="nn">_python_platform</span>
-</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a>
-</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a><span class="k">if</span> <span class="n">_python_platform</span><span class="o">.</span><span class="n">python_implementation</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Jython&quot;</span><span class="p">:</span>
-</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a>    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">imagej</span>
-</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="k">del</span> <span class="n">_python_platform</span>
+</span><span id="L-4"><a href="#L-4"><span class="linenos"> 4</span></a>
+</span><span id="L-5"><a href="#L-5"><span class="linenos"> 5</span></a><span class="sd">.. include:: ../../TESTING.md</span>
+</span><span id="L-6"><a href="#L-6"><span class="linenos"> 6</span></a>
+</span><span id="L-7"><a href="#L-7"><span class="linenos"> 7</span></a><span class="sd">.. include:: ../../CHANGELOG.md</span>
+</span><span id="L-8"><a href="#L-8"><span class="linenos"> 8</span></a><span class="sd">&quot;&quot;&quot;</span>
+</span><span id="L-9"><a href="#L-9"><span class="linenos"> 9</span></a>
+</span><span id="L-10"><a href="#L-10"><span class="linenos">10</span></a><span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;$</span><span class="si">{project.version}</span><span class="s2">&quot;</span>
+</span><span id="L-11"><a href="#L-11"><span class="linenos">11</span></a>
+</span><span id="L-12"><a href="#L-12"><span class="linenos">12</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">iotools</span>
+</span><span id="L-13"><a href="#L-13"><span class="linenos">13</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">log</span>
+</span><span id="L-14"><a href="#L-14"><span class="linenos">14</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">pathtools</span>
+</span><span id="L-15"><a href="#L-15"><span class="linenos">15</span></a><span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">strtools</span>
+</span><span id="L-16"><a href="#L-16"><span class="linenos">16</span></a>
+</span><span id="L-17"><a href="#L-17"><span class="linenos">17</span></a><span class="c1"># check if we&#39;re running in Jython, then also import the &#39;imagej&#39; submodule:</span>
+</span><span id="L-18"><a href="#L-18"><span class="linenos">18</span></a><span class="kn">import</span> <span class="nn">platform</span> <span class="k">as</span> <span class="nn">_python_platform</span>
+</span><span id="L-19"><a href="#L-19"><span class="linenos">19</span></a>
+</span><span id="L-20"><a href="#L-20"><span class="linenos">20</span></a><span class="k">if</span> <span class="n">_python_platform</span><span class="o">.</span><span class="n">python_implementation</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;Jython&quot;</span><span class="p">:</span>
+</span><span id="L-21"><a href="#L-21"><span class="linenos">21</span></a>    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">imagej</span>
+</span><span id="L-22"><a href="#L-22"><span class="linenos">22</span></a><span class="k">del</span> <span class="n">_python_platform</span>
 </span></pre></div>
 
 
