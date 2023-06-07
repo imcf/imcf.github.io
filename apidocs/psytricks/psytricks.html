@@ -33,6 +33,7 @@
   </ul></li>
   <li><a href="#psytricks-change-log">PSyTricks Change Log</a>
   <ul>
+    <li><a href="#212">2.1.2</a></li>
     <li><a href="#211">2.1.1</a></li>
     <li><a href="#210">2.1.0</a></li>
     <li><a href="#200">2.0.0</a></li>
@@ -93,13 +94,19 @@ there) is required.</p>
 
 <ul>
 <li>A wrapper script that is launched as a suprocess from the Python code. It
-doesn't require and further setup beyond the package installation but
-performance is rather poor.</li>
-<li>A (zero-authentication) <code>REST</code> service providing several <code>GET</code> and <code>POST</code>
-endpoints to request status information or perform actions. Performance is
-<em>much</em> better compared to the wrapper script, but obviously this requires the
-code to be running as a service in an appropriate permission context.</li>
+doesn't require any further setup beyond the package installation but
+performance, well, slow.</li>
+<li>A (zero-authentication) <code>REST</code> (see the note below on this) service providing
+several <code>GET</code> and <code>POST</code> endpoints to request status information or perform
+actions. Performance is <em>much</em> better compared to the wrapper script, but
+obviously this requires the code to be running as a service in an appropriate
+permission context.</li>
 </ul>
+
+<p>NOTE: this <code>RESTful</code> claim is actually not entirely true. Or basically not at
+all, it would be better called an <code>HTTP-JSON-RPC-API</code>. We'll still be using the
+term <code>REST</code> for it as this is basically what people nowadays think of when they
+are coming across this label. Sorry, <a href="https://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven">Roy T. Fielding</a>.</p>
 
 <h2 id="are-you-serious">🤯 Are you serious?</h2>
 
@@ -122,7 +129,7 @@ seconds. ⏳</p>
 
 <p>The REST interface provides a much better performance, at the cost of some
 additional setup. If you're happy to take on this approach, the package offers a
-very smooth experience. 🎢🎡</p>
+very smooth ride. 🎢🎡</p>
 
 <h2 id="installation">🛠🚧 Installation</h2>
 
@@ -144,18 +151,25 @@ Controller</code> or <code>XenDesktop</code> installation media and install it a
 <li><code>Broker_PowerShellSnapIn_x64.msi</code></li>
 </ul>
 
-<h3 id="installing-the-package">Installing the package</h3>
+<h3 id="installing-the-package">Installing the 🐍 package</h3>
 
-<p>For installing <code><a href="">psytricks</a></code> please create a <code>venv</code>, then run:</p>
+<p>In case you're planning to use <code><a href="">psytricks</a></code> via the subprocess approach
+(discouraged but less components to set up), you will have to install the
+package itself on the Windows machine having the above mentioned <em>Snap-In</em>
+installed. For the <code>REST</code> approach (recommended) only the PowerShell service
+described in the section below has to run on that machine - the Python package
+can be installed on any computer that is able to talk to the <code>REST</code> service.</p>
+
+<p>For installing <code><a href="">psytricks</a></code> please create and activate a <code>venv</code>, then run:</p>
 
 <div class="pdoc-code codehilite">
 <pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>psytricks
 </code></pre>
 </div>
 
-<p>This will also register the CLI tool <code>psytricks.exe</code> although that one is mostly
-meant for testing and demonstration purposes, otherwise the <code>*-Broker*</code> commands
-provided by the PowerShell snap-in could be used directly.</p>
+<p>NOTE: this will also register the <code><a href="">psytricks</a></code> CLI tool although that one is
+mostly meant for testing and demonstration purposes, otherwise the <code>*-Broker*</code>
+commands provided by the PowerShell snap-in could be used directly.</p>
 
 <h3 id="setting-up-the-rest-service">Setting up the REST service</h3>
 
@@ -197,25 +211,18 @@ log file:</p>
 </code></pre>
 </div>
 
-<p>Tada! That's it, the service is now ready to take HTTP requests! 🎉</p>
+<p>Tada! That's it, the service is now ready to take HTTP requests (from
+<code>localhost</code>)! 🎉</p>
+
+<p>Please be aware that the REST interface doesn't do <strong>any authentication</strong> on
+purpose, meaning everything / everyone that can access it will be able to run
+all requests! We're using it in combination with an SSH tunnel but essentially
+anything that controls who / what can access the service will do the job.</p>
 
 <h2 id="what-does-it-provide">🎪 What does it provide?</h2>
 
 <p>To interact with CVAD, a wrapper object needs to be
 instantiated and instructed how to communicate with the stack.</p>
-
-<h3 id="using-the-subprocess-wrapper">Using the subprocess wrapper</h3>
-
-<p>To create a wrapper object using the subprocess variant, a
-<code><a href="psytricks/wrapper.html#PSyTricksWrapper">psytricks.wrapper.PSyTricksWrapper</a></code> with the address of the <em>Delivery
-Controller</em> to connect to has to be instantiated, for example:</p>
-
-<div class="pdoc-code codehilite">
-<pre><span></span><code><span class="kn">from</span> <span class="nn"><a href="psytricks/wrapper.html">psytricks.wrapper</a></span> <span class="kn">import</span> <span class="n">PSyTricksWrapper</span>
-
-<span class="n">wrapper</span> <span class="o">=</span> <span class="n">PSyTricksWrapper</span><span class="p">(</span><span class="n">deliverycontroller</span><span class="o">=</span><span class="s2">&quot;cdc01.vdi.example.xy&quot;</span><span class="p">)</span>
-</code></pre>
-</div>
 
 <h3 id="using-the-rest-service-recommended">Using the REST service - <em>recommended</em></h3>
 
@@ -227,7 +234,23 @@ under which the REST service is reachable, e.g.</p>
 <div class="pdoc-code codehilite">
 <pre><span></span><code><span class="kn">from</span> <span class="nn"><a href="psytricks/wrapper.html">psytricks.wrapper</a></span> <span class="kn">import</span> <span class="n">ResTricksWrapper</span>
 
-<span class="n">wrapper</span> <span class="o">=</span> <span class="n">ResTricksWrapper</span><span class="p">(</span><span class="n">raw_url</span><span class="o">=</span><span class="s2">&quot;http://localhost:8080/&quot;</span><span class="p">)</span>
+<span class="n">wrapper</span> <span class="o">=</span> <span class="n">ResTricksWrapper</span><span class="p">(</span><span class="n">base_url</span><span class="o">=</span><span class="s2">&quot;http://localhost:8080/&quot;</span><span class="p">)</span>
+</code></pre>
+</div>
+
+<h3 id="using-the-subprocess-wrapper-use-with-caution">Using the subprocess wrapper - <em>use with caution</em></h3>
+
+<p>(This is only recommended for testing or if for some reason you don't want /
+can't set up the REST service.)</p>
+
+<p>To create a wrapper object using the subprocess variant, a
+<code><a href="psytricks/wrapper.html#PSyTricksWrapper">psytricks.wrapper.PSyTricksWrapper</a></code> with the address of the <em>Delivery
+Controller</em> to connect to has to be instantiated, for example:</p>
+
+<div class="pdoc-code codehilite">
+<pre><span></span><code><span class="kn">from</span> <span class="nn"><a href="psytricks/wrapper.html">psytricks.wrapper</a></span> <span class="kn">import</span> <span class="n">PSyTricksWrapper</span>
+
+<span class="n">wrapper</span> <span class="o">=</span> <span class="n">PSyTricksWrapper</span><span class="p">(</span><span class="n">deliverycontroller</span><span class="o">=</span><span class="s2">&quot;cdc01.vdi.example.xy&quot;</span><span class="p">)</span>
 </code></pre>
 </div>
 
@@ -265,6 +288,14 @@ controlled ("brokered") by Citrix:</p>
 
 <!-- markdownlint-disable MD024 (no-duplicate-header) -->
 
+<h2 id="212">2.1.2</h2>
+
+<h3 id="changed">Changed</h3>
+
+<ul>
+<li>Updated [loguru] dependency to <code>0.7.0</code>.</li>
+</ul>
+
 <h2 id="211">2.1.1</h2>
 
 <p>No functional / code changes, only lowering minimal Python version to <code>3.9</code>.</p>
@@ -290,7 +321,7 @@ version.</li>
 check fails or if a version mismatch is detected.</li>
 </ul>
 
-<h3 id="changed">Changed</h3>
+<h3 id="changed-2">Changed</h3>
 
 <ul>
 <li>In case the core HTTP request (<code>GET</code> or <code>POST</code>) fails in any of the wrapper
@@ -328,7 +359,7 @@ permissions configured on the <em>Delivery Controller</em>). Wrapping this into 
 service that is reachable via HTTP allows to run the Python code in a completely
 independent context.</p>
 
-<h3 id="changed-2">Changed</h3>
+<h3 id="changed-3">Changed</h3>
 
 <ul>
 <li>🧨 <strong>BREAKING</strong> 🧨
@@ -371,7 +402,7 @@ magnitude faster 🎢🎡.</li>
 
 <h2 id="100">1.0.0</h2>
 
-<h3 id="changed-3">Changed</h3>
+<h3 id="changed-4">Changed</h3>
 
 <ul>
 <li>🧨 <strong>BREAKING</strong> 🧨
@@ -423,7 +454,7 @@ following properties will now also be reported:
 </ul></li>
 </ul>
 
-<h3 id="changed-4">Changed</h3>
+<h3 id="changed-5">Changed</h3>
 
 <ul>
 <li>Various <code>*State</code> fields reported by Citrix are now being mapped from numerical
@@ -448,7 +479,7 @@ actual Citrix infrastructure is available.</li>
 <li>Sample JSON data for the <code>sessions</code> command.</li>
 </ul>
 
-<h3 id="changed-5">Changed</h3>
+<h3 id="changed-6">Changed</h3>
 
 <ul>
 <li>The <em>command</em> CLI argument is now an option, requiring <code>--command</code> to be used.</li>
