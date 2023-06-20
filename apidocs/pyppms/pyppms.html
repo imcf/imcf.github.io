@@ -41,6 +41,7 @@
   </ul></li>
   <li><a href="#pyppms-changelog">PyPPMS Changelog</a>
   <ul>
+    <li><a href="#230">2.3.0</a></li>
     <li><a href="#220">2.2.0</a></li>
     <li><a href="#210">2.1.0</a></li>
     <li><a href="#200">2.0.0</a></li>
@@ -473,9 +474,40 @@ look something like this:</p>
 
 <p>NOTE: potentially breaking changes are flagged with a 🧨 symbol.</p>
 
-<h2 id="220">2.2.0</h2>
+<h2 id="230">2.3.0</h2>
 
 <h3 id="added">Added</h3>
+
+<ul>
+<li><code><a href="pyppms/ppms.html#PpmsConnection">pyppms.ppms.PpmsConnection()</a></code> now takes an optional parameter
+<code>cache_users_only</code> that will prevent any request but <code>getuser</code> from being
+stored in the local cache. This is useful in scenarios where frequent requests
+to PPMS are being done to fetch booking states and such that would be slowed
+down enormously if no user caching was present. Obviously the cached users
+need to be refreshed explicitly on a regular basis then. Defaults to <code>False</code>
+which will result in the same behavior as before.
+Please note that several things are implicitly being cached (in memory) during
+the lifetime of the <code>PpmsConnection</code> object (e.g. the PPMS systems) unless
+their corresponding method is being called with <code>force_refresh=True</code>.</li>
+<li><code><a href="pyppms/ppms.html#PpmsConnection.update_users">pyppms.ppms.PpmsConnection.update_users()</a></code> and
+<code><a href="pyppms/ppms.html#PpmsConnection.get_users">pyppms.ppms.PpmsConnection.get_users()</a></code> now both have an optional parameter
+<code>active_only</code> (defaulting to <code>True</code>) that can be used to also request users
+that are marked as <em>inactive</em> in PPMS.</li>
+</ul>
+
+<h3 id="changed">Changed</h3>
+
+<ul>
+<li><code><a href="pyppms/ppms.html#PpmsConnection.get_user">pyppms.ppms.PpmsConnection.get_user()</a></code> is only logging a <code>DEBUG</code> level
+message (before: <code>ERROR</code>) in case the requested user can't be found since it
+also raises a <code>KeyError</code>. This is done to prevent cluttering up the logs of
+calling code that might use this method to figure out if an account exists in
+PPMS and properly deals with the exception raised.</li>
+</ul>
+
+<h2 id="220">2.2.0</h2>
+
+<h3 id="added-2">Added</h3>
 
 <ul>
 <li><code><a href="pyppms/ppms.html#PpmsConnection.flush_cache">pyppms.ppms.PpmsConnection.flush_cache()</a></code> to flush the on-disk cache with an
@@ -486,7 +518,7 @@ Note that this will <strong>not</strong> affect <strong>new</strong> users, they
 recognized and fetched from PUMAPI (and stored in the cache).</li>
 </ul>
 
-<h3 id="changed">Changed</h3>
+<h3 id="changed-2">Changed</h3>
 
 <ul>
 <li><code><a href="pyppms/ppms.html#PpmsConnection.get_systems_matching">pyppms.ppms.PpmsConnection.get_systems_matching()</a></code> now raises a <code>TypeError</code>
@@ -522,7 +554,7 @@ raising a <code>NotImplementedError</code>.</li>
 
 <h2 id="210">2.1.0</h2>
 
-<h3 id="changed-2">Changed</h3>
+<h3 id="changed-3">Changed</h3>
 
 <ul>
 <li>[API] <code><a href="pyppms/ppms.html#PpmsConnection.get_user">pyppms.ppms.PpmsConnection.get_user()</a></code> and
@@ -535,7 +567,7 @@ cache to be skipped</li>
 
 <h2 id="200">2.0.0</h2>
 
-<h3 id="changed-3">Changed</h3>
+<h3 id="changed-4">Changed</h3>
 
 <ul>
 <li>[API] 🧨 the signature for <code><a href="pyppms/user.html#PpmsUser">pyppms.user.PpmsUser</a></code> has been changed and now
