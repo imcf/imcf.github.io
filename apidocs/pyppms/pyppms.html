@@ -41,6 +41,7 @@
   </ul></li>
   <li><a href="#pyppms-changelog">PyPPMS Changelog</a>
   <ul>
+    <li><a href="#300">3.0.0</a></li>
     <li><a href="#230">2.3.0</a></li>
     <li><a href="#220">2.2.0</a></li>
     <li><a href="#210">2.1.0</a></li>
@@ -474,6 +475,16 @@ look something like this:</p>
 
 <p>NOTE: potentially breaking changes are flagged with a 🧨 symbol.</p>
 
+<h2 id="300">3.0.0</h2>
+
+<h3 id="changed">Changed</h3>
+
+<ul>
+<li>🧨 Minimum required Python version is now <code>3.9</code>.</li>
+<li>Dependencies have been updated to their latest (compatible) versions.</li>
+<li>Logging is now done through <a href="https://pypi.org/project/loguru/">Loguru</a>.</li>
+</ul>
+
 <h2 id="230">2.3.0</h2>
 
 <h3 id="added">Added</h3>
@@ -495,7 +506,7 @@ their corresponding method is being called with <code>force_refresh=True</code>.
 that are marked as <em>inactive</em> in PPMS.</li>
 </ul>
 
-<h3 id="changed">Changed</h3>
+<h3 id="changed-2">Changed</h3>
 
 <ul>
 <li><code><a href="pyppms/ppms.html#PpmsConnection.get_user">pyppms.ppms.PpmsConnection.get_user()</a></code> is only logging a <code>DEBUG</code> level
@@ -518,7 +529,7 @@ Note that this will <strong>not</strong> affect <strong>new</strong> users, they
 recognized and fetched from PUMAPI (and stored in the cache).</li>
 </ul>
 
-<h3 id="changed-2">Changed</h3>
+<h3 id="changed-3">Changed</h3>
 
 <ul>
 <li><code><a href="pyppms/ppms.html#PpmsConnection.get_systems_matching">pyppms.ppms.PpmsConnection.get_systems_matching()</a></code> now raises a <code>TypeError</code>
@@ -554,7 +565,7 @@ raising a <code>NotImplementedError</code>.</li>
 
 <h2 id="210">2.1.0</h2>
 
-<h3 id="changed-3">Changed</h3>
+<h3 id="changed-4">Changed</h3>
 
 <ul>
 <li>[API] <code><a href="pyppms/ppms.html#PpmsConnection.get_user">pyppms.ppms.PpmsConnection.get_user()</a></code> and
@@ -567,7 +578,7 @@ cache to be skipped</li>
 
 <h2 id="200">2.0.0</h2>
 
-<h3 id="changed-4">Changed</h3>
+<h3 id="changed-5">Changed</h3>
 
 <ul>
 <li>[API] 🧨 the signature for <code><a href="pyppms/user.html#PpmsUser">pyppms.user.PpmsUser</a></code> has been changed and now
