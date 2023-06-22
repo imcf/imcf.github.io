@@ -41,6 +41,7 @@
   </ul></li>
   <li><a href="#pyppms-changelog">PyPPMS Changelog</a>
   <ul>
+    <li><a href="#320">3.2.0</a></li>
     <li><a href="#310">3.1.0</a></li>
     <li><a href="#300">3.0.0</a></li>
     <li><a href="#230">2.3.0</a></li>
@@ -477,9 +478,25 @@ look something like this:</p>
 
 <p>NOTE: potentially breaking changes are flagged with a 🧨 symbol.</p>
 
-<h2 id="310">3.1.0</h2>
+<h2 id="320">3.2.0</h2>
 
 <h3 id="added">Added</h3>
+
+<ul>
+<li><code>pyppms.booking.PpmsBooking.last_served_from_cache</code> has been added to indicate
+if the last request was served from the cache or on-line.</li>
+</ul>
+
+<h3 id="changed">Changed</h3>
+
+<ul>
+<li>Several log messages have been demoted to lower levels for further reducing
+logging clutter.</li>
+</ul>
+
+<h2 id="310">3.1.0</h2>
+
+<h3 id="added-2">Added</h3>
 
 <ul>
 <li><code><a href="pyppms/common.html#fmt_time">pyppms.common.fmt_time()</a></code> to string-format a datetime object that might also
@@ -493,7 +510,7 @@ did <em>not</em> contain any useful data.</li>
 any bookings to allow for properly dealing with "empty" days.</li>
 </ul>
 
-<h3 id="changed">Changed</h3>
+<h3 id="changed-2">Changed</h3>
 
 <ul>
 <li>Several log messages have been demoted from <code>debug</code> to <code>trace</code> level and might
@@ -502,7 +519,7 @@ have been shortened / combined to reduce logging clutter.</li>
 
 <h2 id="300">3.0.0</h2>
 
-<h3 id="changed-2">Changed</h3>
+<h3 id="changed-3">Changed</h3>
 
 <ul>
 <li>🧨 Minimum required Python version is now <code>3.9</code>.</li>
@@ -512,7 +529,7 @@ have been shortened / combined to reduce logging clutter.</li>
 
 <h2 id="230">2.3.0</h2>
 
-<h3 id="added-2">Added</h3>
+<h3 id="added-3">Added</h3>
 
 <ul>
 <li><code><a href="pyppms/ppms.html#PpmsConnection">pyppms.ppms.PpmsConnection()</a></code> now takes an optional parameter
@@ -531,7 +548,7 @@ their corresponding method is being called with <code>force_refresh=True</code>.
 that are marked as <em>inactive</em> in PPMS.</li>
 </ul>
 
-<h3 id="changed-3">Changed</h3>
+<h3 id="changed-4">Changed</h3>
 
 <ul>
 <li><code><a href="pyppms/ppms.html#PpmsConnection.get_user">pyppms.ppms.PpmsConnection.get_user()</a></code> is only logging a <code>DEBUG</code> level
@@ -543,7 +560,7 @@ PPMS and properly deals with the exception raised.</li>
 
 <h2 id="220">2.2.0</h2>
 
-<h3 id="added-3">Added</h3>
+<h3 id="added-4">Added</h3>
 
 <ul>
 <li><code><a href="pyppms/ppms.html#PpmsConnection.flush_cache">pyppms.ppms.PpmsConnection.flush_cache()</a></code> to flush the on-disk cache with an
@@ -554,7 +571,7 @@ Note that this will <strong>not</strong> affect <strong>new</strong> users, they
 recognized and fetched from PUMAPI (and stored in the cache).</li>
 </ul>
 
-<h3 id="changed-4">Changed</h3>
+<h3 id="changed-5">Changed</h3>
 
 <ul>
 <li><code><a href="pyppms/ppms.html#PpmsConnection.get_systems_matching">pyppms.ppms.PpmsConnection.get_systems_matching()</a></code> now raises a <code>TypeError</code>
@@ -590,7 +607,7 @@ raising a <code>NotImplementedError</code>.</li>
 
 <h2 id="210">2.1.0</h2>
 
-<h3 id="changed-5">Changed</h3>
+<h3 id="changed-6">Changed</h3>
 
 <ul>
 <li>[API] <code><a href="pyppms/ppms.html#PpmsConnection.get_user">pyppms.ppms.PpmsConnection.get_user()</a></code> and
@@ -603,7 +620,7 @@ cache to be skipped</li>
 
 <h2 id="200">2.0.0</h2>
 
-<h3 id="changed-6">Changed</h3>
+<h3 id="changed-7">Changed</h3>
 
 <ul>
 <li>[API] 🧨 the signature for <code><a href="pyppms/user.html#PpmsUser">pyppms.user.PpmsUser</a></code> has been changed and now
