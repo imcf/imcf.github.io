@@ -41,6 +41,7 @@
   </ul></li>
   <li><a href="#pyppms-changelog">PyPPMS Changelog</a>
   <ul>
+    <li><a href="#321">3.2.1</a></li>
     <li><a href="#320">3.2.0</a></li>
     <li><a href="#310">3.1.0</a></li>
     <li><a href="#300">3.0.0</a></li>
@@ -477,6 +478,17 @@ look something like this:</p>
 <!-- markdownlint-disable MD024 (no-duplicate-header) -->
 
 <p>NOTE: potentially breaking changes are flagged with a 🧨 symbol.</p>
+
+<h2 id="321">3.2.1</h2>
+
+<h3 id="fixed">Fixed</h3>
+
+<ul>
+<li><code><a href="pyppms/booking.html#PpmsBooking.endtime_fromstr">pyppms.booking.PpmsBooking.endtime_fromstr()</a></code> contained a bug where the
+end time of a booking finishing at midnight got wrongly assigning it to the
+<em>start</em> of the given day instead of the end. This is now fixed by setting the
+end time to the start of the following day.</li>
+</ul>
 
 <h2 id="320">3.2.0</h2>
 
