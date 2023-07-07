@@ -41,6 +41,7 @@
   </ul></li>
   <li><a href="#pyppms-changelog">PyPPMS Changelog</a>
   <ul>
+    <li><a href="#330">3.3.0</a></li>
     <li><a href="#321">3.2.1</a></li>
     <li><a href="#320">3.2.0</a></li>
     <li><a href="#310">3.1.0</a></li>
@@ -479,6 +480,17 @@ look something like this:</p>
 
 <p>NOTE: potentially breaking changes are flagged with a 🧨 symbol.</p>
 
+<h2 id="330">3.3.0</h2>
+
+<h3 id="added">Added</h3>
+
+<ul>
+<li><code>pyppms.ppms.get_running_sheet()</code> now has an optional parameter <code>localisation</code>
+(defaulting to an empty <code>str</code>) that will be passed to the call to
+<code>pyppms.ppms.get_systems_matching()</code>, allowing to restrict the runningsheet to
+systems of a given "room".</li>
+</ul>
+
 <h2 id="321">3.2.1</h2>
 
 <h3 id="fixed">Fixed</h3>
@@ -492,7 +504,7 @@ setting the end time to the start of the following day.</li>
 
 <h2 id="320">3.2.0</h2>
 
-<h3 id="added">Added</h3>
+<h3 id="added-2">Added</h3>
 
 <ul>
 <li><code><a href="pyppms/ppms.html#PpmsConnection.last_served_from_cache">pyppms.ppms.PpmsConnection.last_served_from_cache</a></code> has been added to indicate
@@ -508,7 +520,7 @@ logging clutter.</li>
 
 <h2 id="310">3.1.0</h2>
 
-<h3 id="added-2">Added</h3>
+<h3 id="added-3">Added</h3>
 
 <ul>
 <li><code><a href="pyppms/common.html#fmt_time">pyppms.common.fmt_time()</a></code> to string-format a datetime object that might also
@@ -541,7 +553,7 @@ have been shortened / combined to reduce logging clutter.</li>
 
 <h2 id="230">2.3.0</h2>
 
-<h3 id="added-3">Added</h3>
+<h3 id="added-4">Added</h3>
 
 <ul>
 <li><code><a href="pyppms/ppms.html#PpmsConnection">pyppms.ppms.PpmsConnection()</a></code> now takes an optional parameter
@@ -572,7 +584,7 @@ PPMS and properly deals with the exception raised.</li>
 
 <h2 id="220">2.2.0</h2>
 
-<h3 id="added-4">Added</h3>
+<h3 id="added-5">Added</h3>
 
 <ul>
 <li><code><a href="pyppms/ppms.html#PpmsConnection.flush_cache">pyppms.ppms.PpmsConnection.flush_cache()</a></code> to flush the on-disk cache with an
