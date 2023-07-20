@@ -33,6 +33,7 @@
   </ul></li>
   <li><a href="#psytricks-change-log">PSyTricks Change Log</a>
   <ul>
+    <li><a href="#216">2.1.6</a></li>
     <li><a href="#215">2.1.5</a></li>
     <li><a href="#214">2.1.4</a></li>
     <li><a href="#213">2.1.3</a></li>
@@ -291,6 +292,19 @@ controlled ("brokered") by Citrix:</p>
 
 <!-- markdownlint-disable MD024 (no-duplicate-header) -->
 
+<h2 id="216">2.1.6</h2>
+
+<h3 id="fixed">Fixed</h3>
+
+<ul>
+<li><code>Set-AccessUsers()</code> in <code>psytricks-lib.ps1</code> did not work correctly if multiple
+usernames were specified. This is now fixed by foce-converting the given
+string into an array, splitting at "<code>,</code>" characters. This directly affects the
+functionality for adding / removing multiple users at once via
+<code><a href="psytricks/wrapper.html#ResTricksWrapper.set_access_users">psytricks.wrapper.ResTricksWrapper.set_access_users()</a></code> and
+<code><a href="psytricks/wrapper.html#PSyTricksWrapper.set_access_users">psytricks.wrapper.PSyTricksWrapper.set_access_users()</a></code>.</li>
+</ul>
+
 <h2 id="215">2.1.5</h2>
 
 <h3 id="changed">Changed</h3>
@@ -369,7 +383,7 @@ JSON are printed to the log to facilitate debugging.</li>
 returns the details on the power action status of the given machine.</li>
 </ul>
 
-<h3 id="fixed">Fixed</h3>
+<h3 id="fixed-2">Fixed</h3>
 
 <ul>
 <li>Citrix status values and PowerShell timestamps are now properly mapped also in
