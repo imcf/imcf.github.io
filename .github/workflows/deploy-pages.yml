@@ -72,6 +72,9 @@ jobs:
       #       --minify \
       #       --baseURL "${{ steps.pages.outputs.base_url }}/"
 
+      - name: 🪚🔧🔨 Build API docs
+        run: scripts/buildall-apidocs
+
       - name: 📤 Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
