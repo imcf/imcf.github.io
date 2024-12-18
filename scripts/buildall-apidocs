@@ -1,0 +1,7 @@
+#!/bin/sh
+
+cd $(dirname "$0")
+
+for SETTINGS_FILE in $(find ../settings/apidocs/ -name '*.inc.sh'); do
+    ./multiversion_pdoc_wrapper "$SETTINGS_FILE"
+done
