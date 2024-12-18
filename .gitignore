@@ -1,2 +1,4 @@
 # hugo automatically generates a .htaccess file, we don't need it...
 /.htaccess
+
+/build-tmp/
