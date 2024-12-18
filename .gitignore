@@ -2,3 +2,6 @@
 /.htaccess
 
 /build-tmp/
+
+# ignore all generated API docs:
+/PUBLIC/apidocs*
