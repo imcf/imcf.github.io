@@ -1,0 +1,32 @@
+{% extends "default/index.html.jinja2" %}
+
+{% block title %}IMCF Python API Documentation{% endblock %}
+
+
+{% block nav %}
+<a class="pdoc-button module-list-button" href="../">
+    {% include "resources/box-arrow-in-left.svg" %}
+    &nbsp;
+    Back
+</a>
+<style>
+    nav.pdoc {
+        background-image: url("https://imcf.one/hugo/images/bg.jpg");
+        background-size: cover;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<main class="pdoc">
+
+    <h1>API docs for IMCF Python packages.</h1>
+
+    <ul>
+        {% for submodule in all_modules if "." not in submodule %}
+        <li><a href="{{ submodule }}.html">{{submodule}}</a></li>
+        {% endfor %}
+    </ul>
+</main>
+{% endblock %}

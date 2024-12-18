@@ -1,0 +1,195 @@
+#!/bin/bash
+
+set -o errexit
+set -o pipefail
+
+if [ -n "$1" ]; then
+    SETTINGS_FILE="$1"
+fi
+
+if [ -z "$SETTINGS_FILE" ]; then
+    echo "Error: SETTINGS_FILE needs to be given as an env variable or directly"
+    echo "as a parameter to this script - stopping!"
+    exit 1
+fi
+
+# derive the package name from the name of the settings file (w/o the suffix):
+PACKAGENAME=$(basename "${SETTINGS_FILE%.inc.sh}")
+
+# settings from a sourced file (PRIORITY!) or the environment:
+echo "Reading settings from file [$SETTINGS_FILE]..."
+source "$SETTINGS_FILE"
+
+cd "$(dirname "$0")"
+
+# set default values for empty variables:
+PYTHON_CMD="${PYTHON_CMD:=python3}"
+USE_VENV="${USE_VENV:=$HOME/.virtualenvs/pdoc}"
+PDOC="${USE_VENV}/bin/pdoc"
+PDOC_TEMPLATES="${PDOC_TEMPLATES:=$PWD/../pdoc-templates}"  # templates for pdoc
+DOCS_BASEDIR="${DOCS_BASEDIR:=$PWD/../PUBLIC/apidocs-mv}"  # output base directory
+REPO_BASEDIR="${REPO_BASEDIR:=$PWD/../build-tmp}"
+INCLUDE_TAGS=${INCLUDE_TAGS:=^(${REPO_NAME}-|v)[0-9]+}
+MAIN_BRANCH="${MAIN_BRANCH:=main}"  # name of the repo's main branch
+SKIP_PULL="${SKIP_PULL:=0}"  # set to '1' to skip pulling the package repo
+EXCLUDE_VERSIONS="${EXCLUDE_VERSIONS:=^$}"  # tags to exclude from docs (egrep pattern)
+PKG_SRC="${PKG_SRC:=src}"  # location of the sources inside their repository
+PREPROC_VERSIONS="${PREPROC_VERSIONS:=^$}"
+CACHE_DIR="${CACHE_DIR:=$HOME/.cache/imcf}"
+WHEELS_DIR="$CACHE_DIR/wheels"
+
+# hard coded settings:
+LOGO="https://imcf.one/images/raeppli.png"
+LOGO_LINK="https://imcf.one/apidocs/"
+FAVICON="https://imcf.one/images/raeppli-code.png"
+PIP_PKGS_DEFAULT="click pdoc requests"
+
+# a sed command to process the stdout of the pdoc call, by default everything
+# will be passed on without changes, only in "dry-run" mode (see below) the
+# output will be modified to improve readability:
+PDOC_STDOUT_FILTER=""
+
+if [ -n "$DRY_RUN" ]; then
+    PDOC="echo $PDOC"
+    PDOC_STDOUT_FILTER='s, ,\n    ,g'
+fi
+
+set -o nounset
+test -n "$REPO_NAME"
+test -n "$REPO_URI"
+
+#
+#
+### functions
+
+function prepare_wheels_cache() {
+    mkdir -p "$WHEELS_DIR"
+    cd "$WHEELS_DIR"
+    set +o nounset
+    test -z "$CACHE_WHEELS" && return
+    echo "Caching extra wheels at: [$WHEELS_DIR]"
+    for URI in $CACHE_WHEELS; do
+        echo "Trying to cache [${URI}]..."
+        wget --no-verbose --no-clobber "$URI"
+    done
+    set +o nounset
+    cd -
+}
+
+function prepare_venv() {
+    if ! [ -d "$USE_VENV" ]; then
+        echo "Creating new venv at [$USE_VENV]..."
+        $PYTHON_CMD -m venv "$USE_VENV"
+    fi
+    PIP="${USE_VENV}/bin/pip"
+    $PIP install --upgrade pip
+    # shellcheck disable=SC2086
+    $PIP install --upgrade $PIP_PKGS_DEFAULT
+    set +o nounset
+    if [ -n "$PIP_PKGS_EXTRA" ]; then
+        # shellcheck disable=SC2086
+        $PIP install --upgrade $PIP_PKGS_EXTRA --find-links "$WHEELS_DIR"
+    fi
+    set -o nounset
+}
+
+### functions
+#
+#
+
+prepare_wheels_cache
+prepare_venv
+
+mkdir -p "$REPO_BASEDIR"
+cd "$REPO_BASEDIR"
+if ! [ -d "$REPO_NAME" ]; then
+    git clone "$REPO_URI"
+    cd "$REPO_NAME"
+else
+    cd "$REPO_NAME"
+    git checkout -- .
+    git checkout "$MAIN_BRANCH"
+    if [ "$SKIP_PULL" != "0" ]; then
+        echo "Not pulling repo, using current state!"
+    else
+        git pull --tags -v
+    fi
+fi
+
+# version-tags will be prefixed with the repo-name or start with 'v':
+ALL_VERSIONS=$(
+    git tag -l --sort=committerdate |
+        grep -E "$INCLUDE_TAGS" |
+        sed 's,.*-\([0-9]\+\.\),\1, ; s,^v\([0-9]\+\.\),\1,' |
+        sort -V -r |
+        grep -vE "$EXCLUDE_VERSIONS"
+)
+LATEST_STABLE="$(echo "$ALL_VERSIONS" |
+    grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' |  # exclude alpha/beta/pre/dev etc.
+    head -n 1)"
+
+echo -e "\n==== using versions ====\n${ALL_VERSIONS}"
+echo -e "==== latest stable =====\n${LATEST_STABLE}\n========================"
+
+# all versions which should be documented
+VERSIONS="$(echo "${ALL_VERSIONS}" | xargs)"
+
+# export all variables required by pdoc:
+export VERSIONS
+export PACKAGENAME
+
+run_pdoc() {
+    echo -e "\n*** Generating docs for version [$CUR_VERSION]..."
+    # git reset -- .
+    git checkout -- .
+
+    # find back the tag name to check out from the version (required e.g. for
+    # repos where the release-tag-naming-scheme has changed, note this will fail
+    # in situations where it returns more than one tag!):
+    TAG_NAME=$(git tag -l "*${CUR_VERSION}")
+    git checkout "${TAG_NAME}" --
+
+    ## this doesn't seem to be required for the moment:
+    # PKG_INIT="${PKG_SRC}/${PACKAGENAME}/__init__.py"
+    # sed -i 's/\${project.version}/'"${CUR_VERSION}"'/g' "${PKG_INIT}"
+
+    if echo "$CUR_VERSION" | grep -qsE "$PREPROC_VERSIONS"; then
+        echo "Preprocessing source tree for version [$CUR_VERSION]..."
+
+        PDOC_SKIP="pdoc: skip"               # pragma to look for in the code
+        PDOC_CMNT="disabled while running pdoc"  # prefix for disabled lines
+
+        find "${PKG_SRC}/${PACKAGENAME}/" -iname '*.py' -print0 |
+            xargs -0 sed -i "
+                s,\(.*\)# $PDOC_SKIP,## $PDOC_CMNT ## \1,
+                s,\(.*plugins\.\)in \(.*\),\1_in \2,
+            "
+    fi
+
+    OUTPUT="$DOCS_BASEDIR/$PACKAGENAME/$CUR_VERSION"
+    # echo "Output directory: [$OUTPUT]"
+    mkdir -p "$OUTPUT"
+    $PDOC \
+        --template-directory "$PDOC_TEMPLATES" \
+        --output-directory "$OUTPUT" \
+        --docformat numpy \
+        --logo "$LOGO" \
+        --logo-link "$LOGO_LINK" \
+        --favicon "$FAVICON" \
+        "${PKG_SRC}"/* |
+            sed "$PDOC_STDOUT_FILTER"
+}
+
+for CUR_VERSION in $VERSIONS; do
+    run_pdoc
+done
+
+# create an index.html pointing to the latest release
+INDEX_REDIRECT="$DOCS_BASEDIR/$PACKAGENAME/index.html"
+echo "<meta
+    http-equiv=\"Refresh\"
+    content=\"0;
+    url='./${LATEST_STABLE}/index.html'\"
+/>" > "$INDEX_REDIRECT"
+
+echo -e "\nDone. Output can be found at [$INDEX_REDIRECT].\n"

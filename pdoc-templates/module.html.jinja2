@@ -1,0 +1,58 @@
+{% extends "default/module.html.jinja2" %}
+
+{% block nav_members %}
+    {% if module.members %}
+        {% set filtered_modules = {} %}
+        {% for key, value in module.members.items() %}
+            {% if not key.startswith('__') %}
+                {% set _ = filtered_modules.update({key: value}) %}
+            {% endif %}
+        {% endfor %}
+
+        {% if filtered_modules %}
+            <h2>API Documentation</h2>
+            {{ nav_members(module.members.values()) }}
+        {% endif %}
+    {% endif %}
+{% endblock nav_members %}
+
+{% set versions = env.get("VERSIONS", "").strip().split(" ") %}
+
+{% set package = env.get("PACKAGENAME", "") %}
+
+{% block nav_footer %}
+    <footer>
+      <h3><label for="page-select">API Version</label></h3>
+      <select id="page-select" onchange="redirectToPage()">
+        <option value="">Select an option</option>
+        {% for item in versions %}
+            <option value="{{ item }}">{{ item }}</option>
+        {% endfor %}
+        </select>
+
+      <script>
+        function redirectToPage() {
+          var select = document.getElementById("page-select");
+          var selectedOption = select.options[select.selectedIndex].value;
+
+          if (selectedOption !== "") {
+            var currentURL = window.location.pathname;
+            var match = currentURL.match(/^(.*\/{{ package }}\/)[0-9]+[0-9a-z.]+(\/.*)$/);
+            var redirectURL = match[1] + selectedOption + match[2];
+            window.location.href = redirectURL;
+          }
+        }
+
+        // Set the default value of the dropdown to the selected option
+        window.onload = function() {
+          var select = document.getElementById("page-select");
+          var currentURL = window.location.pathname;
+          var match = currentURL.match(/^.*\/{{ package }}\/([0-9]+[0-9a-z.]+)\/.+$/);
+
+          if (match && match[1]) {
+            select.value = match[1];
+          }
+        };
+      </script>
+    </footer>
+{% endblock nav_footer %}
