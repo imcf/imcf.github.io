@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# set -x
+set -e
+set -u # make emtpy variables an error
+
+cd "$(dirname "$0")"
+BASEDIR="$(readlink -f ..)"
+
+echo "Generating landing page via 'hugo'..."
+
+cd "${BASEDIR}/src/hugo"
+
+DESTINATION="${BASEDIR}/PUBLIC"
+echo "Using destination dir: $DESTINATION"
+
+hugo --destination "$DESTINATION"
+
+echo "Done."
