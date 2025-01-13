@@ -1,0 +1,21 @@
+---
+- group: Generic
+  items:
+    - title: Booking System
+      url: https://ppms.eu/unibas
+      icon: fas fa-calendar-check
+    - title: VAMP
+      url: https://vamp.unibas.ch
+      icon: fas fa-laptop-code
+    - title: Official Website
+      url: https://biozentrum.unibas.ch/imcf
+      icon: fas fa-globe
+    - title: Wiki
+      url: https://wiki.biozentrum.unibas.ch/display/IMCF
+      icon: fas fa-book
+    - title: GitHub
+      url: https://github.com/imcf/
+      icon: fab fa-github
+    - title: API Documentation
+      url: https://imcf.one/apidocs/
+      icon: fas fa-code

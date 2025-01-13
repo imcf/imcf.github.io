@@ -1,0 +1,41 @@
+html,
+body {
+    height: 100%;
+}
+
+body {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-align: center;
+    align-items: center;
+    background: url("../images/bg.jpg");
+    background-size: cover;
+    flex-wrap: wrap;
+}
+
+h1 {
+    color: rgba(255, 255, 255, 0.85);
+    background-color: rgba(151, 151, 151, 0.45);
+    margin-bottom: 55px;
+    padding: 33px;
+}
+
+.card {
+    background-color: rgba(50, 50, 50, 0.85);
+    border: 5px solid rgba(255, 255, 255, 0.25);
+}
+
+.card:hover {
+    background-color: rgba(78, 78, 78, 0.85);
+    border: 5px solid rgba(255, 255, 255, 0.45);
+}
+
+.cursorPointer:hover {
+    cursor: pointer;
+}
+
+a {
+    color: #fbfbfbe8;
+    text-decoration: none;
+    background-color: transparent;
+}

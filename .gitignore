@@ -1,7 +1,10 @@
 # hugo automatically generates a .htaccess file, we don't need it...
-/.htaccess
+/PUBLIC/.htaccess
 
 /build-tmp/
 
 # ignore all generated API docs:
 /PUBLIC/apidocs/*
+
+# temporary hugo lock file while building
+.hugo_build.lock

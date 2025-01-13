@@ -1,0 +1,59 @@
+baseURL = "https://imcf.one/"
+canonifyurls = true
+copyright = "Imaging Core Facility, University of Basel, Switzerland"
+enableRobotsTXT = false
+ignoreFiles = [
+  "content/portfolio/\\.*",
+  "content/product/\\.*",
+  "content/sketch/\\.*",
+  "content/homepage/\\.*",
+  "content/post/\\.*",
+  "content/\\.*",
+] # disable example pages as this is a single page
+languageCode = "en-US"
+paginate = 5
+pygmentsCodeFences = true
+theme = "bootstrap-bp-hugo-startpage"
+title = "Imaging Core Facility - IMCF"
+
+[sitemap]
+changefreq = "weekly"
+priority = 0.5
+
+[permalinks]
+page = "/:slug/"
+pages = "/:slug/"
+post = "/:year/:month/:slug/"
+posts = "/:year/:month/:slug/"
+
+[Author]
+name = "Imaging Core Facility"
+
+[params]
+description = "Shortcuts, bookmarks and API docs of the IMCF"
+#images = ["logo.jpg"]
+startPageColumns = false
+welcomeText = "Imaging Core Facility"
+
+# [[params.searchEngines]]
+#   name = "Google"
+#   activated = true
+#   url = "https://www.google.com/search"
+#
+# [[params.searchEngines]]
+#   name = "DuckDuckGo"
+#   activated = true
+#   url = "https://duckduckgo.com/"
+#
+# [[params.searchEngines]]
+#   name = "Bing"
+#   activated = true
+#   url = "https://www.bing.com/search"
+#
+# [[params.searchEngines]]
+#   name = "Baidu"
+#   activated = true
+#   url = "https://baidu.com/s"
+#   searchkey = "wd"
+
+[taxonomies]
