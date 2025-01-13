@@ -15,6 +15,7 @@ fi
 
 # derive the package name from the name of the settings file (w/o the suffix):
 PACKAGENAME=$(basename "${SETTINGS_FILE%.inc.sh}")
+echo -e "\n\n======= Building API docs for package [$PACKAGENAME] =======\n\n"
 
 # settings from a sourced file (PRIORITY!) or the environment:
 echo "Reading settings from file [$SETTINGS_FILE]..."
