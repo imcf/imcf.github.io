@@ -28,7 +28,7 @@ PYTHON_CMD="${PYTHON_CMD:=python3}"
 USE_VENV="${USE_VENV:=$HOME/.virtualenvs/pdoc}"
 PDOC="${USE_VENV}/bin/pdoc"
 PDOC_TEMPLATES="${PDOC_TEMPLATES:=$PWD/../pdoc-templates}"  # templates for pdoc
-DOCS_BASEDIR="${DOCS_BASEDIR:=$PWD/../PUBLIC/apidocs-mv}"  # output base directory
+DOCS_BASEDIR="${DOCS_BASEDIR:=$PWD/../PUBLIC/apidocs}"  # output base directory
 REPO_BASEDIR="${REPO_BASEDIR:=$PWD/../build-tmp}"
 INCLUDE_TAGS=${INCLUDE_TAGS:=^(${REPO_NAME}-|v)[0-9]+}
 MAIN_BRANCH="${MAIN_BRANCH:=main}"  # name of the repo's main branch
