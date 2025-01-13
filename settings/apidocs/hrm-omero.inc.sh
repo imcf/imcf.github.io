@@ -32,7 +32,7 @@ EXCLUDE_VERSIONS='^(.*-dev[0-9]+)$'
 # PREPROC_VERSIONS='^(1.0.0|1.1.0|1.2.0|1.3.0|1.4.0)$'
 
 # specify a Python command to use for creating the venv:
-PYTHON_CMD="/usr/bin/python3.10"
+# PYTHON_CMD="/usr/bin/python3.10"
 
 # venv to use for running pdoc:
 USE_VENV=$HOME/.virtualenvs/hrm-omero-pdoc
