@@ -1,0 +1,3 @@
+[submodule "src/hugo/themes/bootstrap-bp-hugo-startpage"]
+	path = src/hugo/themes/bootstrap-bp-hugo-startpage
+	url = git@github.com:imcf/bootstrap-bp-hugo-startpage.git
