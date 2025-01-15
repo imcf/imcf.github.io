@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# build API documentation using `pdoc` for multiple versions of a package,
+# inspired and adapted from the code and comments found in
+# https://github.com/mitmproxy/pdoc/issues/470
+
 set -o errexit
 set -o pipefail
 
