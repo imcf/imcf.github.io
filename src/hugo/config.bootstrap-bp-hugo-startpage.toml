@@ -11,10 +11,12 @@ ignoreFiles = [
   "content/\\.*",
 ] # disable example pages as this is a single page
 languageCode = "en-US"
-paginate = 5
 pygmentsCodeFences = true
 theme = "bootstrap-bp-hugo-startpage"
 title = "Imaging Core Facility - IMCF"
+
+[pagination]
+  pagerSize = 5
 
 [sitemap]
 changefreq = "weekly"
@@ -26,7 +28,7 @@ pages = "/:slug/"
 post = "/:year/:month/:slug/"
 posts = "/:year/:month/:slug/"
 
-[Author]
+[params.author]
 name = "Imaging Core Facility"
 
 [params]
