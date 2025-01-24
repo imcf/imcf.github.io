@@ -19,7 +19,7 @@ fi
 
 # derive the package name from the name of the settings file (w/o the suffix):
 PACKAGENAME=$(basename "${SETTINGS_FILE%.inc.sh}")
-echo -e "\n\n======= Building API docs for package [$PACKAGENAME] =======\n\n"
+echo -e "\n\n🎈 🎈 🎈 Building API docs for package [$PACKAGENAME] 🎈 🎈 🎈\n\n"
 
 # settings from a sourced file (PRIORITY!) or the environment:
 echo "Reading settings from file [$SETTINGS_FILE]..."
@@ -144,7 +144,7 @@ export VERSIONS
 export PACKAGENAME
 
 run_pdoc() {
-    echo -e "\n*** Generating docs for version [$CUR_VERSION]..."
+    echo -e "\n⭐⭐⭐ Generating docs for version [$CUR_VERSION]..."
     # git reset -- .
     git checkout -- .
 
@@ -174,6 +174,7 @@ run_pdoc() {
     OUTPUT="$DOCS_BASEDIR/$PACKAGENAME/$CUR_VERSION"
     # echo "Output directory: [$OUTPUT]"
     mkdir -p "$OUTPUT"
+    echo "🏗 Running pdoc ⏳ ..."
     $PDOC \
         --template-directory "$PDOC_TEMPLATES" \
         --output-directory "$OUTPUT" \
@@ -183,18 +184,20 @@ run_pdoc() {
         --favicon "$FAVICON" \
         "${PKG_SRC}"/* |
             sed "$PDOC_STDOUT_FILTER"
+    echo "🎇 Pdoc finished."
 }
 
 for CUR_VERSION in $VERSIONS; do
     run_pdoc
 done
 
-# create an index.html pointing to the latest release
+echo "🔄 Creating redirects to the latest release:"
 INDEX_REDIRECT="$DOCS_BASEDIR/$PACKAGENAME/index.html"
 echo "<meta
     http-equiv=\"Refresh\"
     content=\"0;
     url='./${LATEST_STABLE}/index.html'\"
 />" > "$INDEX_REDIRECT"
+echo "- $INDEX_REDIRECT"
 
-echo -e "\nDone. Output can be found at [$INDEX_REDIRECT].\n"
+echo -e "✅ Done.\n"
