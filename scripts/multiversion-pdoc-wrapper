@@ -199,5 +199,8 @@ echo "<meta
     url='./${LATEST_STABLE}/index.html'\"
 />" > "$INDEX_REDIRECT"
 echo "- $INDEX_REDIRECT"
+PKGNAME_REDIRECT="$DOCS_BASEDIR/$PACKAGENAME/$PACKAGENAME.html"
+cp "$INDEX_REDIRECT" "$PKGNAME_REDIRECT"
+echo "- $PKGNAME_REDIRECT"
 
 echo -e "✅ Done.\n"
