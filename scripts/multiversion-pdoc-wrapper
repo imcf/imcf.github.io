@@ -144,7 +144,7 @@ export VERSIONS
 export PACKAGENAME
 
 run_pdoc() {
-    echo -e "\n⭐⭐⭐ Generating docs for version [$CUR_VERSION]..."
+    echo -e "\n⭐⭐⭐ Generating docs for [$PACKAGENAME@$CUR_VERSION]..."
     # git reset -- .
     git checkout -- .
 
@@ -174,7 +174,7 @@ run_pdoc() {
     OUTPUT="$DOCS_BASEDIR/$PACKAGENAME/$CUR_VERSION"
     # echo "Output directory: [$OUTPUT]"
     mkdir -p "$OUTPUT"
-    echo "🏗 Running pdoc ⏳ ..."
+    echo "🏗 Running pdoc for $PACKAGENAME@$CUR_VERSION ⏳ ..."
     $PDOC \
         --template-directory "$PDOC_TEMPLATES" \
         --output-directory "$OUTPUT" \
