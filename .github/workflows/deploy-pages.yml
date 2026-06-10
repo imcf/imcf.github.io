@@ -55,13 +55,13 @@ jobs:
     # - name: Install Dart Sass
     #   run: sudo snap install dart-sass
     - name: 📥 Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       # with:
       #   submodules: recursive
 
     - name: 📜 Setup Pages
       id: pages
-      uses: actions/configure-pages@v5
+      uses: actions/configure-pages@v6
 
     # - name: Install Node.js dependencies
     #   run: "[[ -f package-lock.json || -f npm-shrinkwrap.json ]] && npm ci || true"
@@ -76,7 +76,7 @@ jobs:
     #       --baseURL "${{ steps.pages.outputs.base_url }}/"
 
     - name: 🐍 Set up Python
-      uses: actions/setup-python@v5.3.0
+      uses: actions/setup-python@v6
       with:
         python-version: "3.10"
 
@@ -84,7 +84,7 @@ jobs:
       run: scripts/buildall-apidocs
 
     - name: 📤 Upload artifact
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v5
       with:
         path: ./PUBLIC
 
@@ -98,4 +98,4 @@ jobs:
     steps:
     - name: 🚚🌍 Deploy to GitHub Pages
       id: deployment
-      uses: actions/deploy-pages@v4
+      uses: actions/deploy-pages@v5
