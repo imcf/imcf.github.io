@@ -5,7 +5,7 @@
 ##### MANDATORY #####
 
 # the name of the repo (~the folder it will be cloned into):
-REPO_NAME="blockbuster"
+REPO_NAME="patchworks"
 
 # the URI of the repo to clone:
 REPO_URI="https://github.com/imcf/${REPO_NAME}.git"
