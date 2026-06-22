@@ -19,13 +19,14 @@ REPO_URI="https://github.com/imcf/${REPO_NAME}.git"
 # INCLUDE_TAGS="^(${REPO_NAME}-|v)[0-9]+"
 
 # the name of the main branch, commonly "main" or (old) "master"
-MAIN_BRANCH="master"
+MAIN_BRANCH="main"
 
 # location of the package source, by default "src/" will be used if emtpy:
 # PKG_SRC="src/main/resources"  # for mavenized packages
 
 # a 'grep -E' pattern to filter VERSIONS to be EXCLUDED from docs generation:
-EXCLUDE_VERSIONS='^0\..*$'
+# (blockbuster is still pre-1.0, so do NOT exclude 0.x releases)
+# EXCLUDE_VERSIONS='^0\..*$'
 
 # check for 'pdoc: skip' pragmas in the code and disable those lines before
 # actually calling pdoc for the versions specified here:
@@ -35,7 +36,10 @@ PREPROC_VERSIONS='^1\.[0-4]{1}\..*$'
 # USE_VENV=
 
 # extra packages that need to be present in the venv:
-PIP_PKGS_EXTRA="imcf-fiji-mocks sjlogging python-micrometa"
+# only blockbuster's unguarded module-level imports are required for pdoc to
+# introspect the sources (scipy, scikit-image, tqdm, psutil, pynvml, cellpose,
+# dask.distributed are all guarded by try/except or imported lazily):
+PIP_PKGS_EXTRA="numpy dask[array] zarr"
 
 # directory with pdoc templates:
 # PDOC_TEMPLATES
