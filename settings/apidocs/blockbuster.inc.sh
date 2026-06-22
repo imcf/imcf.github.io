@@ -36,7 +36,10 @@ PREPROC_VERSIONS='^1\.[0-4]{1}\..*$'
 # USE_VENV=
 
 # extra packages that need to be present in the venv:
-PIP_PKGS_EXTRA="imcf-fiji-mocks sjlogging python-micrometa"
+# only blockbuster's unguarded module-level imports are required for pdoc to
+# introspect the sources (scipy, scikit-image, tqdm, psutil, pynvml, cellpose,
+# dask.distributed are all guarded by try/except or imported lazily):
+PIP_PKGS_EXTRA="numpy dask[array] zarr"
 
 # directory with pdoc templates:
 # PDOC_TEMPLATES
