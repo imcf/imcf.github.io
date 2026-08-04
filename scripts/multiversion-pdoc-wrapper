@@ -18,8 +18,8 @@ if [ -z "$SETTINGS_FILE" ]; then
 fi
 
 # derive the package name from the name of the settings file (w/o the suffix):
-PACKAGENAME=$(basename "${SETTINGS_FILE%.inc.sh}")
-echo -e "\n\n🎈 🎈 🎈 Building API docs for package [$PACKAGENAME] 🎈 🎈 🎈\n\n"
+PACKAGE_NAME=$(basename "${SETTINGS_FILE%.inc.sh}")
+echo -e "\n\n🎈 🎈 🎈 Building API docs for package [$PACKAGE_NAME] 🎈 🎈 🎈\n\n"
 
 # settings from a sourced file (PRIORITY!) or the environment:
 echo "Reading settings from file [$SETTINGS_FILE]..."
@@ -142,10 +142,10 @@ VERSIONS="$(echo "${ALL_VERSIONS}" | xargs)"
 
 # export all variables required by pdoc:
 export VERSIONS
-export PACKAGENAME
+export PACKAGE_NAME
 
 run_pdoc() {
-    echo -e "\n⭐⭐⭐ Generating docs for [$PACKAGENAME@$CUR_VERSION]..."
+    echo -e "\n⭐⭐⭐ Generating docs for [$PACKAGE_NAME@$CUR_VERSION]..."
     # git reset -- .
     git checkout -- .
 
@@ -156,26 +156,26 @@ run_pdoc() {
     git checkout "${TAG_NAME}" --
 
     ## this doesn't seem to be required for the moment:
-    # PKG_INIT="${PKG_SRC}/${PACKAGENAME}/__init__.py"
+    # PKG_INIT="${PKG_SRC}/${PACKAGE_NAME}/__init__.py"
     # sed -i 's/\${project.version}/'"${CUR_VERSION}"'/g' "${PKG_INIT}"
 
     if echo "$CUR_VERSION" | grep -qsE "$PREPROC_VERSIONS"; then
         echo "Preprocessing source tree for version [$CUR_VERSION]..."
 
         PDOC_SKIP="pdoc: skip"               # pragma to look for in the code
-        PDOC_CMNT="disabled while running pdoc"  # prefix for disabled lines
+        PDOC_COMMENT="disabled while running pdoc"  # prefix for disabled lines
 
-        find "${PKG_SRC}/${PACKAGENAME}/" -iname '*.py' -print0 |
+        find "${PKG_SRC}/${PACKAGE_NAME}/" -iname '*.py' -print0 |
             xargs -0 sed -i "
-                s,\(.*\)# $PDOC_SKIP,## $PDOC_CMNT ## \1,
+                s,\(.*\)# $PDOC_SKIP,## $PDOC_COMMENT ## \1,
                 s,\(.*plugins\.\)in \(.*\),\1_in \2,
             "
     fi
 
-    OUTPUT="$DOCS_BASEDIR/$PACKAGENAME/$CUR_VERSION"
+    OUTPUT="$DOCS_BASEDIR/$PACKAGE_NAME/$CUR_VERSION"
     # echo "Output directory: [$OUTPUT]"
     mkdir -p "$OUTPUT"
-    echo "🏗 Running pdoc for $PACKAGENAME@$CUR_VERSION ⏳ ..."
+    echo "🏗 Running pdoc for $PACKAGE_NAME@$CUR_VERSION ⏳ ..."
     $PDOC \
         --template-directory "$PDOC_TEMPLATES" \
         --output-directory "$OUTPUT" \
@@ -193,15 +193,15 @@ for CUR_VERSION in $VERSIONS; do
 done
 
 echo "🔄 Creating redirects to the latest release:"
-INDEX_REDIRECT="$DOCS_BASEDIR/$PACKAGENAME/index.html"
+INDEX_REDIRECT="$DOCS_BASEDIR/$PACKAGE_NAME/index.html"
 echo "<meta
     http-equiv=\"Refresh\"
     content=\"0;
     url='./${LATEST_STABLE}/index.html'\"
 />" > "$INDEX_REDIRECT"
 echo "- $INDEX_REDIRECT"
-PKGNAME_REDIRECT="$DOCS_BASEDIR/$PACKAGENAME/$PACKAGENAME.html"
-cp "$INDEX_REDIRECT" "$PKGNAME_REDIRECT"
-echo "- $PKGNAME_REDIRECT"
+PACKAGE_REDIRECT="$DOCS_BASEDIR/$PACKAGE_NAME/$PACKAGE_NAME.html"
+cp "$INDEX_REDIRECT" "$PACKAGE_REDIRECT"
+echo "- $PACKAGE_REDIRECT"
 
 echo -e "✅ Done.\n"
