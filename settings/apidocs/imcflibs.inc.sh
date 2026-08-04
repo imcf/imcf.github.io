@@ -21,7 +21,7 @@ REPO_URI="https://github.com/imcf/${REPO_NAME}.git"
 # the name of the main branch, commonly "main" or (old) "master"
 MAIN_BRANCH="master"
 
-# location of the package source, by default "src/" will be used if emtpy:
+# location of the package source, by default "src/" will be used if empty:
 # PKG_SRC="src/main/resources"  # for mavenized packages
 
 # a 'grep -E' pattern to filter VERSIONS to be EXCLUDED from docs generation:
