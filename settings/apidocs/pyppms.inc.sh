@@ -35,7 +35,7 @@ REPO_URI="https://github.com/imcf/${REPO_NAME}.git"
 # USE_VENV=
 
 # extra packages that need to be present in the venv:
-PIP_PKGS_EXTRA="loguru"
+PIP_PKGS_EXTRA="loguru pandas"
 
 # directory with pdoc templates:
 # PDOC_TEMPLATES
