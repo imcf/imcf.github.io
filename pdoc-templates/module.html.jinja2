@@ -18,7 +18,7 @@
 
 {% set versions = env.get("VERSIONS", "").strip().split(" ") %}
 
-{% set package = env.get("PACKAGENAME", "") %}
+{% set package_name = env.get("PACKAGE_NAME", "") %}
 
 {% block nav_footer %}
     <footer>
@@ -37,7 +37,7 @@
 
           if (selectedOption !== "") {
             var currentURL = window.location.pathname;
-            var match = currentURL.match(/^(.*\/{{ package }}\/)[0-9]+[0-9a-z.]+(\/.*)$/);
+            var match = currentURL.match(/^(.*\/{{ package_name }}\/)[0-9]+[0-9a-z.]+(\/.*)$/);
             var redirectURL = match[1] + selectedOption + match[2];
             window.location.href = redirectURL;
           }
@@ -47,7 +47,7 @@
         window.onload = function() {
           var select = document.getElementById("page-select");
           var currentURL = window.location.pathname;
-          var match = currentURL.match(/^.*\/{{ package }}\/([0-9]+[0-9a-z.]+)\/.+$/);
+          var match = currentURL.match(/^.*\/{{ package_name }}\/([0-9]+[0-9a-z.]+)\/.+$/);
 
           if (match && match[1]) {
             select.value = match[1];
