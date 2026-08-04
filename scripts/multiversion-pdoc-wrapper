@@ -23,6 +23,7 @@ echo -e "\n\n🎈 🎈 🎈 Building API docs for package [$PACKAGENAME] 🎈 �
 
 # settings from a sourced file (PRIORITY!) or the environment:
 echo "Reading settings from file [$SETTINGS_FILE]..."
+# shellcheck disable=SC1090
 source "$SETTINGS_FILE"
 
 cd "$(dirname "$0")"
